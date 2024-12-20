@@ -1,0 +1,249 @@
+/* 
+ * Copyright (C) 2024 gleon
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
+
+
+/* 
+    Created on : 25 oct. 2024, 18:05:00
+    Author     : gleon
+*/
+body {
+    margin: 0;
+}
+
+iframe {
+  float: left;
+  border: none;
+  width: calc(100% - 360px);
+  margin: 0;
+  padding: 0;
+}
+
+table{
+    border-collapse : collapse;
+}
+
+tr,td{
+    font:12px Arial;
+    padding:1px 3px;
+    border:1px solid #DDDDDD;
+}
+
+.tdchk{
+    font:12px Arial;
+    padding:0px 0px;
+    border:1px solid #DDDDDD;
+}
+
+/*------------------------------------*/
+/*apparence du menu
+/*------------------------------------*/
+
+#menu
+{
+    float:left;
+    height:40px;
+    width:100%;
+    background-color:#97ca8f;
+    clear:both;
+    font:14px Arial;
+}
+
+.iconemenu
+{
+    float:left;
+    height:30px;
+    margin: 5px;
+}
+
+.proprietemenu 
+{
+    float:left;
+    margin: 5px;
+    padding : 6px 10px 6px 10px;
+    background-color:#c1dbbd;
+}
+
+#selActivite ,#selVue
+{
+    float:left;
+    height:30px;
+    margin: 5px;
+}
+
+/*------------------------------------*/
+/*apparence du menu
+/*------------------------------------*/
+
+#participants
+{
+    float:left;
+    width:330px;
+    min-height: 95vh;
+    border: 1px solid black;
+    background-color:#FFFFFF;
+}
+
+.titre_activite
+{
+    padding:3px;
+    height:20px;
+    width:152px;
+    text-align:center;
+    font:16px Arial;
+    background:#FFFFFF;
+    float:left;
+}
+
+.titre_participants
+{
+    padding:3px;
+    height:20px;
+    width:220px;
+    text-align:center;
+    font:16px Arial;
+    background:#FFFFFF;
+    float:left;
+}
+.titre_id
+{
+    padding:3px;
+    height:20px;
+    width:60px;
+    text-align:center;
+    font:14px Arial;
+    background:#FFFFFF;
+    float:left;
+}
+.elactivite
+{
+    float:left;
+    clear:both;
+    background-color:#EEEEEE;
+}
+
+.txtactivite{
+    float:left;
+    padding:3px;
+    color:black;
+    text-decoration: none;
+    height:14px;
+    width:172px;
+    font:12px Arial;
+}
+
+.txtactivite:hover
+{
+    background-color:#DDDDDD;
+}
+
+.iconedroite
+{
+    float:right;
+    width:20px; 
+    height:20px;
+    padding-left:4px;
+}
+
+.iconegauche
+{
+    float:left;
+    width:20px; 
+    height:20px;
+}
+
+/*------------------------------------*/
+/*apparence des boites de dialogues*/
+/*------------------------------------*/
+
+#promptCompat{
+    display: none;
+}
+
+#promptCompat.no_dialog{
+    box-shadow: 0 0 5px 2px red;
+    padding: 0px;
+    display: block;
+    text-align: center;
+    font-weight: bold;
+}
+
+dialog{
+    border-width:1px;
+    padding: 5px;
+    margin: 0;
+    position: absolute;
+    background-color: #e2e6f8;
+    box-shadow: 0 3px 7px rgba(0, 0, 0, 0.3);
+}
+
+
+.net .titre_propriete{
+    background-color: #D90115;
+}
+
+.net .proprietebtn{
+    border-color: #e2e6f8;
+}
+
+dialog::backdrop{
+    background-color: rgba(0, 0, 0, 0.6);
+}
+
+.propriete
+{
+    padding: 8px;
+    border-width:1px;
+    float:left;
+    clear:both;
+}
+.proprietebtn
+{
+    margin: 8px;
+    padding-top:8px;
+    width:98%;
+    border-top-width: 1px;
+    border-top-style: solid;
+    border-color: #7f89b7;
+    float:left;
+    clear:both;
+}
+.proprietebtn input[type=submit]
+{
+    float:right; 
+}
+
+.titre_propriete
+{
+    margin-bottom:8px;
+    padding:3px;
+    height:20px;
+    width:98%;
+    text-align:center;
+    font:16px Arial;
+    background-color: #7f89b7;
+    color:white;
+    display:block;
+    clear:both;
+}
+
+label {
+    width:120px;
+    display: inline-block;
+    font:14px Arial;
+    padding:1px 3px;
+}
+

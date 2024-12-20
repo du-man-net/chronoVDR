@@ -1,0 +1,7 @@
+127.0.0.1       localhost
+::1             localhost ip6-localhost ip6-loopback
+ff02::1         ip6-allnodes
+ff02::2         ip6-allrouter
+127.0.1.1       chronoVDR
+172.16.1.1      www.chrono.vdr chrono.vdr chronovdr
+172.16.1.1      phpmyadmin.chrono.vdr phpmyadmin

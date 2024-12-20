@@ -1,0 +1,63 @@
+<?php
+
+require_once 'class/db.php';
+
+$r = date("D M d 'y h.i A") . ' - ';
+$r .= $_SERVER['REQUEST_URI']. ' - ';
+
+if (isset($_GET["id"])) {
+    $r .= $_GET["id"] . ' - ';
+}
+if (isset($_GET["data1"])) {
+    $r .= $_GET["data1"];
+}
+file_put_contents("files/logs", $r . "\n", FILE_APPEND);
+
+if (isset($_GET["id"])) {
+    $ref_id = $_GET["id"];
+    if (file_exists("files/tagToChange")) {
+        $myfile = fopen("files/tagToChange", "r");
+        $id_participant = substr(fgets($myfile), 0, -1);
+        fclose($myfile);
+        //on essaye de retrouver l'id de l'activité
+        echo "SELECT id_activite FROM participants WHERE id = '" . $id_participant . "'";
+        $result = $mysqli->query("SELECT id_activite FROM participants WHERE id = '" . $id_participant . "'");
+        if ($result->num_rows > 0) {
+            $row = $result->fetch_assoc();
+            //on cherche si un autre participant a le même RFID
+            $result = $mysqli->query("SELECT id FROM participants WHERE ref_id = '" . $ref_id . "' AND id_activite = '" . $row['id_activite'] . "'");
+            if ($result->num_rows == 0) {
+                //si le TAG n'est pas utilisé, on l'ajoute et on détruit le fichier pour dire que tout c'est bien passé
+                $mysqli->query("UPDATE participants SET ref_id = '" . $ref_id . "' WHERE id = '" . $id_participant . "'");
+                unlink("files/tagToChange");
+            }
+        }
+    } else {
+
+        $result = $mysqli->query("SELECT repetition,identification,id FROM activites WHERE start = '1'");
+        if ($result->num_rows > 0) {
+            $row = $result->fetch_assoc();
+            $id_activite = $row['id'];
+            $identification = $row['identification'];
+            $repetition = $row['repetition'];
+
+            $result = $mysqli->query("SELECT id FROM participants WHERE id_activite = '" . $id_activite . "' AND ref_id = '" . $ref_id . "'");
+            if ($result->num_rows > 0) {
+                $row = $result->fetch_assoc();
+                $id_participant = $row['id'];
+
+                if (isset($_GET["data1"])) {
+                    $data1 = $_GET["data1"];
+                    $mysqli->query("INSERT INTO datas (id_activite,id_participant,temps, data) VALUES "
+                            . "('" . $id_activite . "','" . $id_participant . "','" . date('Y-m-d H:i:s') . "','" . $data1 . "')");
+                } else {
+                    $mysqli->query("INSERT INTO datas (id_activite,id_participant,temps) VALUES "
+                            . "('" . $id_activite . "','" . $id_participant . "','" . date('Y-m-d H:i:s') . "')");
+                }
+                echo "ok";
+            }
+        }
+    }
+}
+
+close_db($mysqli);
