@@ -17,7 +17,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-require_once "config.php";
+require_once dirname(__FILE__)."/../config/config.php";
 
 function connect_db() {
     global $mysqli;

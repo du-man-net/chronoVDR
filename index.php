@@ -657,6 +657,7 @@ if($auth){// si pas d'authentiifcation, pas d'enregistrement ni de choix
                 'onclick="starting('.$action.');"/>';            
         $myhtml->closeDiv();
 }
+}
         $myhtml->openDiv('','iconemenu');
             if($auth==1){
                 $img = 'unlock.png';
@@ -670,7 +671,7 @@ if($auth){// si pas d'authentiifcation, pas d'enregistrement ni de choix
                 'style="width:30px; height:30px;" '.
                 'onclick="'.$action.';"/>';                
         $myhtml->closeDiv(); 
-    }
+    
 $myhtml->closeDiv(); 
 
 

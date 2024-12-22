@@ -19,7 +19,5 @@
 
 //base de données
 $username_db = "root";
-$password_db = "kk24&HQ48";
-//application
-$admin_password = "kk24&HQ48";
+
 

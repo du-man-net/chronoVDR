@@ -4,21 +4,18 @@
 echo "Entrez le mot de passe admin : "
 read -s adminPW
 
-adminPW = chronoVDR    
-
 # recupération des sources depuis github
 echo wget github
 wget https://github.com/du-man-net/chronoVDR/archive/refs/heads/master.zip
 echo prépartion
 mkdir chronoVDR
 echo prépartion
-unzip master.zip -d chronoVDR
+#erreur
+unzip master.zip 
 cd chronoVDR-master
 
 #configuration du fichier hosts - et installation du DNS
 
-mv /etc/hosts /etc/hosts.back
-cp conf/hosts /etc/hosts
 apt install dnsmasq-base
 cp conf/dnsmasq.conf /etc/NetworkManager/dnsmasq-shared.d/dnsmasq.conf
 mv /etc/NetworkManager/NetworkManager.conf /etc/NetworkManager/NetworkManager.back
@@ -42,8 +39,11 @@ echo "Installation/configuration de APACHE"
 apt install apache2 php php-mbstring -y
 
 # mise en place des virtual host sur les ports 80, 8080, 3000
-mkdir /var/www/html/cronoVDR
+#erreur
+mkdir /var/www/html/chronoVDR
 mv /etc/apache2/sites-available/virtual.host.conf /etc/apache2/sites-available/virtual.host.back
+
+#erreur
 cp conf/virtual.host.conf /etc/apache2/sites-available/virtual.host.conf
 mv /etc/apache2/sites-available/000-default.conf /etc/apache2/sites-available/000-default.back
 cat /etc/apache2/sites-available/000-default.conf
@@ -56,7 +56,10 @@ debconf-set-selections <<< 'mariadb-server mysql-server/root_password password $
 debconf-set-selections <<< 'mariadb-server mysql-server/root_password_again password $adminPW'
 apt install mariadb-server php-mysql -y
 
-mysql --user=root --password=$adminPW --execute="create database chronoVDR; use chronoVDR;Source conf/chronoVDR.sql;"
+#erreur
+mysql -u root -p'$adminPW' --execute="create database chronoVDR;"
+mysql -u root --p'$adminPW' -p chronoVDR < conf/chronoVDR.sql
+
 
 # installation de phpmyadmin
 
@@ -78,6 +81,11 @@ cp script.js /var/www/html/chronoVDR/script.js
 cp style.css /var/www/html/chronoVDR/style.css
 cp update /var/www/html/chronoVDR/update
 
+#Ajouter les mots de passe admin et mysql au fichier config
+
+echo "$password_db = '$adminPW';" >> config/config.php
+echo "$admin_password = '$adminPW';" >> config/config.php
+
 # mise en place des librairies javascript
 #cd /var/www/html/chronoVDR
 #sudo apt install npm
@@ -96,3 +104,6 @@ sudo service apache2 restart
 
 mv /etc/hostname /etc/hostname.back
 cp conf/hostname /etc/hostname
+hostname chronoVDR
+mv /etc/hosts /etc/hosts.back
+cp conf/hosts /etc/hosts
