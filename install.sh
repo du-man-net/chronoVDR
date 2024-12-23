@@ -24,7 +24,7 @@ cp conf/NetworkManager.conf /etc/NetworkManager/NetworkManager.conf
 # configuration de Network Manager et création du HotSpot Wifi
 nmcli con delete Hotspot
 nmcli con add type wifi ifname wlan0 mode ap con-name Hotspot ssid chronoVDR
-nmcli con modify Hotspot ipv4.method manual ipv4.address 172.16.111.1/24
+nmcli con modify Hotspot ipv4.method manual ipv4.address 172.16.1.1/24
 nmcli con modify Hotspot ipv6.method disabled
 nmcli con modify Hotspot wifi-sec.key-mgmt wpa-psk
 nmcli con modify Hotspot wifi-sec.psk "12345678"
@@ -52,19 +52,31 @@ sudo a2ensite virtual.host
 # installation de mariadb
 
 echo "Mot de passe de la base de donnée"
+sudo mysql <<EOF
+ALTER USER 'root'@'localhost' IDENTIFIED WITH mysql_native_password BY '$adminPW';
+FLUSH PRIVILEGES;
+EOF
+
 debconf-set-selections <<< 'mariadb-server mysql-server/root_password password $adminPW'
 debconf-set-selections <<< 'mariadb-server mysql-server/root_password_again password $adminPW'
 apt install mariadb-server php-mysql -y
 
 #erreur
 mysql -u root -p'$adminPW' --execute="create database chronoVDR;"
-mysql -u root --p'$adminPW' -p chronoVDR < conf/chronoVDR.sql
+mysql -u root -p'$adminPW' chronoVDR < conf/chronoVDR.sql
 
 
 # installation de phpmyadmin
 
+echo "phpmyadmin phpmyadmin/reconfigure-webserver multiselect apache2" | sudo debconf-set-selections
+echo "phpmyadmin phpmyadmin/dbconfig-install boolean true"             | sudo debconf-set-selections
+echo "phpmyadmin phpmyadmin/db/app-user string root"                   | sudo debconf-set-selections
+echo "phpmyadmin phpmyadmin/mysql/app-pass password $adminPW"          | sudo debconf-set-selections
+echo "phpmyadmin phpmyadmin/app-password-confirm password $adminPW"    | sudo debconf-set-selections
+
 sudo apt install phpmyadmin -y
 sudo phpenmod mysqli
+sudo phpenmod mbstring
 ln -s /usr/share/phpmyadmin /var/www/html/phpmyadmin
 
 # mise en place des fichiers web
@@ -83,8 +95,8 @@ cp update /var/www/html/chronoVDR/update
 
 #Ajouter les mots de passe admin et mysql au fichier config
 
-echo "$password_db = '$adminPW';" >> config/config.php
-echo "$admin_password = '$adminPW';" >> config/config.php
+echo "\$password_db = '$adminPW';" >> /var/www/html/chronoVDR/config/config.php
+echo "\$admin_password = '$adminPW';" >> /var/www/html/chronoVDR/config/config.php
 
 # mise en place des librairies javascript
 #cd /var/www/html/chronoVDR
@@ -107,3 +119,9 @@ cp conf/hostname /etc/hostname
 hostname chronoVDR
 mv /etc/hosts /etc/hosts.back
 cp conf/hosts /etc/hosts
+
+#ménage
+cd ..
+rm -r chronoVDR
+rm -r chronoVDR-master
+rm master.zip

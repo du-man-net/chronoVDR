@@ -27,6 +27,8 @@ require_once "db.php";
 class Users {
 
     //put your code here
+    private $_db = NULL;
+    
     public function __construct($mysqli) { // or any other method
         $this->_db = $mysqli;
     }
