@@ -1,102 +1,178 @@
-
 #!/bin/bash
 
-echo "Entrez le mot de passe admin : "
-read -s adminPW
+#read -p "Entrez le mot de passe admin : " adminPW
+adminPW='hbreagq&'
+vdrpath='chronoVDR-master'
 
-# recupération des sources depuis github
-echo wget github
+echo  $vdrpath
+
+echo '---------------------------------------'
+echo Téléchargement des sources depuis github
+
+rm master.zip
 wget https://github.com/du-man-net/chronoVDR/archive/refs/heads/master.zip
-echo prépartion
-mkdir chronoVDR
-echo prépartion
-#erreur
-unzip master.zip 
-cd chronoVDR-master
 
-#configuration du fichier hosts - et installation du DNS
+echo '------------------------------------------------------'
+echo Décompression des sources
 
-apt install dnsmasq-base
-cp conf/dnsmasq.conf /etc/NetworkManager/dnsmasq-shared.d/dnsmasq.conf
-mv /etc/NetworkManager/NetworkManager.conf /etc/NetworkManager/NetworkManager.back
-cp conf/NetworkManager.conf /etc/NetworkManager/NetworkManager.conf
+rm $vdrpath -R
+unzip master.zip
 
-# configuration de Network Manager et création du HotSpot Wifi
-nmcli con delete Hotspot
-nmcli con add type wifi ifname wlan0 mode ap con-name Hotspot ssid chronoVDR
-nmcli con modify Hotspot ipv4.method manual ipv4.address 172.16.1.1/24
-nmcli con modify Hotspot ipv6.method disabled
-nmcli con modify Hotspot wifi-sec.key-mgmt wpa-psk
-nmcli con modify Hotspot wifi-sec.psk "12345678"
-nmcli con up Hotspot
+echo '------------------------------------------------------'
+echo Installation de apache2
 
-systemctl restart dnsmasq 
-systemctl restart NetworkManager.service
-
-# installation de apache
-
-echo "Installation/configuration de APACHE"
+if [ -f /etc/init.d/apache2* ]; then
+    echo "Apache2 est installé"
+else
 apt install apache2 php php-mbstring -y
+systemctl status apache2
+fi
 
 # mise en place des virtual host sur les ports 80, 8080, 3000
-#erreur
+if [ -d /var/www/html/chronoVDR ]; then
+    echo "Dossier web présent"
+else
 mkdir /var/www/html/chronoVDR
-mv /etc/apache2/sites-available/virtual.host.conf /etc/apache2/sites-available/virtual.host.back
+fi
 
-#erreur
-cp conf/virtual.host.conf /etc/apache2/sites-available/virtual.host.conf
-mv /etc/apache2/sites-available/000-default.conf /etc/apache2/sites-available/000-default.back
-cat /etc/apache2/sites-available/000-default.conf
-sudo a2ensite virtual.host
+echo '------------------------------------------------------'
+echo Configartion de apache2
+if [ -f /etc/apache2/sites-enabled/chronovdr_vhost.conf ]; then
+    echo "VirtualHost installé"
+else
+a2dissite 000-default
+cp $vdrpath/conf/chronovdr_vhost.conf /etc/apache2/sites-available/chronovdr_vhost.conf
+a2ensite chronovdr_vhost
+systemctl reload apache2
+fi
 
-# installation de mariadb
+echo '------------------------------------------------------'
+echo Installation de mariadb-server
 
-echo "Mot de passe de la base de donnée"
-sudo mysql <<EOF
-ALTER USER 'root'@'localhost' IDENTIFIED WITH mysql_native_password BY '$adminPW';
-FLUSH PRIVILEGES;
-EOF
+if [ -f /etc/init.d/mariadb* ]; then
+    echo "MariaDB est installé"
+else
 
-debconf-set-selections <<< 'mariadb-server mysql-server/root_password password $adminPW'
-debconf-set-selections <<< 'mariadb-server mysql-server/root_password_again password $adminPW'
 apt install mariadb-server php-mysql -y
 
-#erreur
-mysql -u root -p'$adminPW' --execute="create database chronoVDR;"
-mysql -u root -p'$adminPW' chronoVDR < conf/chronoVDR.sql
+echo '------------------------------------------------------'
+echo Sécurisation de mariadb-server
 
+mysql --user=root  <<EOF
+ALTER USER 'root'@'localhost' IDENTIFIED VIA mysql_native_password USING PASSWORD("$adminPW");
+DELETE FROM mysql.user WHERE USER LIKE '';
+DELETE FROM mysql.user WHERE user = 'root' and host NOT IN ('127.0.0.1', 'localhost');
+FLUSH PRIVILEGES;
+DELETE FROM mysql.db WHERE db LIKE 'test%';
+DROP DATABASE IF EXISTS test ;
+EOF
 
-# installation de phpmyadmin
+echo '------------------------------------------------------'
+echo Mise en place de la base de donnée
 
-echo "phpmyadmin phpmyadmin/reconfigure-webserver multiselect apache2" | sudo debconf-set-selections
-echo "phpmyadmin phpmyadmin/dbconfig-install boolean true"             | sudo debconf-set-selections
-echo "phpmyadmin phpmyadmin/db/app-user string root"                   | sudo debconf-set-selections
-echo "phpmyadmin phpmyadmin/mysql/app-pass password $adminPW"          | sudo debconf-set-selections
-echo "phpmyadmin phpmyadmin/app-password-confirm password $adminPW"    | sudo debconf-set-selections
+mysql --user=root --password=$adminPW --execute="create database chronoVDR;"
+mysql --user=root --password=$adminPW chronoVDR < $vdrpath/conf/chronoVDR.sql
+fi
 
-sudo apt install phpmyadmin -y
-sudo phpenmod mysqli
-sudo phpenmod mbstring
-ln -s /usr/share/phpmyadmin /var/www/html/phpmyadmin
+echo '------------------------------------------------------'
+echo Installation de phpmyadmin
 
-# mise en place des fichiers web
+if [ -d /usr/share/phpmyadmin ]; then
+    echo "phpmyadmin est installé"
+else
 
-mkdir /var/www/html/chronoVDR/files
-cp -R class /var/www/html/chronoVDR/class
-cp -R config /var/www/html/chronoVDR/config
-cp -R img /var/www/html/chronoVDR/img
-cp -R vues /var/www/html/chronoVDR/vues
-cp -R node_modules /var/www/html/chronoVDR/node_modules
-cp ajax_back.php /var/www/html/chronoVDR/ajax_back.php
-cp index.php /var/www/html/chronoVDR/index.php
-cp script.js /var/www/html/chronoVDR/script.js
-cp style.css /var/www/html/chronoVDR/style.css
-cp update /var/www/html/chronoVDR/update
+export DEBIAN_FRONTEND=noninteractive
+debconf-set-selections <<< "phpmyadmin phpmyadmin/reconfigure-webserver multiselect apache2"
+debconf-set-selections <<< "phpmyadmin phpmyadmin/dbconfig-install boolean true"
+debconf-set-selections <<< "phpmyadmin phpmyadmin/db/app-user string root"
+debconf-set-selections <<< "phpmyadmin phpmyadmin/mysql/app-pass password $adminPW"
+debconf-set-selections <<< "phpmyadmin phpmyadmin/app-password-confirm password $adminPW"
 
-#Ajouter les mots de passe admin et mysql au fichier config
+apt install phpmyadmin -qy
+fi
 
-echo "\$password_db = '$adminPW';" >> /var/www/html/chronoVDR/config/config.php
-echo "\$admin_password = '$adminPW';" >> /var/www/html/chronoVDR/config/config.php
+if grep -q "Include /etc/phpmyadmin/apache.conf" /etc/apache2/apache2.conf; then
+echo "phpmyadmin est activé"
+else
+echo "Include /etc/phpmyadmin/apache.conf" >> /etc/apache2/apache2.conf
+fi
+
+echo '------------------------------------------------------'
+echo Mise à jour des fichiers WEB
+
+mkdir -p /var/www/html/chronoVDR/files
+cp -R $vdrpath/class /var/www/html/chronoVDR/class
+cp -R $vdrpath/img /var/www/html/chronoVDR/img
+cp -R $vdrpath/vues /var/www/html/chronoVDR/vues
+cp -R $vdrpath/node_modules /var/www/html/chronoVDR/node_modules
+cp $vdrpath/ajax_back.php /var/www/html/chronoVDR/ajax_back.php
+cp $vdrpath/index.php /var/www/html/chronoVDR/index.php
+cp $vdrpath/script.js /var/www/html/chronoVDR/script.js
+cp $vdrpath/style.css /var/www/html/chronoVDR/style.css
+cp $vdrpath/update /var/www/html/chronoVDR/update
+
+if [ -f /var/www/html/chronoVDR/config/config.php ]; then
+    echo "configuration chronoVDR OK"
+else
+    mkdir -p /var/www/html/chronoVDR/config
+    echo  "<?php" >> /var/www/html/chronoVDR/config/config.php
+    echo  '$username_db = "root";' >> /var/www/html/chronoVDR/config/config.php
+    echo  $'$password_db = "'$adminPW'";' >> /var/www/html/chronoVDR/config/config.php
+    echo  $'$admin_password = "'$adminPW'";' >> /var/www/html/chronoVDR/config/config.php
+fi
+
+chown -R pi:www-data /var/www/html/
+chmod -R 770 /var/www/html/
+
+service apache2 restart
+
+echo '------------------------------------------------------'
+echo Hotspot WIFI
+
+wifidevice="no"
+for device in $(nmcli device | awk '$2=="wifi" {print $1}'); do
+    wifidevice=$device
+done
+
+wificon="no"
+for con in $(nmcli con show | awk '$1=="Hotspot" {print $1}'); do
+   wificon=$con
+done
+
+if [ "$wifidevice" = "no" ];then
+   echo "Aucune carte réseau wifi trouvée"
+else
+   if [ "$wificon" = "Hotspot" ]; then
+      echo "conexion $wificon trouvée pour $wifidevice"
+   else
+      echo "création du Hotspot wifi pour $wifidevice"
+      nmcli con add type wifi ifname $wifidevice mode ap con-name Hotspot ssid chronoVDR
+      nmcli con modify Hotspot ipv4.method shared ipv4.address 172.16.1.1/24
+      nmcli connection modify Hotspot wifi-sec.pmf disable
+      nmcli con modify Hotspot ipv6.method disabled
+      nmcli con modify Hotspot wifi-sec.key-mgmt wpa-psk
+      nmcli con modify Hotspot wifi-sec.psk "12345678"
+      nmcli con down Hotspot
+      nmcli con up Hotspot
+   fi
+fi
+
+echo '------------------------------------------------------'
+echo installation de dnsmasq
+if [ -f /usr/sbin/dnsmasq ]; then
+    echo "dnsmasq est installé"
+else
+   apt install dnsmasq-base -y
+   if grep -q "dns=dnsmasq" /etc/NetworkManager/NetworkManager.conf; then
+      echo "plugin dnsmasq activé"
+   else
+      mv /etc/NetworkManager/NetworkManager.conf /etc/NetworkManager/NetworkManager.back
+      cp $vdrpath/conf/NetworkManager.conf /etc/NetworkManager/NetworkManager.conf
+      cp $vdrpath/conf/dnsmasq.conf /etc/NetworkManager/dnsmasq-shared.d/dnsmasq.conf
+   fi
+   sudo systemctl restart NetworkManager
+fi
+
 
 # mise en place des librairies javascript
 #cd /var/www/html/chronoVDR
@@ -107,21 +183,11 @@ echo "\$admin_password = '$adminPW';" >> /var/www/html/chronoVDR/config/config.p
 #npm install chartjs-adapter-luxon --save
 #npm fund
 
-sudo chown -R pi:www-data /var/www/html/
-sudo chmod -R 770 /var/www/html/
-
-sudo service apache2 restart
-
 #configuration du fichier hostname - nom de l'ordinateur
 
-mv /etc/hostname /etc/hostname.back
-cp conf/hostname /etc/hostname
-hostname chronoVDR
-mv /etc/hosts /etc/hosts.back
-cp conf/hosts /etc/hosts
+#mv /etc/hostname /etc/hostname.back
+#cp conf/hostname /etc/hostname
+#hostname chronoVDR
+#mv /etc/hosts /etc/hosts.back
+#cp conf/hosts /etc/hosts
 
-#ménage
-cd ..
-rm -r chronoVDR
-rm -r chronoVDR-master
-rm master.zip
