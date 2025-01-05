@@ -1,39 +1,58 @@
 #!/bin/bash
 
+vdrpath='chronoVDR-master'
+
+echo '------------------------------------------------------'
+while [ -z "$adminPW" ]; do
+  echo "Entrez le mot de passe admin : "
+  read -s first
+  read -s -p "Confirmer le mot de passe admin: " second
+  if [ $first == $second ];
+  then
+    adminPW=$first
+  else
+    echo "Les mots de passe sont différents. Reessayez..."
+    continue
+  fi
+  break
+done
+
+echo
+echo '------------------------------------------------------'
 read -r -p "Voulez vous installer les mises à jour : [y/n] " maj
 case "$maj" in
     [yY])
-        apt update  && apt upgrade -y
+        apt update  && apt upgrade -y -q
         ;;
     [nN])
         ;;
 esac
 
-#read -p "Entrez le mot de passe admin : " adminPW
-adminPW='hbreagq&'
-vdrpath='chronoVDR-master'
-
-echo  $vdrpath
-
+echo
 echo '---------------------------------------'
 echo Téléchargement des sources depuis github
+echo
 
 rm master.zip
 wget https://github.com/du-man-net/chronoVDR/archive/refs/heads/master.zip
 
+echo
 echo '------------------------------------------------------'
 echo Décompression des sources
+echo
 
 rm $vdrpath -R
-unzip master.zip
+unzip -o master.zip  | awk 'BEGIN {ORS=""} {if(NR%2==0)print "."}'
 
+echo
 echo '------------------------------------------------------'
 echo Installation de apache2
+echo
 
 if [ -f /etc/init.d/apache2* ]; then
     echo "Apache2 est installé"
 else
-apt install apache2 php php-mbstring -y
+apt install apache2 php php-mbstring -y -q
 fi
 
 # mise en place des virtual host sur les ports 80, 8080, 3000
@@ -43,8 +62,11 @@ else
 mkdir /var/www/html/chronoVDR
 fi
 
+echo
 echo '------------------------------------------------------'
 echo Configartion de apache2
+echo
+
 if [ -f /etc/apache2/sites-enabled/chronovdr_vhost.conf ]; then
     echo "VirtualHost installé"
 else
@@ -54,17 +76,21 @@ a2ensite chronovdr_vhost
 systemctl reload apache2
 fi
 
+echo
 echo '------------------------------------------------------'
 echo Installation de mariadb-server
+echo
 
 if [ -f /etc/init.d/mariadb* ]; then
     echo "MariaDB est installé"
 else
 
-apt install mariadb-server php-mysql -y
+apt install mariadb-server php-mysql -y -q
 
+echo
 echo '------------------------------------------------------'
 echo Sécurisation de mariadb-server
+echo
 
 mysql --user=root  <<EOF
 ALTER USER 'root'@'localhost' IDENTIFIED VIA mysql_native_password USING PASSWORD("$adminPW");
@@ -75,15 +101,19 @@ DELETE FROM mysql.db WHERE db LIKE 'test%';
 DROP DATABASE IF EXISTS test ;
 EOF
 
+echo
 echo '------------------------------------------------------'
 echo Mise en place de la base de donnée
+echo
 
 mysql --user=root --password=$adminPW --execute="create database chronoVDR;"
 mysql --user=root --password=$adminPW chronoVDR < $vdrpath/conf/chronoVDR.sql
 fi
 
+echo
 echo '------------------------------------------------------'
 echo Installation de phpmyadmin
+echo
 
 if [ -d /usr/share/phpmyadmin ]; then
     echo "phpmyadmin est installé"
@@ -96,7 +126,7 @@ debconf-set-selections <<< "phpmyadmin phpmyadmin/db/app-user string root"
 debconf-set-selections <<< "phpmyadmin phpmyadmin/mysql/app-pass password $adminPW"
 debconf-set-selections <<< "phpmyadmin phpmyadmin/app-password-confirm password $adminPW"
 
-apt install phpmyadmin -qy
+apt install phpmyadmin -y -q 
 fi
 
 if grep -q "Include /etc/phpmyadmin/apache.conf" /etc/apache2/apache2.conf; then
@@ -105,8 +135,10 @@ else
 echo "Include /etc/phpmyadmin/apache.conf" >> /etc/apache2/apache2.conf
 fi
 
+echo
 echo '------------------------------------------------------'
 echo Mise à jour des fichiers WEB
+echo
 
 mkdir -p /var/www/html/chronoVDR/files
 cp -R $vdrpath/class /var/www/html/chronoVDR/class
@@ -134,9 +166,12 @@ chmod -R 770 /var/www/html/
 
 service apache2 restart
 
+echo
 echo '------------------------------------------------------'
 echo Hotspot WIFI
+echo
 
+nmcli radio wifi on
 wifidevice="no"
 for device in $(nmcli device | awk '$2=="wifi" {print $1}'); do
     wifidevice=$device
@@ -163,12 +198,15 @@ else
    fi
 fi
 
+echo
 echo '------------------------------------------------------'
 echo installation de dnsmasq
-if [ -f /usr/sbin/dnsmasq ]; then
+echo
+
+if [ -f /etc/NetworkManager/conf.d/00-use-dnsmasq.conf ]; then
     echo "dnsmasq est installé"
 else
-   apt install dnsmasq-base -y
+   apt install dnsmasq-base -y -q 
    if [ -f /etc/NetworkManager/conf.d/00-use-dnsmasq.conf ]; then
       echo "plugin dnsmasq activé"
    else
@@ -180,8 +218,11 @@ else
    sudo systemctl restart NetworkManager
 fi
 
+echo
 echo '------------------------------------------------------'
 echo configuration du système de nommage
+echo
+
 if grep -q "chronovdr" /etc/hostname; then
    echo "/etc/hostname vérifié"
 else
@@ -193,6 +234,21 @@ if grep -q "chronovdr" /etc/hosts; then
 else
    cp $vdrpath/conf/hosts /etc/hosts
 fi
+
+echo
+echo '------------------------------------------------------'
+echo fin de l'installation
+echo
+
+echo "La configuration de chronoVDR nécessite un redémarage"
+read -r -p "Voulez vous redémarrer maintenant ? : [y/n] " redemarrer
+case "$redemarrer" in
+    [yY])
+        sudo reboot
+        ;;
+    [nN])
+        ;;
+esac
 
 # mise en place des librairies javascript
 #cd /var/www/html/chronoVDR
