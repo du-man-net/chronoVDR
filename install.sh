@@ -1,5 +1,14 @@
 #!/bin/bash
 
+read -r -p "Voulez vous installer les mises à jour : [y/n] " maj
+case "$maj" in
+    [yY])
+        apt update  && apt upgrade -y
+        ;;
+    [nN])
+        ;;
+esac
+
 #read -p "Entrez le mot de passe admin : " adminPW
 adminPW='hbreagq&'
 vdrpath='chronoVDR-master'
@@ -25,7 +34,6 @@ if [ -f /etc/init.d/apache2* ]; then
     echo "Apache2 est installé"
 else
 apt install apache2 php php-mbstring -y
-systemctl status apache2
 fi
 
 # mise en place des virtual host sur les ports 80, 8080, 3000
@@ -148,11 +156,9 @@ else
       echo "création du Hotspot wifi pour $wifidevice"
       nmcli con add type wifi ifname $wifidevice mode ap con-name Hotspot ssid chronoVDR
       nmcli con modify Hotspot ipv4.method shared ipv4.address 172.16.1.1/24
-      nmcli connection modify Hotspot wifi-sec.pmf disable
       nmcli con modify Hotspot ipv6.method disabled
       nmcli con modify Hotspot wifi-sec.key-mgmt wpa-psk
       nmcli con modify Hotspot wifi-sec.psk "12345678"
-      nmcli con down Hotspot
       nmcli con up Hotspot
    fi
 fi
@@ -163,16 +169,30 @@ if [ -f /usr/sbin/dnsmasq ]; then
     echo "dnsmasq est installé"
 else
    apt install dnsmasq-base -y
-   if grep -q "dns=dnsmasq" /etc/NetworkManager/NetworkManager.conf; then
+   if [ -f /etc/NetworkManager/conf.d/00-use-dnsmasq.conf ]; then
       echo "plugin dnsmasq activé"
    else
-      mv /etc/NetworkManager/NetworkManager.conf /etc/NetworkManager/NetworkManager.back
-      cp $vdrpath/conf/NetworkManager.conf /etc/NetworkManager/NetworkManager.conf
-      cp $vdrpath/conf/dnsmasq.conf /etc/NetworkManager/dnsmasq-shared.d/dnsmasq.conf
+      cp $vdrpath/conf/00-use-dnsmasq.conf /etc/NetworkManager/conf.d/00-use-dnsmasq.conf
+      cp $vdrpath/conf/00-chronovdr.conf /etc/NetworkManager/dnsmasq.d/00-chronovdr.conf
+      cp $vdrpath/conf/01-chronovdr.conf /etc/NetworkManager/dnsmasq.d/01-chronovdr.conf
+      cp $vdrpath/conf/02-chronovdr.conf /etc/NetworkManager/dnsmasq.d/02-chronovdr.conf
    fi
    sudo systemctl restart NetworkManager
 fi
 
+echo '------------------------------------------------------'
+echo configuration du système de nommage
+if grep -q "chronovdr" /etc/hostname; then
+   echo "/etc/hostname vérifié"
+else
+   echo "chronovdr" > /etc/hostname
+fi
+
+if grep -q "chronovdr" /etc/hosts; then
+   echo "/etc/hosts vérifié"
+else
+   cp $vdrpath/conf/hosts /etc/hosts
+fi
 
 # mise en place des librairies javascript
 #cd /var/www/html/chronoVDR
@@ -182,12 +202,3 @@ fi
 #npm fund
 #npm install chartjs-adapter-luxon --save
 #npm fund
-
-#configuration du fichier hostname - nom de l'ordinateur
-
-#mv /etc/hostname /etc/hostname.back
-#cp conf/hostname /etc/hostname
-#hostname chronoVDR
-#mv /etc/hosts /etc/hosts.back
-#cp conf/hosts /etc/hosts
-
