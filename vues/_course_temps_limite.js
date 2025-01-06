@@ -123,7 +123,7 @@ function putAjaxDatasToGraph() {
                         datetimes_isos.push(new Date(item['x']));
                         datatemp.push(item['y']);
                     });
-                    console.log(datetimes_isos);
+                    
                     myChart[id].data.labels = datetimes_isos;
                     myChart[id].data.datasets[0].data = datatemp;
                     myChart[id].update();

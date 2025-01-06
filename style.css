@@ -77,6 +77,15 @@ tr,td{
     background-color:#c1dbbd;
 }
 
+#cartes_reseaux
+{
+    float:left;
+    margin: 5px;
+    padding : 3px 10px 3px 10px;
+    background-color:#c1dbbd;
+    font:10px Arial;
+}
+
 #selActivite ,#selVue
 {
     float:left;
@@ -85,7 +94,7 @@ tr,td{
 }
 
 /*------------------------------------*/
-/*apparence du menu
+/*apparence de la liste des participants
 /*------------------------------------*/
 
 #participants
@@ -115,7 +124,7 @@ tr,td{
     width:220px;
     text-align:center;
     font:16px Arial;
-    background:#FFFFFF;
+    background-color:#FFFFFF;
     float:left;
 }
 .titre_id
@@ -125,7 +134,7 @@ tr,td{
     width:60px;
     text-align:center;
     font:14px Arial;
-    background:#FFFFFF;
+    background-color:#FFFFFF;
     float:left;
 }
 .elactivite
@@ -164,6 +173,7 @@ tr,td{
     width:20px; 
     height:20px;
 }
+
 
 /*------------------------------------*/
 /*apparence des boites de dialogues*/

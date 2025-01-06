@@ -19,9 +19,9 @@ done
 
 echo
 echo '------------------------------------------------------'
-read -r -p "Voulez vous installer les mises à jour : [y/n] " maj
+read -r -p "Voulez vous installer les mises à jour : [o/n] " maj
 case "$maj" in
-    [yY])
+    [oO])
         apt update  && apt upgrade -y -q
         ;;
     [nN])
@@ -141,10 +141,10 @@ echo Mise à jour des fichiers WEB
 echo
 
 mkdir -p /var/www/html/chronoVDR/files
-cp -R $vdrpath/class /var/www/html/chronoVDR/class
-cp -R $vdrpath/img /var/www/html/chronoVDR/img
-cp -R $vdrpath/vues /var/www/html/chronoVDR/vues
-cp -R $vdrpath/node_modules /var/www/html/chronoVDR/node_modules
+cp -R $vdrpath/class /var/www/html/chronoVDR/
+cp -R $vdrpath/img /var/www/html/chronoVDR/
+cp -R $vdrpath/vues /var/www/html/chronoVDR/
+cp -R $vdrpath/node_modules /var/www/html/chronoVDR/
 cp $vdrpath/ajax_back.php /var/www/html/chronoVDR/ajax_back.php
 cp $vdrpath/index.php /var/www/html/chronoVDR/index.php
 cp $vdrpath/script.js /var/www/html/chronoVDR/script.js
@@ -203,8 +203,8 @@ echo '------------------------------------------------------'
 echo installation de dnsmasq
 echo
 
-if [ -f /etc/NetworkManager/conf.d/00-use-dnsmasq.conf ]; then
-    echo "dnsmasq est installé"
+if [ -f /usr/sbin/dnsmasq ]; then
+    echo "dnsmasq-base est installé"
 else
    apt install dnsmasq-base -y -q 
    if [ -f /etc/NetworkManager/conf.d/00-use-dnsmasq.conf ]; then
@@ -237,24 +237,16 @@ fi
 
 echo
 echo '------------------------------------------------------'
-echo fin de l'installation
+echo fin de l\'installation
 echo
 
 echo "La configuration de chronoVDR nécessite un redémarage"
-read -r -p "Voulez vous redémarrer maintenant ? : [y/n] " redemarrer
+read -r -p "Voulez vous redémarrer maintenant ? : [o/n] " redemarrer
 case "$redemarrer" in
-    [yY])
+    [oO])
         sudo reboot
         ;;
     [nN])
         ;;
 esac
 
-# mise en place des librairies javascript
-#cd /var/www/html/chronoVDR
-#sudo apt install npm
-#npm install chart.js
-#npm install chart.js --save
-#npm fund
-#npm install chartjs-adapter-luxon --save
-#npm fund

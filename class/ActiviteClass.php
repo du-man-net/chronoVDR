@@ -68,7 +68,7 @@ class Activite {
                 $ep = $result->fetch_assoc();
                 $curent_activite = $ep['id'];
             }
-            //si une activité est en cours d'enregistrement, on ne pas changer la visualisation
+            //on ne pas changer la visualisation que si aucune activité n'edt en enregistrement
             if($curent_activite==0){
                 //on s'assure que toute les autres activitée sont à l'état désactivée
                 $this->_db->query("UPDATE activites SET etat = '0' WHERE id != '" . $id . "'");

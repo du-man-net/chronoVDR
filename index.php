@@ -1,4 +1,6 @@
 <?php
+error_reporting(E_ALL & ~E_DEPRECATED);
+ini_set("display_errors", 1);
 session_start();
 
 /* 
@@ -671,7 +673,26 @@ if($auth){// si pas d'authentiifcation, pas d'enregistrement ni de choix
                 'style="width:30px; height:30px;" '.
                 'onclick="'.$action.';"/>';                
         $myhtml->closeDiv(); 
-    
+
+        $myhtml->openDiv("cartes_reseaux");
+            $interfaces = net_get_interfaces();
+            if ($interfaces){
+                foreach($interfaces as $interface){
+                    $unicasts = $interface['unicast'];
+                    if (isset($unicasts[1]['address'])) {
+                        $address = $unicasts[1]['address'];
+                        $address = substr($address,strpos($address,"<br"));
+                    }
+                    if (isset($unicasts[1]['netmask'])) {
+                        $netmask = $unicasts[1]['netmask'];
+                        $netmask = substr($netmask,strpos($netmask,"<br"));
+                    }
+                    if(strpos($address,'127')===false){
+                        echo $address." / ".$netmask."<br/>";
+                    }
+                }
+            }
+        $myhtml->closeDiv();
 $myhtml->closeDiv(); 
 
 
@@ -686,24 +707,28 @@ $myhtml->openDiv('participants');
     $myhtml->openTable('id="parts" width="100%"');
     $myhtml->openTr();
     $myhtml->openTd('titre_participants');
-        echo 'Partipants';
-        if($auth){
-            $myhtml->openDiv('','iconedroite');
-            $myform->button("delParts", " -- ");
-            $myhtml->closeDiv();
-            $myhtml->openDiv('','iconedroite');
-            echo '<img src="img/plus.png" '.   
-                'title="Ajouter des participants" '.
-                'style="width:20px; height:20px;" '.
-                'onclick="show_dialog_participants()"/>';
-            $myhtml->closeDiv();
+        if($myactivite->get_id()>0){
+            echo 'Partipants';
+            if($auth){
+                $myhtml->openDiv('','iconedroite');
+                $myform->button("delParts", " -- ");
+                $myhtml->closeDiv();
+                $myhtml->openDiv('','iconedroite');
+                echo '<img src="img/plus.png" '.   
+                    'title="Ajouter des participants" '.
+                    'style="width:20px; height:20px;" '.
+                    'onclick="show_dialog_participants()"/>';
+                $myhtml->closeDiv();
+            }
         }
     $myhtml->closeTd(); 
     $myhtml->openTd();
-        if($auth){
-            $myform->button("makeq", "E");
-        }else{
-            echo '<div style="text-align:center;font:14px Arial;">E</div>';
+        if($myactivite->get_id()>0){
+            if($auth){
+                $myform->button("makeq", "E");
+            }else{
+                echo '<div style="text-align:center;font:14px Arial;">E</div>';
+            }
         }
     $myhtml->closeTd();
         $myhtml->openTd('titre_id');
@@ -757,7 +782,6 @@ $myhtml->openDiv('participants');
         }
     }  
     $myhtml->closeTable();
-
 $myhtml->closeDiv();
 
 if(!empty($myactivite->infos['vue'])){

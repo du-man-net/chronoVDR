@@ -1,4 +1,6 @@
 <?php
+error_reporting(E_ALL);
+ini_set("display_errors", 1);
 
 require_once 'class/db.php';
 
@@ -34,7 +36,7 @@ if (isset($_GET["id"])) {
         }
     } else {
 
-        $result = $mysqli->query("SELECT repetition,identification,id FROM activites WHERE start = '1'");
+        $result = $mysqli->query("SELECT repetition,identification,id FROM activites WHERE etat = '2'");
         if ($result->num_rows > 0) {
             $row = $result->fetch_assoc();
             $id_activite = $row['id'];

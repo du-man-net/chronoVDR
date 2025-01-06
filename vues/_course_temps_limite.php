@@ -17,13 +17,9 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-require_once '../ActiviteClass.php';
-
-
+require_once '../class/ActiviteClass.php';
 
 $myactivite = new Activite($mysqli);
-
-
 
 $participants = $myactivite->get_participants();
 $t_datas=[];
