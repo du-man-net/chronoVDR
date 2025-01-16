@@ -21,12 +21,9 @@ require_once "db.php";
 class Activite {
 
 // déclaration d'une propriété
+    private $_last_update = 0;
     private $_id = 0;
-    private $_log = "";
     private $_db = NULL;
-    private $_participants = array();
-    private $_new_participants = array();
-    private bool $_archived = false;
     public $infos = array('nom' => '',
         'organisateur' => '',
         'date_activite' => '',
@@ -36,14 +33,19 @@ class Activite {
         'identification' => '',
         'nb_max' => '',
         'temps_max' => '',
-        'archived' => '',
         'etat' => '');
 
     public function __construct($mysqli) { // or any other method
         $this->_db = $mysqli;
         $this->get_id();
+        $this->_last_update = strtotime(date('Y-m-d H:i:s'));
     }
 
+/*
+ * ------------------------------------------------------
+ * Gestion des paramètres de l'activité
+ * ------------------------------------------------------
+ */
     public function get_id() {
         $result = $this->_db->query("SELECT id FROM activites WHERE etat>0");
         if ($result->num_rows > 0) {
@@ -99,6 +101,14 @@ class Activite {
         }
     }
 
+    public function get_list() {
+        $result = $this->_db->query("SELECT id,nom FROM activites");
+        if ($result->num_rows > 0) {
+            return $result;
+        }
+        return array();
+    }
+    
     public function set_vue($vue) {
         if ($this->_id > 0) {
             //echo on enregistre le fichier de visualisation à utiliser
@@ -106,81 +116,12 @@ class Activite {
         }
     }
     
-    public function set_password($password) {
-        if ($this->_id > 0) {
-            //echo on enregistre le fichier de visualisation à utiliser
-            $this->_db->query("UPDATE activites SET password = '" . $password . "' WHERE id = '" . $this->_id . "'");
-        }
-    }
-    public function get_password() {
-        if ($this->_id > 0) {
-            $result = $this->_db->query("SELECT password FROM activites WHERE id='" . $this->_id . "'");
-            if ($result->num_rows > 0) {
-                $ep = $result->fetch_assoc();
-                return $ep['password'];
-            }
-        }
-    }
-    
-    public function set_archived(bool $value) {
-        if ($this->_id > 0) {
-//echo 'set archieved';
-            $this->_archived = $value;
-            $this->_db->query("UPDATE activites SET archived = '" . $this->_archived . "' WHERE id = '" . $this->_id . "'");
-        }
-    }
-
-    public function create(): bool {
-        $this->_db->query("INSERT INTO activites (nom,organisateur,date_activite,repetition,identification,nb_max,temps_max) " .
-                "VALUES ('" .
-                $this->infos['nom'] . "','" .
-                $this->infos['organisateur'] . "','" .
-                $this->infos['date_activite'] . "','" .
-                $this->infos['repetition'] . "','" .
-                $this->infos['identification'] . "','" .
-                $this->infos['nb_max'] . "','" .
-                $this->infos['temps_max'] . "')");
-//on récupère l'ID
-        $this->_id = $this->_db->insert_id;
-        return $this->_id;
-    }
-
-    public function list() {
-        $result = $this->_db->query("SELECT id,nom FROM activites");
-        if ($result->num_rows > 0) {
-            return $result;
-        }
-        return array();
-    }
-
-//DATE_FORMAT(date_activite, '%W %d %M %Y à %Hh%i')
-    public function refresh() {
-        if ($this->_id > 0) {
-            $this->_db->query("SET lc_time_names = 'fr_FR'");
-            $result = $this->_db->query("SELECT  "
-                    . "DATE_FORMAT(date_activite, '%d/%m/%Y') as date_fr,"
-                    . "nom, organisateur, repetition, identification, etat, archived, date_activite, vue, nb_max, temps_max "
-                    . "FROM activites WHERE id = '" . $this->_id . "'");
-            if ($result->num_rows > 0) {
-                $ep = $result->fetch_assoc();
-                $this->infos['nom'] = $ep['nom'];
-                $this->infos['organisateur'] = $ep['organisateur'];
-                $this->infos['date_fr'] = $ep['date_fr'];
-                $this->infos['date_activite'] = $ep['date_activite'];
-                $this->infos['repetition'] = $ep['repetition'];
-                $this->infos['archived'] = $ep['archived'];
-                $this->infos['identification'] = $ep['identification'];
-                $this->infos['temps_max'] = $ep['temps_max'];
-                $this->infos['nb_max'] = $ep['nb_max'];
-                $this->infos['vue'] = $ep['vue'];
-                $this->infos['etat'] = $ep['etat'];
-                $this->archived = $ep['archived'];
-                return true;
-            }
-        }
-        return false;
-    }
-
+ /*
+ * ------------------------------------------------------
+ * Gestion des méthodes de l'activité
+ * ------------------------------------------------------
+ */
+ 
     public function select() {
         if ($this->_id > 0) {
             $this->_db->query("UPDATE activites SET etat = '0' WHERE id != '" . $this->_id . "'");
@@ -199,7 +140,53 @@ class Activite {
             $this->_db->query("UPDATE activites SET etat = '1' WHERE id = '" . $this->_id . "'");
         }
     }
+    public function create(): bool {
+        $this->_db->query("INSERT INTO activites (nom,organisateur,date_activite,repetition,identification,nb_max,temps_max) " .
+                "VALUES ('" .
+                $this->infos['nom'] . "','" .
+                $this->infos['organisateur'] . "','" .
+                $this->infos['date_activite'] . "','" .
+                $this->infos['repetition'] . "','" .
+                $this->infos['identification'] . "','" .
+                $this->infos['nb_max'] . "','" .
+                $this->infos['temps_max'] . "')");
+//on récupère l'ID
+        $this->_id = $this->_db->insert_id;
+        return $this->_id;
+    }
 
+//DATE_FORMAT(date_activite, '%W %d %M %Y à %Hh%i')
+    public function refresh() {
+        if ($this->_id > 0) {
+            $this->_db->query("SET lc_time_names = 'fr_FR'");
+            $result = $this->_db->query("SELECT  "
+                    . "DATE_FORMAT(date_activite, '%d/%m/%Y') as date_fr,"
+                    . "nom, organisateur, repetition, identification, etat, date_activite, vue, nb_max, temps_max "
+                    . "FROM activites WHERE id = '" . $this->_id . "'");
+            if ($result->num_rows > 0) {
+                $ep = $result->fetch_assoc();
+                $this->infos['nom'] = $ep['nom'];
+                $this->infos['organisateur'] = $ep['organisateur'];
+                $this->infos['date_fr'] = $ep['date_fr'];
+                $this->infos['date_activite'] = $ep['date_activite'];
+                $this->infos['repetition'] = $ep['repetition'];
+                $this->infos['identification'] = $ep['identification'];
+                $this->infos['temps_max'] = $ep['temps_max'];
+                $this->infos['nb_max'] = $ep['nb_max'];
+                $this->infos['vue'] = $ep['vue'];
+                $this->infos['etat'] = $ep['etat'];
+                return true;
+            }
+        }
+        return false;
+    }
+    
+    public function delete(){
+        $this->delete_all_datas();
+        $this->delete_all_participants();
+        $this->_db->query("DELETE FROM activites WHERE id = '".$this->_id."'");
+    }  
+    
     public function save() {
         if ($this->_id > 0) {
             $this->_db->query("UPDATE activites SET nom = '" . $this->infos["nom"] .
@@ -215,6 +202,12 @@ class Activite {
         return false;
     }
 
+ /*
+ * ------------------------------------------------------
+ * Gestion des participants
+ * ------------------------------------------------------
+ */
+    
     public function set_ref_id($id_participant, $ref_id) {
         if ($id_participant > 0) {
             $this->_db->query("UPDATE participants SET ref_id = '" . $ref_id . "' "
@@ -284,6 +277,30 @@ class Activite {
         return array();
     }
 
+    public function delete_participant($id_participants){
+        if (is_array($id_participants)) {
+            foreach ($id_participants as $id_participant) {
+                
+                $result = $this->_db->query("SELECT id FROM datas WHERE id_participant = '".$id_participant."' "
+                                . "AND id_activite = '".$this->_id."'");
+                if ($result->num_rows == 0) {
+                    $this->_db->query("DELETE FROM participants WHERE id_activite = '".$this->_id."' "
+                                    . "AND id = '".$id_participant."'");
+                }
+            }
+        }
+    }
+    
+    public function delete_all_participants(){
+        $this->_db->query("DELETE FROM participants WHERE id = '".$this->_id."'");
+    }
+    
+ /*
+ * ------------------------------------------------------
+ * Gestion des datas
+ * ------------------------------------------------------
+ */
+       
     public function get_max_datas() {
         if ($this->_id > 0) {
             $result = $this->_db->query("SELECT MAX(y.num) as max_count "
@@ -304,6 +321,7 @@ class Activite {
                     "id_participant = '" . $id_participant . "'");
             return $result;
         }
+        $this->_last_update = strtotime(date('Y-m-d H:i:s'));
         return array();
     }
 
@@ -329,29 +347,9 @@ class Activite {
         $this->_db->query("DELETE FROM datas WHERE id_activite = '".$this->_id."'");
     }
     
-    public function delete_participant($id_participants){
-        if (is_array($id_participants)) {
-            foreach ($id_participants as $id_participant) {
-                
-                $result = $this->_db->query("SELECT id FROM datas WHERE id_participant = '".$id_participant."' "
-                                . "AND id_activite = '".$this->_id."'");
-                if ($result->num_rows == 0) {
-                    $this->_db->query("DELETE FROM participants WHERE id_activite = '".$this->_id."' "
-                                    . "AND id = '".$id_participant."'");
-                }
-            }
-        }
-    }
+
     
-    public function delete_all_participants(){
-        $this->_db->query("DELETE FROM participants WHERE id = '".$this->_id."'");
-    }
-    
-    public function delete(){
-        $this->delete_all_datas();
-        $this->delete_all_participants();
-        $this->_db->query("DELETE FROM activite WHERE id = '".$this->_id."'");
-    }  
+
     
     
 }

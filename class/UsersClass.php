@@ -36,8 +36,7 @@ class Users {
     public function findUser($userInfos, &$classe) {
         $result = $this->_db->query("SELECT id,classe FROM users WHERE " .
                 "nom = '" . $userInfos[0] . "' AND " .
-                "prenom = '" . $userInfos[1] . "' AND " .
-                "nais = '" . $userInfos[2] . "'");
+                "prenom = '" . $userInfos[1] . "'");
         $usr = $result->fetch_assoc();
         if (is_array($usr)) {
             $classe  = $usr['classe'];
@@ -48,7 +47,7 @@ class Users {
 
     public function insertUser($userInfo) {
         $oldClasse = '';
-        $newClasse = $userInfo[3];
+        $newClasse = $userInfo[2];
         $idUser = $this->findUser($userInfo, $oldClasse);
         
         if ($idUser) {
@@ -56,8 +55,8 @@ class Users {
                 $this->_db->query("UPDATE users SET classe = '" . $newClasse . "' WHERE id = '" . $idUser . "'");
             }
         } else {
-            $this->_db->query("INSERT INTO users (nom, prenom, nais, classe) VALUES " .
-                    "('" . $userInfo[0] . "','" . $userInfo[1] . "','" . $userInfo[2] . "','" . $newClasse . "')");
+            $this->_db->query("INSERT INTO users (nom, prenom, classe) VALUES " .
+                    "('" . $userInfo[0] . "','" . $userInfo[1] . "','" . $newClasse . "')");
         }
     }
     
@@ -76,20 +75,20 @@ class Users {
             foreach ($users as $user) {
                 if($this->getUserInfos($user)){
                     if ($user[0] == $usr['nom'] &&
-                        $user[1] == $usr['prenom'] &&
-                        $user[2] == $usr['nais']) {
+                        $user[1] == $usr['prenom']){
                         $find = true;
                     }
                 }
             }
             if(!$find){
-                cleanUser($usr["id"]);
+                $this->cleanUser($usr["id"]);
             }
         }
     }  
     
     public function cleanUser($userId){
-        $this->_db->query("UPDATE users SET classe = 'corbeille' WHERE id = '" . $userId . "'");
+        echo "UPDATE users SET classe = 'Bean' WHERE id = '" . $userId . "'";
+        $this->_db->query("UPDATE users SET classe = 'Bean' WHERE id = '" . $userId . "'");
     }
     
     public function getUserInfos(&$user){
@@ -105,7 +104,7 @@ class Users {
         $users = explode("\n", $lstusers);
         foreach ($users as $user) {
             if($this->getUserInfos($user)){
-                $classe = $user[3];
+                $classe = $user[2];
                 $this->insertUser($user);
             }
         }
@@ -121,7 +120,9 @@ class Users {
     }
     
     public function deleteUsersBin(){
-        $this->_db->query("DELETE * FROM users Where classe = 'corbeille' "
-                                    . "AND users.id NOT IN (SELECT id_users FROM participants))");
+        $this->_db->query("DELETE FROM users Where classe = 'Bean' "
+                                    . "AND users.id NOT IN (SELECT id_user as id FROM participants)");
+        $this->_db->query("DELETE FROM users Where classe = '' "
+                                    . "AND users.id NOT IN (SELECT id_user as id FROM participants)");
     }
 }

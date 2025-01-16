@@ -115,6 +115,15 @@ $myhtml->openBody();
  */
 
 $myhtml->openDiv('lstdatas');
+
+$myhtml->openTable('width="100%"');
+$myhtml->openTr();
+$myhtml->openTd();
+    echo "&nbsp;";
+$myhtml->closeTd(); 
+$myhtml->closeTr();
+$myhtml->closeTable();
+
 $myhtml->openTable('id="results" width="100%"');
 $myhtml->openTr();
 $myhtml->openTd('', 'width=2px');

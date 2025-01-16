@@ -172,6 +172,7 @@ echo Hotspot WIFI
 echo
 
 nmcli radio wifi on
+iw reg set FR
 wifidevice="no"
 for device in $(nmcli device | awk '$2=="wifi" {print $1}'); do
     wifidevice=$device
@@ -189,7 +190,7 @@ else
       echo "conexion $wificon trouvée pour $wifidevice"
    else
       echo "création du Hotspot wifi pour $wifidevice"
-      nmcli con add type wifi ifname $wifidevice mode ap con-name Hotspot ssid chronoVDR
+      nmcli con add type wifi ifname $wifidevice mode ap con-name Hotspot ssid chrono.vdr
       nmcli con modify Hotspot ipv4.method shared ipv4.address 172.16.1.1/24
       nmcli con modify Hotspot ipv6.method disabled
       nmcli con modify Hotspot wifi-sec.key-mgmt wpa-psk
@@ -207,14 +208,12 @@ if [ -f /usr/sbin/dnsmasq ]; then
     echo "dnsmasq-base est installé"
 else
    apt install dnsmasq-base -y -q 
-   if [ -f /etc/NetworkManager/conf.d/00-use-dnsmasq.conf ]; then
-      echo "plugin dnsmasq activé"
-   else
-      cp $vdrpath/conf/00-use-dnsmasq.conf /etc/NetworkManager/conf.d/00-use-dnsmasq.conf
-      cp $vdrpath/conf/00-chronovdr.conf /etc/NetworkManager/dnsmasq.d/00-chronovdr.conf
-      cp $vdrpath/conf/01-chronovdr.conf /etc/NetworkManager/dnsmasq.d/01-chronovdr.conf
-      cp $vdrpath/conf/02-chronovdr.conf /etc/NetworkManager/dnsmasq.d/02-chronovdr.conf
-   fi
+fi
+if [ -f /etc/NetworkManager/conf.d/00-use-dnsmasq.conf ]; then
+   echo "plugin dnsmasq activé"
+else
+   cp $vdrpath/conf/00-use-dnsmasq.conf /etc/NetworkManager/conf.d/00-use-dnsmasq.conf
+   cp $vdrpath/conf/00-chronovdr.conf /etc/NetworkManager/dnsmasq.d/00-chronovdr.conf
    sudo systemctl restart NetworkManager
 fi
 

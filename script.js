@@ -16,8 +16,9 @@
  */
 
 var askStopEditing = false;
-var tdInEdition = false;
+var tdInEdition = 0;
 var oFrame;
+var last_maj=0;
 
 /**
  * Gestion dimensionnement en hauteur de l'iframe
@@ -25,13 +26,41 @@ var oFrame;
 
 window.onload = function () {
     oFrame = window.document.getElementById('datas');
+    
     setInterval(function () {
-        console.log(document.getElementsByName('etat')[0].value);
+        
+        //etat de l'activité    0=non séléctionnée 
+        //                      1=sélectionnée 
+        //                      2= sélectionnée et enrestrement actif
+        //                      
+        //Si l'enregistrement est actif, alord on surveille les modifs 
+        //dans la base de donnée toutes les secondes pour affichage rapide
+        
         if (document.getElementsByName('etat')[0].value == 2) {
-            var frame_id = 'datas';
-            document.getElementById(frame_id).contentWindow.postMessage("message", "*");
+            
+               
+            var xhttp = new XMLHttpRequest();
+            xhttp.open("GET", encodeURI("last_update.php", true));
+            xhttp.onreadystatechange = function () {
+                if (this.readyState === 4 && this.status === 200) {
+                    //si la réponse AJAX n'est pas vide
+                    
+                    if (this.responseText.length > 0) { 
+                        //si la date de la dernière maj de la bdd est différente de celle mémorisée
+                        if(last_maj !== this.responseText){
+                            //on enregistre la date de la maj
+                            last_maj = this.responseText;
+                            //on envoi un message à l'iframe pour la qu'elle mette les donées à jour
+                            document.getElementById('datas').contentWindow.postMessage("message", "*");
+                        }
+                    }
+                   
+                }
+            };
+            xhttp.send();
         }
-    }, 10000);
+
+    }, 1000);
     resizeIframe.call(oFrame);
 };
 
@@ -40,13 +69,13 @@ window.onload = function () {
 function ajusteIframe() {
     resizeIframe.call(oFrame);
 }
+
 // fonction de redimensionnement de l'iframe
 function resizeIframe() {
     const iframe = this;
     const doc = iframe.contentDocument;
     if (doc && doc.documentElement) {
         iframe.style.height = doc.documentElement.offsetHeight + "px";
-        //iframe.style.width = (doc.documentElement.clientWidth) + "px"
     }
 }
 
@@ -73,12 +102,8 @@ function resetTdColor() {
     }
 }
 
-function tdedit(el) {
-    
-    const e = el.firstChild;
-    if (e.innerHTML){
-        var contenu = e.innerHTML;
-    }else{
+function setNewId(el){
+    if (el.innerHTML){
         var contenu = el.innerHTML;
     }
     contenu = contenu.split("<br>")[0];
@@ -87,13 +112,29 @@ function tdedit(el) {
     var xhttp = new XMLHttpRequest();
     xhttp.open("GET", encodeURI("ajax_back.php?id_participant=" + id_participant + "&ref_id=" + contenu), true);
     xhttp.send();
+    el.style.backgroundColor = "white";
+    el.setAttribute("contenteditable", false);
+    el.blur();
+}
+
+function tdedit(el) {
+    el.setAttribute("contenteditable", true);
+    el.style.backgroundColor = "#f2f3f4";
+    el.focus();
+    el.addEventListener("keydown", function(event){
+        if (event.key === "Enter") {
+            setNewId(el);
+            event.preventDefault();
+            return false;
+        }
+    },false);
 }
 
 function tdclick(el) {
     //si pas d'édition de TGA en cours, on lance l'édition
-    if (el.id !== "tagToChange" && tdInEdition === false) {
-        askStopEditing = false;
-        tdInEdition = true;
+    console.log(tdInEdition);
+     if(tdInEdition === 0){
+        tdInEdition = 1;
         resetTdColor();
 
         //on mémorise l'ancien tag et on passe la cellule en jaune
@@ -120,35 +161,50 @@ function tdclick(el) {
 
                 //si la réponse AJAX n'est pas vide
                 if (this.responseText.length > 0) {
-                    //le tag a bien été changé on repasse en blanc
-                    tagToChange.innerHTML = this.responseText;
-                    tagToChange.style.backgroundColor = "white";
-                    //fin de l'édition et passge au tag suivant
-                    tagToChange.id = "";
-                    tdInEdition = false;
-                    if (askStopEditing === false) {
+                    //si l'édition est toujours en mode scan
+                    //on clos l'édition et on passe à l'édition du tag suivant
+                    if (tdInEdition === 1) {
+                        tagToChange.innerHTML = this.responseText;
+                        tagToChange.style.backgroundColor = "white";
                         nextTD = nextTDbyRow(tagToChange);
+                        tagToChange.id = "";
+                        tdInEdition = 0;
                         if (nextTD) {
                             tdclick(nextTD);
                         }
                     }
                 } else {
-                    //sinon, ça c'est mal passé, on remet l'ancien contenu
-                    //on signal l'erreur en rouge
-                    tagToChange.innerHTML = old_RFID;
-                    tagToChange.style.backgroundColor = "red";
-                    //fin de l'édition et passge au tag suivant
-                    tagToChange.id = "";
-                    tdInEdition = false;
+                    //si l'édition est toujours en mode scan
+                    //on clos l'édition
+                    if (tdInEdition === 1) {
+                        tagToChange.innerHTML = old_RFID;
+                        tagToChange.style.backgroundColor = "white";
+                        tagToChange.id = "";
+                        tdInEdition = 0;
+                        el.blur();
+                    }
                 }
+
             }
         };
         xhttp.send();
-    } else {
-        //si une édition de TAG est en cours, on demande l'arret
-        //et on passe tout en blanc
-        askStopEditing = true;
+        
+    // si on a déja clicker une fois
+    } else if(tdInEdition === 1){
+        tdInEdition = 2;
         resetTdColor();
+        el.setAttribute("contenteditable", true);
+        el.style.backgroundColor = "#f2f3f4";
+        el.focus();
+        el.addEventListener("keydown", function(event){
+            if (event.key === "Enter") {
+                tdInEdition = 0;
+                console.log("validation" + tdInEdition);
+                setNewId(el);
+                event.preventDefault();
+                return false;
+            }
+        },false);
     }
 }
 
@@ -161,7 +217,7 @@ function starting(state) {
 }
 
 function touche(el) {
-    if (el=='Enter'){
+    if (el==='Enter'){
         document.forms[0].submit();
     }
 }
@@ -288,11 +344,4 @@ function password_disconnect() {
     document.forms[0].submit();
 }
 
-function select_activite(el) {
-    const $id = el.value;
-    console.log($id);
-    if ($id > 0) {
-        document.location.href = "index.php?id=" + $id;
-    }
-}
 

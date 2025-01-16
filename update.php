@@ -2,18 +2,25 @@
 error_reporting(E_ALL);
 ini_set("display_errors", 1);
 
+/* 
+ * Copyright (C) 2024 gleon
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
+
+
 require_once 'class/db.php';
-
-$r = date("D M d 'y h.i A") . ' - ';
-$r .= $_SERVER['REQUEST_URI']. ' - ';
-
-if (isset($_GET["id"])) {
-    $r .= $_GET["id"] . ' - ';
-}
-if (isset($_GET["data1"])) {
-    $r .= $_GET["data1"];
-}
-file_put_contents("files/logs", $r . "\n", FILE_APPEND);
 
 if (isset($_GET["id"])) {
     $ref_id = $_GET["id"];
@@ -22,7 +29,6 @@ if (isset($_GET["id"])) {
         $id_participant = substr(fgets($myfile), 0, -1);
         fclose($myfile);
         //on essaye de retrouver l'id de l'activité
-        echo "SELECT id_activite FROM participants WHERE id = '" . $id_participant . "'";
         $result = $mysqli->query("SELECT id_activite FROM participants WHERE id = '" . $id_participant . "'");
         if ($result->num_rows > 0) {
             $row = $result->fetch_assoc();
@@ -36,28 +42,36 @@ if (isset($_GET["id"])) {
         }
     } else {
 
-        $result = $mysqli->query("SELECT repetition,identification,id FROM activites WHERE etat = '2'");
+        $result = $mysqli->query("SELECT nb_max,temps_max,activites.id as ida ,participants.id as idp "
+                . "FROM activites, participants "
+                . "WHERE activites.etat = '2' "
+                . "AND activites.id = participants.id_activite "
+                . "AND ref_id = '".$_GET["id"]."'");
+        
         if ($result->num_rows > 0) {
             $row = $result->fetch_assoc();
-            $id_activite = $row['id'];
-            $identification = $row['identification'];
-            $repetition = $row['repetition'];
+            $id_activite = $row['ida'];
+            $id_participant = $row['idp'];
 
-            $result = $mysqli->query("SELECT id FROM participants WHERE id_activite = '" . $id_activite . "' AND ref_id = '" . $ref_id . "'");
-            if ($result->num_rows > 0) {
-                $row = $result->fetch_assoc();
-                $id_participant = $row['id'];
-
-                if (isset($_GET["data1"])) {
-                    $data1 = $_GET["data1"];
-                    $mysqli->query("INSERT INTO datas (id_activite,id_participant,temps, data) VALUES "
-                            . "('" . $id_activite . "','" . $id_participant . "','" . date('Y-m-d H:i:s') . "','" . $data1 . "')");
-                } else {
-                    $mysqli->query("INSERT INTO datas (id_activite,id_participant,temps) VALUES "
-                            . "('" . $id_activite . "','" . $id_participant . "','" . date('Y-m-d H:i:s') . "')");
-                }
-                echo "ok";
+            $str_data = ''; $ins_data='';
+            if (isset($_GET["data"])) {
+                $data = $_GET["data"];
+                $str_data = "','" . $data;
+                $ins_data = ",data";
             }
+
+            if (isset($_GET["temps"])) {
+                $str_temps = $_GET["temps"];
+            }else{
+                $str_temps = date('Y-m-d H:i:s');
+            }
+
+            $mysqli->query("INSERT INTO datas (id_activite,id_participant,temps".$ins_data.") VALUES "
+                    . "('" . $id_activite . "','" . $id_participant . "','" . date('Y-m-d H:i:s') . $str_data . "')");
+            
+            $mysqli->query("UPDATE activites SET UPDATE_TIME='" . date('Y-m-d H:i:s') . "' WHERE id='".$id_activite."'");
+
+            echo "ok";
         }
     }
 }

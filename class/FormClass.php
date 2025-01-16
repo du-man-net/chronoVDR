@@ -130,8 +130,12 @@ class Form {
         echo $this->format($ret . '>' . $value . '</option>');
     }
     
-    public function file($name) {
-        echo $this->format('<input type="file" name="'.$name.'" id="'.$name.'"/>');
+    public function file($name, $other = '') {
+        $ret = '<input type="file" name="'.$name.'" id="'.$name.'" ';
+        if (!empty($other)) {
+            $ret .= $other;
+        }
+        echo $this->format($ret . '/>');
     } 
     
 }

@@ -34,16 +34,16 @@ if (isset($_GET['id_participant'])) {
         echo $ref_id;
         
     } else {
-        //On écrit dans n  fichier temporaire l'id du participant
+        //On écrit dans un fichier temporaire l'id du participant
         $myfile = fopen("files/tagToChange", "w") or die("Unable to open file!");
         fwrite($myfile, $id_participant . "\n");
         fclose($myfile);
 
-        //on attend 6 secondes que la page upload.php est été appelée pour 
-        //récupéré l'id et ajouter le tag RFID dans la base donnée
+        //on attend 10 secondes que la page upload.php soit appelée pour 
+        //récupérer l'id et ajouter le tag RFID dans la base donnée
         $debut = mstime();
         $last = $debut;
-        while (file_exists("files/tagToChange") && ((mstime() - $debut) < 6000)) {
+        while (file_exists("files/tagToChange") && ((mstime() - $debut) < 10000)) {
             
         }
         //Si le fichier n'existe plus, c'est que tout c'est bien passé
@@ -58,4 +58,5 @@ if (isset($_GET['id_participant'])) {
         }
     }
 }
+
 close_db($mysqli);

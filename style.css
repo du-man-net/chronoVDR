@@ -42,6 +42,13 @@ tr,td{
     border:1px solid #DDDDDD;
 }
 
+select{
+    font:12px Arial;
+    margin:0px;
+    padding:0px 5px 0px 5px;
+    border:1px solid ;
+}
+
 .tdchk{
     font:12px Arial;
     padding:0px 0px;
@@ -55,7 +62,7 @@ tr,td{
 #menu
 {
     float:left;
-    height:40px;
+    height:45px;
     width:100%;
     background-color:#97ca8f;
     clear:both;
@@ -77,13 +84,25 @@ tr,td{
     background-color:#c1dbbd;
 }
 
-#cartes_reseaux
+.barre_menu 
 {
     float:left;
-    margin: 5px;
-    padding : 3px 10px 3px 10px;
+    margin: 4px 10px 4px 10px;
+    padding : 1px 10px 1px 10px;
     background-color:#c1dbbd;
-    font:10px Arial;
+    height:35px;
+}
+
+.barre_menu .iconemenu
+{
+    margin: 2px 5px 2px 5px;
+}
+
+.barre_menu .titre
+{
+    float:left;
+    padding-top:10px;
+    color:  #229954  ;
 }
 
 #selActivite ,#selVue
@@ -101,8 +120,7 @@ tr,td{
 {
     float:left;
     width:330px;
-    min-height: 95vh;
-    border: 1px solid black;
+    min-height: 90vh;
     background-color:#FFFFFF;
 }
 
@@ -113,7 +131,7 @@ tr,td{
     width:152px;
     text-align:center;
     font:16px Arial;
-    background:#FFFFFF;
+    background-color:#FFFFFF;
     float:left;
 }
 

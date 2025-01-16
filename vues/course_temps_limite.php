@@ -125,12 +125,7 @@ $myhtml->openBody();
 
 $myhtml->openDiv('lstdatas');
 $myhtml->openTable('id="'.$myactivite->get_id().'" width="100%"');
-$myhtml->openTr();
-$myhtml->openTd('', 'width=2px');
-$myhtml->closeTd();
-$myhtml->openTd('titre_time');
-$myhtml->closeTd();
-$myhtml->closeTr();
+
 /*
  * --------------------------------
  * Parcour des participants
