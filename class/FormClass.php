@@ -54,6 +54,16 @@ class Form {
         echo $this->format($ret . '/>');
     }
 
+    public function textarea($name,$value='',$rows=31,$cols=35,$readonly=true){
+        $ret = '<textarea ';
+        if($readonly){
+            $ret .= 'readonly="true"';
+        }
+        echo $this->format($ret . 'name="'.$name.'" rows="'.$rows.'" cols="'.$cols.'">');
+        echo $this->format($value);  
+        echo $this->format('</textarea>');
+    }
+    
     public function password($name, $value = '', $other = '') {
         $ret = '<input type="password" name="' . $name . '" id="' . $name . '" ';
         if (!empty($value)) {
@@ -111,7 +121,7 @@ class Form {
     }
 
     public function openSelect($name, $id = '', $other = '') {
-        $ret = '<select name="' . $id . '" id="' . $name . '" ';
+        $ret = '<select id="' . $id . '" name="' . $name . '" ';
         if (!empty($other)) {
             $ret .= $other;
         }
@@ -122,6 +132,14 @@ class Form {
         echo $this->format('</select>');
     }
 
+    public function radio($name, $value, $id = '') {
+        $ret = '<input type="radio" name="' . $name . '" value="' . $value . '" ';
+        if (!empty($id)) {
+            $ret .= 'id="' . $id ."'";
+        }
+        echo $this->format($ret . '/>');
+    }
+  
     public function option($val, $value = '', $select = false) {
         $ret = '<option value="' . $val .'" ';
         if ($select) {

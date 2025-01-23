@@ -30,35 +30,17 @@ require_once 'class/HtmlClass.php';
 require_once 'class/ActiviteClass.php';
 require_once 'class/ImportClass.php';
 require_once 'class/UsersClass.php';
+require_once 'class/ExportClass.php';
 
 connect_db();
 
-$myactivite = new Activite($mysqli);
-$myusers = new Users($mysqli);
 $myform = new Form;
 $myhtml = new Html;
-$myimport = new Import();
+$myactivite = new Activite($mysqli);
+$myusers = new Users($mysqli);
+$myimport = new Import($mysqli);
 
-/*
- * ------------------------------------------------------
- * Mise en place des headers de la page 
- * isertion du fichier css et du fichier javascript
- * ------------------------------------------------------
- */
-$myhtml->openHtml();
-echo '<title>ChronoVDR</title>';
-echo '<meta http-equiv="content-type" content="text/html; charset=UTF-8">';
-echo '<script type="text/javascript" src="script.js"></script>';
-echo '<link rel="stylesheet" href="style.css" type="text/css" />';
-setlocale (LC_ALL, 'fr_FR.utf8');
-date_default_timezone_set('Europe/Paris');
-$myhtml->closeHead();
 
-$myhtml->openBody();
-
-function logout() {
-    session_destroy();
-}
 
 /*
  * ------------------------------------------------------
@@ -103,15 +85,17 @@ if($auth){// si pas d'authentiifcation, pas d'enregistrement ni de choix
 if(isset($_POST['creer_activite']) or
    isset($_POST['enregistrer_activite'])){ 
     
-    if(empty($_POST['nom_activite']) or 
+    if(empty($_POST['title_activite']) or 
         empty($_POST['organisateur']) or 
         empty($_POST['date_activite']) or 
-        empty($_POST['date_activite'])){
-            if(empty($_POST['nom_activite'])) {$message = 'Remplir nom !';}
-            if(empty($_POST['organisateur'])) {$message = 'Remplir organisateur !';}
-            if(empty($_POST['date_activite'])){$message = 'Remplir date_activite !';}  
+        empty($_POST['date_activite']) or
+        empty($_POST['nb_max'])){
+            if(empty($_POST['title_activite'])) {$message = 'Remplir le nom de l\'activité !';}
+            if(empty($_POST['organisateur'])) {$message = 'Remplir le nom de l\'organisateur !';}
+            if(empty($_POST['date_activite'])){$message = 'Remplir la date de l\'activite !';}  
+            if(empty($_POST['nb_max'])){$message = 'Remplir le nombre d\'enregistrements !';}  
     }else{
-        $myactivite->infos['nom']            = $_POST['nom_activite'];
+        $myactivite->infos['nom']            = $_POST['title_activite'];
         $myactivite->infos['organisateur']   = $_POST['organisateur'];
         $myactivite->infos['date_activite']  = $_POST['date_activite']." ".$_POST['heure_activite'];
         $myactivite->infos['repetition']     = $_POST['repetition'];
@@ -121,7 +105,7 @@ if(isset($_POST['creer_activite']) or
         
 
         if(isset($_POST['creer_activite'])){
-            $myactivite->create();
+            $myactivite->set_id($myactivite->create());
         }
         if(isset($_POST['enregistrer_activite'])){
             $myactivite->save();
@@ -171,6 +155,21 @@ if(isset($_POST['importer'])){
         $myusers->importUsers($_POST['lstusers']);
     }
 }
+
+/*
+ * ------------------------------------------------------
+ * Importer la liste des users à partir du texte mis en forme
+ * ------------------------------------------------------
+ */
+if(isset($_POST['btn_exportation'])){
+    if(isset($_POST['lstexport'])){
+        if(isset($_POST['unite'])){
+            $myexport = new Export($mysqli);
+            $myexport->export($_POST['lstexport'],$_POST['unite']);
+        }
+    }
+}
+
 /*
  * ------------------------------------------------------
  * Ajouter les participants à l'activité depuis la liste
@@ -229,6 +228,7 @@ if(isset($_POST['delParts'])){
  */
 if(isset($_POST['del_activites'])){
     $myactivite->delete();
+    $myactivite->get_id();
 }
 /*
  * ------------------------------------------------------
@@ -310,6 +310,27 @@ $myactivite->refresh();
 
 /*
  * ------------------------------------------------------
+ * Mise en place des headers de la page 
+ * isertion du fichier css et du fichier javascript
+ * ------------------------------------------------------
+ */
+$myhtml->openHtml();
+echo '<title>ChronoVDR</title>';
+echo '<meta http-equiv="content-type" content="text/html; charset=UTF-8">';
+echo '<script type="text/javascript" src="script.js"></script>';
+echo '<link rel="stylesheet" href="style.css" type="text/css" />';
+setlocale (LC_ALL, 'fr_FR.utf8');
+date_default_timezone_set('Europe/Paris');
+$myhtml->closeHead();
+
+$myhtml->openBody();
+
+function logout() {
+    session_destroy();
+}
+
+/*
+ * ------------------------------------------------------
  * on utilise un seul formulaire pour toute l'interface.
  * ------------------------------------------------------
  */
@@ -324,6 +345,8 @@ if(!isset($_POST['show_password'])){$_POST['show_password'] = "close";}
 $myform->hidden('show_password', $_POST["show_password"]);
 if(!isset($_POST['show_nettoyage'])){$_POST['show_nettoyage'] = "close";}
 $myform->hidden('show_nettoyage', $_POST["show_nettoyage"]);
+if(!isset($_POST['show_exportation'])){$_POST['show_exportation'] = "close";}
+$myform->hidden('show_exportation', $_POST["show_exportation"]);
 
 if(!isset($_POST['etat'])){$_POST['etat'] = $myactivite->infos['etat'];}
 $myform->hidden('etat', $_POST["etat"]);
@@ -333,8 +356,8 @@ $myform->hidden('etat', $_POST["etat"]);
  * Fenètre d''authentification par mot de passe pour l'activité
  * ------------------------------------------------------
  */
-$myhtml->openDiv('div-password');
-    $myhtml->openDialog('propriete_password', $_POST["show_password"], ' style = "left:400px;top:40px;"');
+$myhtml->openDiv('password');
+    $myhtml->openDialog('propriete_password', $_POST["show_password"]);
         $myhtml->openDiv('','titre_propriete');
             echo 'Mdp pour '.$myactivite->infos['nom'];
         $myhtml->closeDiv();
@@ -361,14 +384,15 @@ if($auth){// si pas d'authentiifcation, pas d'enregistrement ni de choix
  * en fonction de l'utilisation -> javascript
  * ------------------------------------------------------
  */
-$myhtml->openDiv('div-activite');
-    $myhtml->openDialog('propriete_acivite', $_POST["show_activite"], ' style = "left:400px;top:40px;"');
+$myhtml->openDiv('activite');
+    $myhtml->openDialog('propriete_acivite', $_POST["show_activite"]);
         $myhtml->openDiv('proptitle','titre_propriete');
             echo 'titre à modifié en fonction de l\'usage';
         $myhtml->closeDiv();
         $myhtml->openDiv('','propriete');
-            $myform->label('nom_activite','Nom de l\'activité');
-            $myform->text('nom_activite', $myactivite->infos['nom']);
+            if(isset($message)){echo '<br/><div style="color:#FF0000">'.$message.'</div>';}
+            $myform->label('title_activite','Nom de l\'activité');
+            $myform->text('title_activite', $myactivite->infos['nom']);
         $myhtml->closeDiv();
         $myhtml->openDiv('','propriete');
             $myform->label('organisateur','Organisateur');
@@ -419,14 +443,12 @@ $myhtml->closeDiv();
 
 /*
  * ------------------------------------------------------
- * Fenètre de paramétrage de l'activité
- * Le bouton btnaction prend les valeurs créer ou enregistrer
- * en fonction de l'utilisation -> javascript
+ * Fenètre de nettoyage/suppression de données
  * ------------------------------------------------------
  */
 
-$myhtml->openDiv('div-nettoyage');
-    $myhtml->openDialog('propriete_nettoyage', $_POST["show_nettoyage"], ' style = "left:400px;top:40px;"');
+$myhtml->openDiv('nettoyage');
+    $myhtml->openDialog('propriete_nettoyage', $_POST["show_nettoyage"]);
         $myhtml->openDiv('','net');
             $myhtml->openDiv('','titre_propriete');
                 echo 'Supprimer les données de l\'activité';
@@ -448,7 +470,6 @@ $myhtml->openDiv('div-nettoyage');
             $myhtml->openDiv('','proprietebtn');
                 $myform->button('del_users', "Supprimer");
             $myhtml->closeDiv();  
-
         $myhtml->closeDiv(); 
         $myhtml->openDiv('','proprietebtn');
             $myform->button('cancel_nettoyage', "Annuler",'onclick="return cancel_dialog_nettoyage()"');
@@ -458,12 +479,49 @@ $myhtml->closeDiv();
 
 /*
  * ------------------------------------------------------
+ * Exportation des données de l'activité
+ * ------------------------------------------------------
+ */
+
+$myhtml->openDiv('exportation');
+    $myhtml->openDialog('propriete_exportation', $_POST["show_exportation"]);
+        $myhtml->openDiv('','titre_propriete');
+            echo 'Exportation des données au format csv';
+        $myhtml->closeDiv();
+        $myhtml->openDiv('','comment');
+        echo "Exporter les données pour l'activité en cours<br/>";
+        $myhtml->closeDiv();  
+        $myhtml->openDiv('propriete');
+        $myform->label('lstexport','modèle d\'export.');
+        $myform->textarea('lstexport', "nom;prenom;classe;nais;sexe;temps",2,50,false);
+        $myhtml->closeDiv();   
+        $myhtml->openDiv('','propriete');
+            $myform->label('unite','Unité de temps');
+            $myform->openSelect('unite','unite');
+            $myform->option('h','heures');
+            $myform->option('m','Minutes',true);
+            $myform->option('s','Secondes');
+            $myform->closeSelect();
+        $myhtml->closeDiv();  
+        //$myhtml->openDiv('','propriete');
+        //    $myform->radio('modele','nom,prenom,classe,nais,sexe,data,temps');
+        //    $myform->label('modele','Endurance');
+        //$myhtml->closeDiv(); 
+        $myhtml->openDiv('','proprietebtn');
+            $myform->button('cancel_exportation', "Annuler",'onclick="return cancel_dialog_exportation()"');
+            $myform->button('btn_exportation', "Exporter");
+        $myhtml->closeDiv();   
+    $myhtml->closeDialog();
+$myhtml->closeDiv();  
+
+/*
+ * ------------------------------------------------------
  * Fenètre de d'impotation des noms/classe à partir de fichiers CSV
  * Depuis pronote ou depuis des listes gromatées divers
  * ------------------------------------------------------
  */
 $myhtml->openDiv('add-users');
-    $myhtml->openDialog('add_users', $_POST["show_users"], ' style = "left:400px;top:40px;"');
+    $myhtml->openDialog('add_users', $_POST["show_users"]);
         $myhtml->openDiv('','titre_propriete');
             echo 'Importer des classes';
         $myhtml->closeDiv();
@@ -495,9 +553,9 @@ $myhtml->openDiv('add-users');
             $myhtml->openDiv('propriete');
             $lstusers = '';
             foreach ($eleves_read as $eleve){
-                $lstusers .= $eleve['nom'].','.$eleve['prenom'].','.$eleve['classe']."\n";
+                $lstusers .= $eleve['nom'].','.$eleve['prenom'].','.$eleve['classe'].','.$eleve['nais'].','.$eleve['sexe']."\n";
             }
-            $myhtml->textarea('lstusers', $lstusers);
+            $myform->textarea('lstusers', $lstusers,40,35);
             $myhtml->closeDiv();
             $myhtml->openDiv('','proprietebtn');
                 $myform->button('cancel_users', "Annuler",'onclick="return cancel_dialog_users()"');
@@ -544,7 +602,7 @@ $myhtml->closeDiv();
  */
 
 $myhtml->openDiv('add-participants');
-    $myhtml->openDialog('add_participants', $_POST["show_participants"], ' style = "left:400px;top:40px;"');
+    $myhtml->openDialog('add_participants', $_POST["show_participants"]);
         $myhtml->openDiv('','titre_propriete');
             echo 'Ajouter des participants';
         $myhtml->closeDiv();
@@ -604,7 +662,6 @@ if($auth){// si pas d'authentiifcation, pas d'enregistrement ni de choix
     $myhtml->openDiv('','iconemenu');
         echo '<img src="img/supprimer.png" '.   
             'title="Nettoyage" '.
-            'style="width:30px; height:30px;" '.
             'onclick="show_dialog_nettoyage();"/>';
     $myhtml->closeDiv(); 
     
@@ -616,7 +673,6 @@ if($auth){// si pas d'authentiifcation, pas d'enregistrement ni de choix
     $myhtml->openDiv('','iconemenu');
         echo '<img src="img/users.png" '.   
             'title="Importer des classes" '.
-            'style="width:30px; height:30px;" '.
             'onclick="show_dialog_users();"/>';
     $myhtml->closeDiv(); 
     $myhtml->closeDiv(); 
@@ -629,7 +685,6 @@ if($auth){// si pas d'authentiifcation, pas d'enregistrement ni de choix
     $myhtml->openDiv('','iconemenu');
         echo '<img src="img/plus.png" '.   
             'title="Crée une nouvelle activité" '.
-            'style="width:30px; height:30px;" '.
             'onclick="show_dialog_activite(true)"/>';
     $myhtml->closeDiv(); 
 
@@ -644,28 +699,33 @@ if($auth){// si pas d'authentiifcation, pas d'enregistrement ni de choix
 
     if($myactivite->get_id()>0){
         
-        $myhtml->openDiv('','iconemenu');
-            echo '<img src="img/propriete.png" '.
-                'title="Paramètres de l\'activité" '.
-                'style="width:30px; height:30px;" '.
-                'onclick="show_dialog_activite(false)"/>';
-        $myhtml->closeDiv(); 
+    $myhtml->openDiv('','iconemenu');
+        echo '<img src="img/propriete.png" '.
+            'title="Paramètres de l\'activité" '.
+            'onclick="show_dialog_activite(false)"/>';
+    $myhtml->closeDiv(); 
 
-        $myhtml->openDiv('','iconemenu');
-            if(intval($myactivite->infos['etat'])==2){
-                $img = 'stop.png';
-                $action = 1;
-                $title = "Arréter l'enregistrement";
-            }else{
-                $img = 'start.png';
-                $action = 2;
-                $title = "Démarrer l'enregistrement";
-            }
-            echo '<img src="img/'.$img.'" '.   
-                'title="'.$title.'" '.
-                'style="width:30px; height:30px;" '.
-                'onclick="starting('.$action.');"/>';            
-        $myhtml->closeDiv();
+    $myhtml->openDiv('','iconemenu');
+        if(intval($myactivite->infos['etat'])==2){
+            $img = 'stop.png';
+            $action = 1;
+            $title = "Arréter l'enregistrement";
+        }else{
+            $img = 'start.png';
+            $action = 2;
+            $title = "Démarrer l'enregistrement";
+        }
+        echo '<img src="img/'.$img.'" '.   
+            'title="'.$title.'" '.
+            'onclick="starting('.$action.');"/>';            
+    $myhtml->closeDiv();
+
+    $myhtml->openDiv('','iconemenu');
+        echo '<img src="img/export.png" '.   
+            'title="Exporter les données" '.
+            'onclick="show_dialog_exportation();"/>';
+    $myhtml->closeDiv(); 
+        
     $myhtml->closeDiv(); 
     
     $myhtml->openDiv('','barre_menu');
@@ -699,7 +759,6 @@ if($auth){// si pas d'authentiifcation, pas d'enregistrement ni de choix
             }
             echo '<img src="img/'.$img.'" '.   
                 'title="'.$title.'" '.
-                'style="width:30px; height:30px;" '.
                 'onclick="'.$action.';"/>';                
         $myhtml->closeDiv(); 
 $myhtml->closeDiv(); 
@@ -713,7 +772,7 @@ $myhtml->closeDiv();
  * ------------------------------------------------------
  */ 
 $myhtml->openDiv('participants');
-    $myhtml->openTable('style="width:100%;background-color:#97ca8f;"');
+    $myhtml->openTable('style="width:100%;background-color: #eff3f5 ;"');
     $myhtml->openTr();
     $myhtml->openTd();
         if($myactivite->get_id()>0){echo 'Org. : '.$myactivite->infos['organisateur'];}
@@ -803,7 +862,7 @@ $myhtml->openDiv('participants');
     }  
     $myhtml->closeTable();
     
-    $myhtml->openTable('style="width:100%;background-color: #e5e7e9; margin-top:20px; padding-left:20px;"');
+    $myhtml->openTable('style="width:100%;background-color:#eff3f5 ; margin-top:20px; padding-left:20px;"');
         $myhtml->openTr();
         $myhtml->openTd();
             echo "Informations réseau : ";
@@ -841,7 +900,7 @@ $myhtml->closeDiv();
 if(!empty($myactivite->infos['vue'])){
 echo '<iframe '.
   'id="datas" '.
-  'src="./vues/'.$myactivite->infos['vue'].'?id='.$myactivite->get_id().'">'.
+  'src="./vues/'.$myactivite->infos['vue'].'">'.
   '</iframe>';
 }
  /*
@@ -853,5 +912,7 @@ echo '<iframe '.
 $myform->closeForm();
 $myhtml->closeBody();
 $myhtml->closeHtml();
+
+
 
 

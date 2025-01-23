@@ -92,12 +92,6 @@ class Html {
         return '<b>'.$value.'</b>';
     }
     
-    public function textarea($name,$value='',$rows=31,$cols=35){
-        echo $this->format('<textarea readonly name="'.$name.'" rows="'.$rows.'" cols="'.$cols.'">');
-        echo $this->format($value);  
-        echo $this->format('</textarea>');
-    }
-
     public function openTable($other = '') {
         $ret = '<table ';
         if (!empty($other)) {

@@ -46,6 +46,7 @@ window.onload = function () {
                     //si la réponse AJAX n'est pas vide
                     
                     if (this.responseText.length > 0) { 
+                                           
                         //si la date de la dernière maj de la bdd est différente de celle mémorisée
                         if(last_maj !== this.responseText){
                             //on enregistre la date de la maj
@@ -60,7 +61,7 @@ window.onload = function () {
             xhttp.send();
         }
 
-    }, 1000);
+    }, 500);
     resizeIframe.call(oFrame);
 };
 
@@ -233,7 +234,7 @@ function toutcocher(el) {
     }
 }
 
-var nom_activite = '';
+var title_activite = '';
 var organisateur = '';
 var date_activite = '';
 var heure_activite = '';
@@ -256,8 +257,8 @@ function show_dialog_activite($create) {
     if (!$propriete_activite.open) {
         $show_activite.value = "open";
         if ($create === true) {
-            if (document.getElementById('nom_activite').value.length > 0) {
-                nom_activite = saveValue('nom_activite');
+            if (document.getElementById('title_activite').value.length > 0) {
+                title_activite = saveValue('title_activite');
                 organisateur = saveValue('organisateur');
                 date_activite = saveValue('date_activite');
                 heure_activite = saveValue('heure_activite');
@@ -267,8 +268,8 @@ function show_dialog_activite($create) {
             $titre.innerHTML = "création d'une nouvelle activité";
 
         } else {
-            if (document.getElementById('nom_activite').value.length === 0) {
-                setValue('nom_activite', nom_activite);
+            if (document.getElementById('title_activite').value.length === 0) {
+                setValue('title_activite', title_activite);
                 setValue('organisateur', organisateur);
                 setValue('date_activite', date_activite);
                 setValue('heure_activite', heure_activite);
@@ -314,6 +315,10 @@ function show_dialog_nettoyage() {
     dialog("propriete_nettoyage", "show_nettoyage", "open");
 }
 
+function show_dialog_exportation() {
+    dialog("propriete_exportation", "show_exportation", "open");
+}
+
 function cancel_dialog_users() {
     dialog("add_users", "show_users", "close");
     return false;
@@ -336,6 +341,11 @@ function cancel_dialog_password() {
 
 function cancel_dialog_nettoyage() {
     dialog("propriete_nettoyage", "show_nettoyage", "close");
+    return false;
+}
+
+function cancel_dialog_exportation() {
+    dialog("propriete_exportation", "show_exportation", "close");
     return false;
 }
 

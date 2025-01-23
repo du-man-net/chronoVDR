@@ -55,8 +55,8 @@ class Users {
                 $this->_db->query("UPDATE users SET classe = '" . $newClasse . "' WHERE id = '" . $idUser . "'");
             }
         } else {
-            $this->_db->query("INSERT INTO users (nom, prenom, classe) VALUES " .
-                    "('" . $userInfo[0] . "','" . $userInfo[1] . "','" . $newClasse . "')");
+            $this->_db->query("INSERT INTO users (nom, prenom, classe, nais, sexe) VALUES " .
+                    "('" . $userInfo[0] . "','" . $userInfo[1] . "','" . $newClasse . "','" . $userInfo[3] ."','" . $userInfo[4] ."')");
         }
     }
     
@@ -75,7 +75,8 @@ class Users {
             foreach ($users as $user) {
                 if($this->getUserInfos($user)){
                     if ($user[0] == $usr['nom'] &&
-                        $user[1] == $usr['prenom']){
+                        $user[1] == $usr['prenom'] &&
+                        $user[3] == $usr['nais']){
                         $find = true;
                     }
                 }

@@ -21,7 +21,6 @@ require_once "db.php";
 class Activite {
 
 // déclaration d'une propriété
-    private $_last_update = 0;
     private $_id = 0;
     private $_db = NULL;
     public $infos = array('nom' => '',
@@ -233,31 +232,36 @@ class Activite {
 
     public function get_participants() {
         if ($this->_id > 0) {
+
             $result = $this->_db->query(
-                    "("
-                    . "SELECT association as id_participant,ref_id,"
-                    . "("
-                    . "SELECT GROUP_CONCAT(users.classe,' - ',users.nom,' ',users.prenom SEPARATOR '<br/>') "
-                    . "FROM participants, users WHERE "
-                    . "participants.id_user=users.id AND "
-                    . "participants.association = id_participant "
-                    . "GROUP BY association "
-                    . "ORDER BY nom"
-                    . ") as nom "
-                    . "FROM participants WHERE "
-                    . "association = participants.id AND "
-                    . "id_activite = '" . $this->_id . "'"
-                    . ") UNION ALL("
-                    . "SELECT participants.id as id_participant,ref_id,"
-                    . "CONCAT(users.classe,' - ',users.nom,' ',users.prenom) as nom "
-                    . "FROM participants, users "
-                    . "WHERE "
-                    . "participants.id_user=users.id AND "
-                    . "participants.association IS NULL AND "
-                    . "participants.id_activite = '" . $this->_id . "' "
-                    . "ORDER BY nom"
-                    . ")"
-            );
+                    "SELECT * FROM"
+                        . "("
+                            . "SELECT association as id_participant,ref_id,"
+                            . "("
+                                . "SELECT GROUP_CONCAT(users.classe,' - ',users.nom,' ',users.prenom SEPARATOR '<br/>') "
+                                . "FROM participants, users WHERE "
+                                . "participants.id_user=users.id AND "
+                                . "participants.association = id_participant "
+                                . "GROUP BY association "
+                                . "ORDER BY nom"
+                            . ") as nom "
+                            . "FROM participants WHERE "
+                            . "association = participants.id AND "
+                            . "id_activite = '" . $this->_id . "' "
+                        . "UNION ALL "
+                            . "SELECT participants.id as id_participant,ref_id,"
+                            . "CONCAT("
+                                . "users.classe,' - ',users.nom,' ',users.prenom"
+                            . ") as nom "
+                            . "FROM participants, users "
+                            . "WHERE "
+                            . "participants.id_user=users.id AND "
+                            . "participants.association IS NULL AND "
+                            . "participants.id_activite = '" . $this->_id . "' "
+                        . ") as sel ORDER BY sel.nom"
+                    );
+
+            
             if ($result->num_rows > 0) {
                 return $result;
             }
@@ -321,7 +325,6 @@ class Activite {
                     "id_participant = '" . $id_participant . "'");
             return $result;
         }
-        $this->_last_update = strtotime(date('Y-m-d H:i:s'));
         return array();
     }
 
@@ -347,9 +350,5 @@ class Activite {
         $this->_db->query("DELETE FROM datas WHERE id_activite = '".$this->_id."'");
     }
     
-
-    
-
-    
-    
+   
 }

@@ -17,12 +17,11 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-require_once 'class/db.php';
+if (file_exists("files/lastupdate")) {
+    $myfile = fopen("files/lastupdate", "r");
+    $last_modifiy = fgets($myfile);
+    fclose($myfile);
+    echo $last_modifiy;
+}      
 
-$result = $mysqli->query("SELECT update_time FROM activites WHERE etat='2'");
-$ep = $result->fetch_assoc();
-$last_modifiy =$ep['update_time'];
 
-echo strtotime($last_modifiy);
-
-close_db($mysqli);

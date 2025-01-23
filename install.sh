@@ -150,6 +150,7 @@ cp $vdrpath/index.php /var/www/html/chronoVDR/index.php
 cp $vdrpath/script.js /var/www/html/chronoVDR/script.js
 cp $vdrpath/style.css /var/www/html/chronoVDR/style.css
 cp $vdrpath/update.php /var/www/html/chronoVDR/update.php
+cp $vdrpath/last_update.php /var/www/html/chronoVDR/last_update.php
 
 if [ -f /var/www/html/chronoVDR/config/config.php ]; then
     echo "configuration chronoVDR OK"
