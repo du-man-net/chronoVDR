@@ -119,27 +119,21 @@ if(isset($_POST['creer_activite']) or
  * Lire un fichier CSV pour importation
  * ------------------------------------------------------
  */
-$eleves_read = array();
-if(isset($_FILES['fileImport'])){
-    $myimport->set_file($_FILES['fileImport']);
-    if($myimport->is_csv_file()){
-        $myimport->read_file();
-        if(isset($_POST['importClasse'])){
-            $eleves_read = $myimport->getElevesArray($_POST['importClasse']);
-        }else{
-            $eleves_read = $myimport->getElevesArray();
-        }
-        
+
+if(isset($_POST['importer'])){
+    if(isset($_POST['lstusers'])){
+        $myusers->importUsers($_POST['lstusers']);      
     }
-}elseif(isset($_POST['readcsvfile'])){
-    if(isset($_POST['importClasse'])){
-        $classe = $_POST['importClasse'];
-        if(isset($_FILES['fileImport'])){
-            $myimport->set_file($_FILES['fileImport']);
-            if($myimport->is_csv_file()){
-                $myimport->read_file();
-                $eleves_read = $myimport->getElevesArray($classe);
-            }
+}
+
+$eleves_read = array();
+if(isset($_POST['readcsvfile'])){
+    if(isset($_FILES['fileImport'])){
+        $myimport->set_file($_FILES['fileImport']);
+        if($myimport->is_csv_file()){
+            $myimport->read_file(); 
+            if(isset($_POST['importClasse'])){$classe = $_POST['importClasse'];}
+            $eleves_read = $myimport->getElevesArray($classe);
         }
     }
 }
@@ -530,11 +524,7 @@ $myhtml->openDiv('add-users');
                 echo '<br/><div style="color:#FF0000">'.$myimport->get_erreur_message().'</div>';
             }
             $myform->label('fileImport','fichier csv');
-            if($myimport->get_erreur()){
-                $myform->file('fileImport','onchange=""');
-            }else{
-                $myform->file('fileImport','onchange="this.form.submit();"');
-            }
+            $myform->file('fileImport');
         $myhtml->closeDiv();  
         $myhtml->openDiv('','propriete');
             $myform->label('importClasse','Classe');
@@ -542,7 +532,7 @@ $myhtml->openDiv('add-users');
         $myhtml->closeDiv();
         $myhtml->openDiv('','proprietebtn');
             $myform->button('cancel_users1', "Annuler",'onclick="return cancel_dialog_users()"');
-            if($myimport->get_erreur()){$myform->button('readcsvfile', "Ré-essayer");}
+            $myform->button('readcsvfile', "Lire le fichier");
         $myhtml->closeDiv();
         
         if(count($eleves_read)>0){
