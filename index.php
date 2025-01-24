@@ -526,14 +526,9 @@ $myhtml->openDiv('add-users');
             echo 'Importer des classes';
         $myhtml->closeDiv();
         $myhtml->openDiv('','propriete');
-            $myform->label('importClasse','Classe');
-            $myform->text('importClasse', '');
             if($myimport->get_erreur()){
                 echo '<br/><div style="color:#FF0000">'.$myimport->get_erreur_message().'</div>';
             }
-        $myhtml->closeDiv();
-        
-        $myhtml->openDiv('','propriete');
             $myform->label('fileImport','fichier csv');
             if($myimport->get_erreur()){
                 $myform->file('fileImport','onchange=""');
@@ -541,6 +536,10 @@ $myhtml->openDiv('add-users');
                 $myform->file('fileImport','onchange="this.form.submit();"');
             }
         $myhtml->closeDiv();  
+        $myhtml->openDiv('','propriete');
+            $myform->label('importClasse','Classe');
+            $myform->text('importClasse', '');
+        $myhtml->closeDiv();
         $myhtml->openDiv('','proprietebtn');
             $myform->button('cancel_users1', "Annuler",'onclick="return cancel_dialog_users()"');
             if($myimport->get_erreur()){$myform->button('readcsvfile', "Ré-essayer");}

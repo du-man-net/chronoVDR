@@ -173,10 +173,7 @@ if (!empty($participants)) {
         
         foreach ($datas as $data) {
             $myhtml->openTd('data');
-            if ($data['data']) {
-
-                    echo $data['data'];
-            }
+            echo $data['data'];
             $myhtml->closeTd();
             $i++;
             if($i == $nb_max){
