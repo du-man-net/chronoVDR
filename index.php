@@ -105,7 +105,7 @@ if(isset($_POST['creer_activite']) or
         
 
         if(isset($_POST['creer_activite'])){
-            $myactivite->set_id($myactivite->create());
+            $myactivite->set_id($myactivite->create(),true);
         }
         if(isset($_POST['enregistrer_activite'])){
             $myactivite->save();

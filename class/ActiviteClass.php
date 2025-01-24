@@ -61,7 +61,7 @@ class Activite {
         return $this->_id;
     }
 
-    public function set_id($id) {
+    public function set_id($id,$force=false) {
         if($id>0){
             $curent_activite=0;
             $result = $this->_db->query("SELECT id FROM activites WHERE etat='2'");
@@ -70,7 +70,7 @@ class Activite {
                 $curent_activite = $ep['id'];
             }
             //on ne pas changer la visualisation que si aucune activité n'edt en enregistrement
-            if($curent_activite==0){
+            if($curent_activite==0 || $force==true){
                 //on s'assure que toute les autres activitée sont à l'état désactivée
                 $this->_db->query("UPDATE activites SET etat = '0' WHERE id != '" . $id . "'");
                 //on mémorise l'activité selectionnée
