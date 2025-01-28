@@ -155,7 +155,7 @@ if [ -f /var/www/html/chronoVDR/config/config.php ]; then
     echo "configuration chronoVDR OK"
 else
     mkdir -p /var/www/html/chronoVDR/config
-    echo  $'$adminPW' >> /var/www/html/chronoVDR/config/mysql_password
+    echo  $"$adminPW" > /var/www/html/chronoVDR/config/mysql_password
 fi
 
 chown -R pi:www-data /var/www/html/
@@ -169,11 +169,11 @@ echo Communication série avec Micro:bit
 echo
 
 if [ -f /etc/udev/rules.d/99-serial_background.rules ]; then
-    echo "Configration communication avec Micro:bit OK
+    echo "Configration communication avec Micro:bit OK"
 else
-    sudo apt install python python3-serial python3-pip at
-    sudo rm /usr/lib/python3.11/EXTERNALLY-MANAGED
-    sudo pip3 install mysql-connector
+    apt install python3 python3-serial python3-pip at -y -q
+    rm /usr/lib/python3.11/EXTERNALLY-MANAGED
+    pip3 install mysql-connector
     cp $vdrpath/conf/99-serial_background.rules /etc/udev/rules.d/99-serial_background.rules
 fi
 

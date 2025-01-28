@@ -55,6 +55,7 @@ CREATE TABLE `datas` (
   `id_participant` int(11) NOT NULL,
   `id_activite` int(11) NOT NULL,
   `data` float DEFAULT NULL
+  `temps` datetime DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 
