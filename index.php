@@ -40,8 +40,6 @@ $myactivite = new Activite($mysqli);
 $myusers = new Users($mysqli);
 $myimport = new Import($mysqli);
 
-
-
 /*
  * ------------------------------------------------------
  * on vérifie l'authentification
@@ -364,10 +362,7 @@ $myhtml->openDiv('password');
             $myform->button('valider_PW', "Valider");
         $myhtml->closeDiv();   
     $myhtml->closeDialog();
-$myhtml->closeDiv();   
-
-
-
+$myhtml->closeDiv();  
 
 
 if($auth){// si pas d'authentiifcation, pas d'enregistrement ni de choix
@@ -648,6 +643,7 @@ $myhtml->closeDiv();
 $myhtml->openDiv('menu');
     
 if($auth){// si pas d'authentiifcation, pas d'enregistrement ni de choix
+    
     $myhtml->openDiv('','iconemenu');
         echo '<img src="img/supprimer.png" '.   
             'title="Nettoyage" '.
