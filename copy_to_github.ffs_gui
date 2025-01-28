@@ -28,6 +28,10 @@
     </Filter>
     <FolderPairs>
         <Pair>
+            <Left>C:\Users\gerar\Documents\techno college\cours\ChronoVDR\serial</Left>
+            <Right>C:\Users\gerar\Documents\GitHub\chronoVDR\serial</Right>
+        </Pair>
+        <Pair>
             <Left>C:\Users\gerar\Documents\techno college\cours\ChronoVDR\vues</Left>
             <Right>C:\Users\gerar\Documents\GitHub\chronoVDR\vues</Right>
         </Pair>
