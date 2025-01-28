@@ -119,20 +119,19 @@ if [ -d /usr/share/phpmyadmin ]; then
     echo "phpmyadmin est installé"
 else
 
-export DEBIAN_FRONTEND=noninteractive
-debconf-set-selections <<< "phpmyadmin phpmyadmin/reconfigure-webserver multiselect apache2"
-debconf-set-selections <<< "phpmyadmin phpmyadmin/dbconfig-install boolean true"
-debconf-set-selections <<< "phpmyadmin phpmyadmin/db/app-user string root"
-debconf-set-selections <<< "phpmyadmin phpmyadmin/mysql/app-pass password $adminPW"
-debconf-set-selections <<< "phpmyadmin phpmyadmin/app-password-confirm password $adminPW"
-
-apt install phpmyadmin -y -q 
+    export DEBIAN_FRONTEND=noninteractive
+    debconf-set-selections <<< "phpmyadmin phpmyadmin/reconfigure-webserver multiselect apache2"
+    debconf-set-selections <<< "phpmyadmin phpmyadmin/dbconfig-install boolean true"
+    debconf-set-selections <<< "phpmyadmin phpmyadmin/db/app-user string root"
+    debconf-set-selections <<< "phpmyadmin phpmyadmin/mysql/app-pass password $adminPW"
+    debconf-set-selections <<< "phpmyadmin phpmyadmin/app-password-confirm password $adminPW"
+    apt install phpmyadmin -y -q 
 fi
 
 if grep -q "Include /etc/phpmyadmin/apache.conf" /etc/apache2/apache2.conf; then
-echo "phpmyadmin est activé"
+    echo "phpmyadmin est activé"
 else
-echo "Include /etc/phpmyadmin/apache.conf" >> /etc/apache2/apache2.conf
+    echo "Include /etc/phpmyadmin/apache.conf" >> /etc/apache2/apache2.conf
 fi
 
 echo
@@ -156,16 +155,34 @@ if [ -f /var/www/html/chronoVDR/config/config.php ]; then
     echo "configuration chronoVDR OK"
 else
     mkdir -p /var/www/html/chronoVDR/config
-    echo  "<?php" >> /var/www/html/chronoVDR/config/config.php
-    echo  '$username_db = "root";' >> /var/www/html/chronoVDR/config/config.php
-    echo  $'$password_db = "'$adminPW'";' >> /var/www/html/chronoVDR/config/config.php
-    echo  $'$admin_password = "'$adminPW'";' >> /var/www/html/chronoVDR/config/config.php
+    echo  $'$adminPW' >> /var/www/html/chronoVDR/config/mysql_password
 fi
 
 chown -R pi:www-data /var/www/html/
 chmod -R 770 /var/www/html/
 
 service apache2 restart
+
+echo
+echo '------------------------------------------------------'
+echo Communication série avec Micro:bit
+echo
+
+if [ -f /etc/udev/rules.d/99-serial_background.rules ]; then
+    echo "Configration communication avec Micro:bit OK
+else
+    sudo apt install python python3-serial python3-pip at
+    sudo rm /usr/lib/python3.11/EXTERNALLY-MANAGED
+    sudo pip3 install mysql-connector
+    cp $vdrpath/conf/99-serial_background.rules /etc/udev/rules.d/99-serial_background.rules
+fi
+
+cp -R $vdrpath/serial /var/www/html/chronoVDR/
+chown -R pi:www-data /var/www/html/chronoVDR/serial/
+chmod -R 770 /var/www/html/chronoVDR/serial/
+chmod +x /var/www/html/chronoVDR/serial/serial.sh
+chmod +x /var/www/html/chronoVDR/serial/microbit.py
+udevadm control --reload
 
 echo
 echo '------------------------------------------------------'

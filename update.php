@@ -66,7 +66,6 @@ if (isset($_GET["id"])) {
             //si le champs data est présent, on prépare son insertion
             $str_data = ''; $ins_data='';
             if (isset($_GET["data"])) {
-                echo "issetdata";
                 $data = $_GET["data"];
                 $str_data = "','" . $data;
                 $ins_data = ",data";
