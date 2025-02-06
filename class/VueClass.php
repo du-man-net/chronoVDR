@@ -263,12 +263,6 @@ class Vue extends Activite {
      */
     private function Array2CSVDownload($array, $filename = "export.csv", $delimiter = ";") {
 
-//        $data = [];
-//        foreach ($array as $item) {
-//            $values = explode($item,$delimiter);
-//            var_dump($values);
-//            array_push($data, implode($delimiter, $values));
-//        }
         // flush buffer
         ob_flush();
         // mixing items

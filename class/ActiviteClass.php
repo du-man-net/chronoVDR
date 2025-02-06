@@ -48,7 +48,7 @@ class Activite {
     public $infos = array('nom' => '',
         'organisateur' => '',
         'vue' => '',
-        'flag' => '',
+        'flag' => 0,
         'nb_max' => '',
         'temps_max' => '',
         'etat' => '');
@@ -168,8 +168,8 @@ class Activite {
     }
 
     public function create() {
-        $this->_db->query("INSERT INTO activites (nom,organisateur,flag,nb_max,temps_max) " .
-                "VALUES ('Sans nom','Sans nom','334','10','30')");
+        $this->_db->query("INSERT INTO activites (nom,organisateur,flag,nb_max,temps_max,vue) " .
+                "VALUES ('Sans nom','Sans nom','334','10','30','tableau.php')");
         //on récupère l'ID
         $this->set_id($this->_db->insert_id, true);
     }
@@ -219,7 +219,6 @@ class Activite {
             if(!empty($this->infos["temps_max"]))   {$query .= "temps_max = '" . $this->infos["temps_max"]."' ,";}
             if(!empty($this->infos["flag"]))        {$query .= "flag = '" . $this->infos["flag"]."' ";}
             $query .= " WHERE id = '" . $this->_id . "'";
-            echo $query;
             $this->_db->query($query);
             return true;
         }
