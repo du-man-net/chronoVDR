@@ -19,7 +19,7 @@
 
 require_once '../class/ActiviteClass.php';
 
-$myactivite = new Activite($mysqli);
+$myactivite = new Activite();
 
 
     $participants = $myactivite->get_participants();

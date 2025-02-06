@@ -52,14 +52,14 @@ echo
 if [ -f /etc/init.d/apache2* ]; then
     echo "Apache2 est installé"
 else
-apt install apache2 php php-mbstring -y -q
+    apt install apache2 php php-mbstring -y -q
 fi
 
 # mise en place des virtual host sur les ports 80, 8080, 3000
 if [ -d /var/www/html/chronoVDR ]; then
     echo "Dossier web présent"
 else
-mkdir /var/www/html/chronoVDR
+    mkdir /var/www/html/chronoVDR
 fi
 
 echo
@@ -70,10 +70,10 @@ echo
 if [ -f /etc/apache2/sites-enabled/chronovdr_vhost.conf ]; then
     echo "VirtualHost installé"
 else
-a2dissite 000-default
-cp $vdrpath/conf/chronovdr_vhost.conf /etc/apache2/sites-available/chronovdr_vhost.conf
-a2ensite chronovdr_vhost
-systemctl reload apache2
+    a2dissite 000-default
+    cp $vdrpath/conf/chronovdr_vhost.conf /etc/apache2/sites-available/chronovdr_vhost.conf
+    a2ensite chronovdr_vhost
+    systemctl reload apache2
 fi
 
 echo
@@ -87,27 +87,27 @@ else
 
 apt install mariadb-server php-mysql -y -q
 
-echo
-echo '------------------------------------------------------'
-echo Sécurisation de mariadb-server
-echo
+    echo
+    echo '------------------------------------------------------'
+    echo Sécurisation de mariadb-server
+    echo
 
-mysql --user=root  <<EOF
-ALTER USER 'root'@'localhost' IDENTIFIED VIA mysql_native_password USING PASSWORD("$adminPW");
-DELETE FROM mysql.user WHERE USER LIKE '';
-DELETE FROM mysql.user WHERE user = 'root' and host NOT IN ('127.0.0.1', 'localhost');
-FLUSH PRIVILEGES;
-DELETE FROM mysql.db WHERE db LIKE 'test%';
-DROP DATABASE IF EXISTS test ;
-EOF
+    mysql --user=root  <<EOF
+    ALTER USER 'root'@'localhost' IDENTIFIED VIA mysql_native_password USING PASSWORD("$adminPW");
+    DELETE FROM mysql.user WHERE USER LIKE '';
+    DELETE FROM mysql.user WHERE user = 'root' and host NOT IN ('127.0.0.1', 'localhost');
+    FLUSH PRIVILEGES;
+    DELETE FROM mysql.db WHERE db LIKE 'test%';
+    DROP DATABASE IF EXISTS test ;
+    EOF
 
-echo
-echo '------------------------------------------------------'
-echo Mise en place de la base de donnée
-echo
+    echo
+    echo '------------------------------------------------------'
+    echo Mise en place de la base de donnée
+    echo
 
-mysql --user=root --password=$adminPW --execute="create database chronoVDR;"
-mysql --user=root --password=$adminPW chronoVDR < $vdrpath/conf/chronoVDR.sql
+    mysql --user=root --password=$adminPW --execute="create database chronoVDR;"
+    mysql --user=root --password=$adminPW chronoVDR < $vdrpath/conf/chronoVDR.sql
 fi
 
 echo

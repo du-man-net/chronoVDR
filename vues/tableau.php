@@ -1,6 +1,6 @@
+
 <?php
-error_reporting(E_ALL & ~E_DEPRECATED);
-ini_set("display_errors", 1);
+
 /* 
  * Copyright (C) 2024 gleon
  *
@@ -24,9 +24,9 @@ ini_set("display_errors", 1);
  * ------------------------------------------------------
  */
 require_once '../class/HtmlClass.php';
-require_once '../class/ActiviteClass.php';
+require_once '../class/VueClass.php';
 
-$myactivite = new Activite($mysqli);
+$myvue = new Vue();
 $myhtml = new Html;
 
 /*
@@ -45,40 +45,34 @@ echo '<style>
 
     table{
         border-collapse : collapse;
+        border-left:1px solid black;
     }
-
-    tr,td{
-        padding:1px 3px;
-        font:12px Arial;
-        border:1px solid #DDDDDD;
+    .dumy{
+        font:13px Arial;
+        padding:0px; 
     }
-    
+    .bandeau{
+        font:10px Arial;
+        padding:3.5px;
+    } 
     .data{
-        font:14px Arial;
+        font:13px Arial;
+        border:1px solid #DDDDDD; 
+        padding:1px; 
     }
 
     .total{
-        font:14px Arial;
+        font:13px Arial;
         border:1px solid blue;
         background-color:#EEEEEE;
         text-align:center;
         min-width:80px;
-        overflow: hidden;
-    }
-
-    #lstdatas
-    {
-        float:left;
-        width: 100%;
-        min-height: 95vh;
-        border: 1px solid black;
-        background-color:#FFFFFF;
+        padding:1px; 
     }
 
     .titre_time
     {
-        padding:3px;
-        height:22px;
+        padding:4px;
         text-align:center;
         font:16px Arial;
         background:#FFFFFF;
@@ -98,102 +92,108 @@ echo 'window.addEventListener("message", function(event) {
   if (event.origin == " ") {
     return;
   }
-  window.location.reload(); 
+  window.location.reload();
 
 });';
 echo '</script>';
     
 $myhtml->closeHead();
+
 $myhtml->openBody();
-$myhtml->openDiv('lstdatas');
 
 /*
- * --------------------------------
- * Affichage des données
- * --------------------------------
+ * ------------------------------------------------------
+ * La variable id de l'activitée est la seule passée par la méthode GET. 
+ * Initialisation de la class activité avec l'id passée en GET
+ * ------------------------------------------------------
  */
+
+//$myhtml->openDiv('lstdatas');
+
+$myhtml->openTable('width="100%"');
+$myhtml->openTr();
+$myhtml->openTd('bandeau');
+    echo "&nbsp;";
+$myhtml->closeTd(); 
+$myhtml->closeTr();
+$myhtml->closeTable();
+
 $myhtml->openTable('id="results" width="100%"');
 $myhtml->openTr();
 $myhtml->openTd('', 'width=2px');
 $myhtml->closeTd();
 
-
 /*
  * --------------------------------
- * Entête des colomnes 
+ * Entête des colomne de tour
  * --------------------------------
  */
 
-$nb_max = intval($myactivite->get_nb_max());
-
-for ($i = 1; $i < $nb_max +1; $i++) {
+foreach($myvue->make_headers() as $header){
     $myhtml->openTd('titre_time');
-    echo 'essais' . $i;
+    echo $header;
     $myhtml->closeTd();
 }
 
-$myhtml->closeTr();
 /*
  * --------------------------------
  * Parcour des participants
  * --------------------------------
  */
-$participants = $myactivite->get_participants();
+$participants = $myvue->get_participants();
 if (!empty($participants)) {
     foreach ($participants as $participant) {
-        $myhtml->openTr();
-
-        /*
-         * ----------------------------------------------------------------
-         * affichage première cellule pour déterminer la hauteur de la ligne
-         * ----------------------------------------------------------------
-         */
-        $myhtml->openTd('', 'height=22px');
-        $nbr = substr_count($participant["nom"], '<br/>');
-        echo str_repeat("<br/>&nbsp;", $nbr);
-        $myhtml->closeTd();
 
         /*
          * ----------------------------------------------------------------
          * récupération de la liste des datas pour le participants
          * ----------------------------------------------------------------
          */
-        $datas = $myactivite->get_datas($participant['id_participant']);
-        $i = 0;
-        
-        foreach ($datas as $data) {
-            $myhtml->openTd('data');
-            if ($data['temps']) {
 
-                $unite_time = "s.v";
-                $dt = new DateTimeImmutable($data['temps']);
-                $st = $dt->format($unite_time);
-                //lors de la covertion, affichage des millième
-                //tronquage du dernier chraractère pour avoir les 1000e
-                if(strpos($st,".")>0){
-                    echo substr($st,0,-1);
+        foreach ($myvue->make_datas($participant['id_participant']) as $datas_line) {
+            /*
+             * ----------------------------------------------------------------
+             * affichage première cellule pour déterminer la hauteur de la ligne
+             * ----------------------------------------------------------------
+             */
+            $nbr = count(explode('<br/>',$participant["nom"]));
+            if(($myvue->infos['flag'] & SHOW_TIME)&&($myvue->infos['flag'] & SHOW_DATA)){
+                if($nbr>2){$nbr = $nbr*6.75+3;}else{$nbr = 24.8;}
+            }else{
+                if($nbr>1){$nbr = $nbr*14.35+3;}else{$nbr = 24.8;}
+            }
+            
+            $myhtml->openTr();
+            $myhtml->openTd('dumy', 'height='.$nbr.'px');
+            echo "&nbsp;";
+            $myhtml->closeTd();
+            /*
+             * ----------------------------------------------------------------
+             * affichage d'une ligne de data
+             * ----------------------------------------------------------------
+             */
+
+            $i = 0;
+            foreach($datas_line as $data){
+                if(($i == count($datas_line)-1) && ($myvue->infos['flag'] & IS_LIMIT)){
+                    $myhtml->openTd('total');
                 }else{
-                    echo $st;
+                    $myhtml->openTd('data');
                 }
+                if (empty($data)){
+                    echo "&nbsp;";
+                }else{
+                    echo $data;
+                }
+                $myhtml->closeTd();
+                $i++;
             }
-            $myhtml->closeTd();
-            $i++;
-            if($i == $nb_max){
-                break;
-            }
+            $myhtml->closeTr();
         }
-         
-        for($j = $i ;$j < $nb_max+1; $j++ ){
-            $myhtml->openTd('data');
-            $myhtml->closeTd();
-        }
-
-
-        $myhtml->closeTr();
     }
 }
 $myhtml->closeTable();
-$myhtml->closeDiv();
+//$myhtml->closeDiv();
 
 /*
  * ------------------------------------------------------

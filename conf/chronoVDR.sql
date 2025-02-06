@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Hôte : localhost:3306
--- Généré le : jeu. 16 jan. 2025 à 00:04
+-- Généré le : lun. 03 fév. 2025 à 12:06
 -- Version du serveur : 10.11.6-MariaDB-0+deb12u1
 -- Version de PHP : 8.2.26
 
@@ -31,18 +31,12 @@ CREATE TABLE `activites` (
   `id` int(11) NOT NULL,
   `nom` varchar(32) NOT NULL DEFAULT 'sans_nom',
   `organisateur` varchar(32) NOT NULL DEFAULT 'sans_nom',
-  `password` char(40) DEFAULT NULL,
-  `date_activite` datetime NOT NULL DEFAULT current_timestamp(),
+  `flag` int(10) DEFAULT NULL,
   `vue` varchar(32) DEFAULT NULL,
-  `repetition` varchar(10) DEFAULT NULL,
-  `identification` varchar(10) DEFAULT NULL,
-  `nb_max` int(11) DEFAULT 10,
-  `temps_max` time DEFAULT '00:10:00',
+  `nb_max` int(11) DEFAULT NULL,
+  `temps_max` int(11) DEFAULT NULL,
   `etat` tinyint(1) NOT NULL DEFAULT 0
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
-
-
-
 
 -- --------------------------------------------------------
 
@@ -58,8 +52,6 @@ CREATE TABLE `datas` (
   `temps` datetime DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
-
-
 -- --------------------------------------------------------
 
 --
@@ -73,8 +65,6 @@ CREATE TABLE `participants` (
   `ref_id` varchar(8) DEFAULT NULL,
   `association` int(11) DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
-
-
 
 -- --------------------------------------------------------
 
@@ -90,7 +80,6 @@ CREATE TABLE `users` (
   `nais` varchar(10) DEFAULT NULL,
   `sexe` varchar(1) DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
-
 
 --
 -- Index pour les tables déchargées
@@ -132,25 +121,25 @@ ALTER TABLE `users`
 -- AUTO_INCREMENT pour la table `activites`
 --
 ALTER TABLE `activites`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=16;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
 
 --
 -- AUTO_INCREMENT pour la table `datas`
 --
 ALTER TABLE `datas`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=918;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
 
 --
 -- AUTO_INCREMENT pour la table `participants`
 --
 ALTER TABLE `participants`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=398;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
 
 --
 -- AUTO_INCREMENT pour la table `users`
 --
 ALTER TABLE `users`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=1946;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
 
 --
 -- Contraintes pour les tables déchargées

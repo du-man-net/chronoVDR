@@ -30,15 +30,16 @@ require_once 'class/HtmlClass.php';
 require_once 'class/ActiviteClass.php';
 require_once 'class/ImportClass.php';
 require_once 'class/UsersClass.php';
-require_once 'class/ExportClass.php';
+require_once 'class/VueClass.php';
 
 connect_db();
 
 $myform = new Form;
 $myhtml = new Html;
-$myactivite = new Activite($mysqli);
-$myusers = new Users($mysqli);
-$myimport = new Import($mysqli);
+$myactivite = new Activite();
+$myusers = new Users();
+$myimport = new Import();
+
 
 /*
  * ------------------------------------------------------
@@ -75,42 +76,48 @@ if(!empty($_POST['selActivite'])){
 }
 
 if($auth){// si pas d'authentiifcation, pas d'enregistrement ni de choix
+    
 /*
  * ------------------------------------------------------
  * création et/ou enregistrement des paramètres de l'activitée 
  * ------------------------------------------------------
  */
-if(isset($_POST['creer_activite']) or
-   isset($_POST['enregistrer_activite'])){ 
     
-    if(empty($_POST['title_activite']) or 
-        empty($_POST['organisateur']) or 
-        empty($_POST['date_activite']) or 
-        empty($_POST['date_activite']) or
-        empty($_POST['nb_max'])){
-            if(empty($_POST['title_activite'])) {$message = 'Remplir le nom de l\'activité !';}
-            if(empty($_POST['organisateur'])) {$message = 'Remplir le nom de l\'organisateur !';}
-            if(empty($_POST['date_activite'])){$message = 'Remplir la date de l\'activite !';}  
-            if(empty($_POST['nb_max'])){$message = 'Remplir le nombre d\'enregistrements !';}  
-    }else{
-        $myactivite->infos['nom']            = $_POST['title_activite'];
-        $myactivite->infos['organisateur']   = $_POST['organisateur'];
-        $myactivite->infos['date_activite']  = $_POST['date_activite']." ".$_POST['heure_activite'];
-        $myactivite->infos['repetition']     = $_POST['repetition'];
-        $myactivite->infos['identification'] = $_POST['identification'];
-        $myactivite->infos['nb_max']         = $_POST['nb_max'];
-        $myactivite->infos['temps_max']      = $_POST['temps_max'];
-        
+if(isset($_POST['creer_activite'])){
+    $myactivite->create();
+    $_POST["show_activite"]='open';
+}
 
-        if(isset($_POST['creer_activite'])){
-            $myactivite->set_id($myactivite->create(),true);
-        }
-        if(isset($_POST['enregistrer_activite'])){
-            $myactivite->save();
-        }
-        $_POST["show_activite"]='close';
+function save_activite(){
+    global $myactivite;
+    
+    if(!empty($_POST['nom']))           {$myactivite->infos['nom']            = $_POST['title_activite'];}
+    if(!empty($_POST['organisateur']))  {$myactivite->infos['organisateur']   = $_POST['organisateur'];}
+    if(!empty($_POST['nb_max']))        {$myactivite->infos['nb_max']         = $_POST['nb_max'];}
+    if(!empty($_POST['temps_max']))     {$myactivite->infos['temps_max']      = $_POST['temps_max'];}  
+    if(!empty($_POST['flag']))          {$myactivite->infos['flag']           = $_POST['flag'];}
+
+    $myactivite->save();
+    
+}
+
+if(isset($_POST['enregistrer_activite'])){
+    global $myactivite;
+    save_activite();
+    $_POST["show_activite"]='open';
+    if(empty($myactivite->get_participants())){
+        $_POST["show_participants"]='open';
+    }
+    
+}
+
+if(isset($_POST['change_activite'])){
+    if($_POST['change_activite']=="ok"){
+        save_activite();
+        $_POST["show_activite"]='open';
     }
 }
+
 
 /*
  * ------------------------------------------------------
@@ -155,10 +162,8 @@ if(isset($_POST['importer'])){
  */
 if(isset($_POST['btn_exportation'])){
     if(isset($_POST['lstexport'])){
-        if(isset($_POST['unite'])){
-            $myexport = new Export($mysqli);
-            $myexport->export($_POST['lstexport'],$_POST['unite']);
-        }
+        $myvue = new Vue;
+        $myvue->export($_POST['lstexport']);
     }
 }
 
@@ -220,7 +225,6 @@ if(isset($_POST['delParts'])){
  */
 if(isset($_POST['del_activites'])){
     $myactivite->delete();
-    $myactivite->get_id();
 }
 /*
  * ------------------------------------------------------
@@ -358,7 +362,7 @@ $myhtml->openDiv('password');
             $myform->password('auth','','onkeydown="touche(event.key);"');
         $myhtml->closeDiv(); 
         $myhtml->openDiv('','proprietebtn');
-            $myform->button('cancel_password', "Annuler",'onclick="return cancel_dialog_password();"');
+            $myform->button('cancel_password', " X ",'onclick="return cancel_dialog_password();"');
             $myform->button('valider_PW', "Valider");
         $myhtml->closeDiv();   
     $myhtml->closeDialog();
@@ -387,45 +391,73 @@ $myhtml->openDiv('activite');
             $myform->label('organisateur','Organisateur');
             $myform->text('organisateur', $myactivite->infos['organisateur']);
         $myhtml->closeDiv();   
+
         $myhtml->openDiv('','propriete');
-            $myform->label('date_activite','Date de l\'activité');
-            $myform->date('date_activite', date('Y-m-d', strtotime($myactivite->infos["date_activite"])));
+            $myform->label('flag','Type d\'activité');
+            $myform->openSelect('flag','flag','onchange="save_type_activite(this);"');
+            foreach($myactivite->type_activite as $flag => $titre_activite){
+                if($myactivite->infos["flag"] == $flag){$select = true;}else{$select = false;}
+                $myform->option($flag,$titre_activite,$select);
+            }
+            $myform->closeSelect();
+            $myform->hidden("change_activite");
+        $myhtml->closeDiv(); 
+ 
+        $myhtml->openDiv('','propriete');
+            if($myactivite->infos["flag"] & IS_LIMIT_LAP){
+                $myform->label('nb_max','Nombre maximum d\'enregistrements');
+                $myform->text('nb_max', $myactivite->infos['nb_max']);
+            }
+            if($myactivite->infos["flag"] & IS_LIMIT_TIME){
+                $myform->label('temps_max','Temps maximum (en minutes)');
+                $myform->text('temps_max', $myactivite->infos['temps_max']);
+            }
         $myhtml->closeDiv();  
+      
+        if($myactivite->infos["flag"] & PERSONAL_CONFIG){$disabled = "";}else{$disabled = 'disabled="true"';}
         $myhtml->openDiv('','propriete');
-            $myform->label('heure_activite','Heure de l\'activité');
-            $myform->time('heure_activite', date('H:i', strtotime($myactivite->infos["date_activite"])));
-        $myhtml->closeDiv();  
-        $myhtml->openDiv('','propriete');
-            $myform->label('identification','Identification');
-            $myform->openSelect('identification','identification');
-            if($myactivite->infos["identification"] == 'materiel'){$select = true;}else{$select = false;}
-            $myform->option('materiel','Id_matériel', $select);
-            if($myactivite->infos["identification"] == 'dossard'){$select = true;}else{$select = false;}
-            $myform->option('dossard','Dossard', $select);
-            if($myactivite->infos["identification"] == 'rfid'){$select = true;}else{$select = false;}
-            $myform->option('rfid','RFID', $select);
+            $myform->label('flag_ID','Authentification des participants par');
+            $myform->openSelect('flag_ID','flag_ID',$disabled);
+            if($myactivite->infos["flag"] & BY_IDMAT){$select = true;}else{$select = false;}
+            $myform->option(BY_IDMAT,'Id_matériel', $select);
+            if($myactivite->infos["flag"] & BY_RFID){$select = true;}else{$select = false;}
+            $myform->option(BY_RFID,'RFID', $select);
             $myform->closeSelect();
         $myhtml->closeDiv(); 
+        
         $myhtml->openDiv('','propriete');
-            $myform->label('repetition','repetition');
-            $myform->openSelect('repetition','repetition');
-            if($myactivite->infos["repetition"] == 'essais'){$select = true;}else{$select = false;}
-            $myform->option('essais','Plusieurs essais', $select);
-            if($myactivite->infos["repetition"] == 'passages'){$select = true;}else{$select = false;}
-            $myform->option('passages','Plusieurs passage', $select);
+            $myform->label('flag_SHOW_TIME','Afficher l\'heure de départ');
+            if($myactivite->infos["flag"] & SHOW_TIME){$select = "checked ";}else{$select = "";}
+            $myform->checkbox('flag_SHOW_TIME',SHOW_TIME,$select . $disabled);
+        $myhtml->closeDiv();  
+
+        $myhtml->openDiv('','propriete');
+            $myform->label('flag_PERLAP','Afficher pour chaque enregistrement');
+            $myform->openSelect('flag_PERLAP','flag_PERLAP',$disabled);
+            if($myactivite->infos["flag"] & HOUR_PER_LAP){$select = true;}else{$select = false;}
+            $myform->option(HOUR_PER_LAP,'Heure', $select);
+            if($myactivite->infos["flag"] & TIME_PER_LAP){$select = true;}else{$select = false;}
+            $myform->option(TIME_PER_LAP,'Temps en min.', $select);
+            if($myactivite->infos["flag"] & DATA_PER_TEST){$select = true;}else{$select = false;}
+            $myform->option(DATA_PER_TEST,'Donnée', $select);
             $myform->closeSelect();
-        $myhtml->closeDiv();  
+        $myhtml->closeDiv(); 
+        
         $myhtml->openDiv('','propriete');
-            $myform->label('nb_max','Nombre maximum d\'enregistrements');
-            $myform->text('nb_max', $myactivite->infos['nb_max']);
+            $myform->label('flag_TIME','Afficher le temps total');
+            if($myactivite->infos["flag"] & SHOW_FINAL_TIME){$select = "checked ";}else{$select = "";}
+            $myform->checkbox('flag_TIME',SHOW_FINAL_TIME,$select . $disabled);
         $myhtml->closeDiv();  
+        
         $myhtml->openDiv('','propriete');
-            $myform->label('temps_max','Temps maximum');
-            $myform->time('temps_max', date('H:i:s', strtotime($myactivite->infos["temps_max"])));
+            $myform->label('flag_NBLAPS','Afficher le nombre de tours');
+            if($myactivite->infos["flag"] & SHOW_NUMBER_LAPS){$select = "checked ";}else{$select = "";}
+            $myform->checkbox('flag_NBLAPS',SHOW_NUMBER_LAPS,$select . $disabled);
         $myhtml->closeDiv();  
+        
         $myhtml->openDiv('','proprietebtn');
-            $myform->button('cancel_activite', "Annuler",'onclick="return cancel_dialog_activite()"');
-            $myform->button('btnaction', "Enregistrer");
+            $myform->button('cancel_activite', " X ",'onclick="return cancel_dialog_activite()"');
+            $myform->button('enregistrer_activite', "Enregistrer");
         $myhtml->closeDiv();   
     $myhtml->closeDialog();
 $myhtml->closeDiv();
@@ -461,7 +493,7 @@ $myhtml->openDiv('nettoyage');
             $myhtml->closeDiv();  
         $myhtml->closeDiv(); 
         $myhtml->openDiv('','proprietebtn');
-            $myform->button('cancel_nettoyage', "Annuler",'onclick="return cancel_dialog_nettoyage()"');
+            $myform->button('cancel_nettoyage', " X ",'onclick="return cancel_dialog_nettoyage()"');
         $myhtml->closeDiv();   
     $myhtml->closeDialog();
 $myhtml->closeDiv();      
@@ -484,20 +516,20 @@ $myhtml->openDiv('exportation');
         $myform->label('lstexport','modèle d\'export.');
         $myform->textarea('lstexport', "nom;prenom;classe;nais;sexe;temps",2,50,false);
         $myhtml->closeDiv();   
-        $myhtml->openDiv('','propriete');
-            $myform->label('unite','Unité de temps');
-            $myform->openSelect('unite','unite');
-            $myform->option('h','heures');
-            $myform->option('m','Minutes',true);
-            $myform->option('s','Secondes');
-            $myform->closeSelect();
-        $myhtml->closeDiv();  
+//        $myhtml->openDiv('','propriete');
+//            $myform->label('unite','Unité de temps');
+//            $myform->openSelect('unite','unite');
+//            $myform->option('h','heures');
+//            $myform->option('m','Minutes',true);
+//            $myform->option('s','Secondes');
+//            $myform->closeSelect();
+//        $myhtml->closeDiv();  
         //$myhtml->openDiv('','propriete');
         //    $myform->radio('modele','nom,prenom,classe,nais,sexe,data,temps');
         //    $myform->label('modele','Endurance');
         //$myhtml->closeDiv(); 
         $myhtml->openDiv('','proprietebtn');
-            $myform->button('cancel_exportation', "Annuler",'onclick="return cancel_dialog_exportation()"');
+            $myform->button('cancel_exportation', " X ",'onclick="return cancel_dialog_exportation()"');
             $myform->button('btn_exportation', "Exporter");
         $myhtml->closeDiv();   
     $myhtml->closeDialog();
@@ -526,7 +558,7 @@ $myhtml->openDiv('add-users');
             $myform->text('importClasse', '');
         $myhtml->closeDiv();
         $myhtml->openDiv('','proprietebtn');
-            $myform->button('cancel_users1', "Annuler",'onclick="return cancel_dialog_users()"');
+            $myform->button('cancel_users1', " X ",'onclick="return cancel_dialog_users()"');
             $myform->button('readcsvfile', "Lire le fichier");
         $myhtml->closeDiv();
         
@@ -542,7 +574,7 @@ $myhtml->openDiv('add-users');
             $myform->textarea('lstusers', $lstusers,40,35);
             $myhtml->closeDiv();
             $myhtml->openDiv('','proprietebtn');
-                $myform->button('cancel_users', "Annuler",'onclick="return cancel_dialog_users()"');
+                $myform->button('cancel_users', " X ",'onclick="return cancel_dialog_users()"');
                 $myform->button('importer', "Importer");
             $myhtml->closeDiv();  
             
@@ -625,7 +657,7 @@ $myhtml->openDiv('add-participants');
         $myhtml->closeDiv();
             
         $myhtml->openDiv('','proprietebtn');
-            $myform->button('cancel_participant', "Annuler",'onclick="return cancel_dialog_participants()"');
+            $myform->button('cancel_participant', " X ",'onclick="return cancel_dialog_participants()"');
             $myform->button('AjouterParticipants', "ajouter");
         $myhtml->closeDiv();  
     $myhtml->closeDialog();
@@ -644,10 +676,19 @@ $myhtml->openDiv('menu');
     
 if($auth){// si pas d'authentiifcation, pas d'enregistrement ni de choix
     
+    if($myactivite->infos["etat"]==2){
+        $disabled = 'disabled="true"';
+        $enabled = false;
+    }else{
+        $disabled = "";
+        $enabled = true;
+    }
+            
     $myhtml->openDiv('','iconemenu');
         echo '<img src="img/supprimer.png" '.   
-            'title="Nettoyage" '.
-            'onclick="show_dialog_nettoyage();"/>';
+            'title="Nettoyage" ';
+        if($enabled){echo 'onclick="show_dialog_nettoyage();"';}
+        echo '/>';
     $myhtml->closeDiv(); 
     
     $myhtml->openDiv('','barre_menu');
@@ -657,8 +698,9 @@ if($auth){// si pas d'authentiifcation, pas d'enregistrement ni de choix
     
     $myhtml->openDiv('','iconemenu');
         echo '<img src="img/users.png" '.   
-            'title="Importer des classes" '.
-            'onclick="show_dialog_users();"/>';
+            'title="Importer des classes" ';
+        if($enabled){echo ' onclick="show_dialog_users();"';}
+        echo '/>';
     $myhtml->closeDiv(); 
     $myhtml->closeDiv(); 
     
@@ -668,13 +710,11 @@ if($auth){// si pas d'authentiifcation, pas d'enregistrement ni de choix
     $myhtml->closeDiv(); 
     
     $myhtml->openDiv('','iconemenu');
-        echo '<img src="img/plus.png" '.   
-            'title="Crée une nouvelle activité" '.
-            'onclick="show_dialog_activite(true)"/>';
+        $myform->button('creer_activite',"&nbsp;",$disabled);
     $myhtml->closeDiv(); 
 
 
-    $myform->openSelect('selActivite', 'selActivite', 'onchange="this.form.submit();"');
+    $myform->openSelect('selActivite', 'selActivite', $disabled.' onchange="this.form.submit();"');
     $myform->option('0', 'Choisir une activite');
      foreach ($myactivite->get_list() as $activite){
         if($activite['id'] == $myactivite->get_id()){$select = true;}else{$select = false;}
@@ -686,29 +726,31 @@ if($auth){// si pas d'authentiifcation, pas d'enregistrement ni de choix
         
     $myhtml->openDiv('','iconemenu');
         echo '<img src="img/propriete.png" '.
-            'title="Paramètres de l\'activité" '.
-            'onclick="show_dialog_activite(false)"/>';
+            'title="Paramètres de l\'activité" ';
+        if($enabled){echo ' onclick="show_dialog_activite();"';}
+        echo '/>';
     $myhtml->closeDiv(); 
 
     $myhtml->openDiv('','iconemenu');
         if(intval($myactivite->infos['etat'])==2){
-            $img = 'stop.png';
+            $img = 'stop1.png';
             $action = 1;
             $title = "Arréter l'enregistrement";
         }else{
-            $img = 'start.png';
+            $img = 'start1.png';
             $action = 2;
             $title = "Démarrer l'enregistrement";
         }
         echo '<img src="img/'.$img.'" '.   
             'title="'.$title.'" '.
-            'onclick="starting('.$action.');"/>';            
+            ' onclick="starting('.$action.');"/>';           
     $myhtml->closeDiv();
 
     $myhtml->openDiv('','iconemenu');
         echo '<img src="img/export.png" '.   
-            'title="Exporter les données" '.
-            'onclick="show_dialog_exportation();"/>';
+            'title="Exporter les données" ';
+        if($enabled){echo ' onclick="show_dialog_exportation();"';}
+        echo '/>';
     $myhtml->closeDiv(); 
         
     $myhtml->closeDiv(); 
@@ -760,11 +802,14 @@ $myhtml->openDiv('participants');
     $myhtml->openTable('style="width:100%;background-color: #eff3f5 ;"');
     $myhtml->openTr();
     $myhtml->openTd();
-        if($myactivite->get_id()>0){echo 'Org. : '.$myactivite->infos['organisateur'];}
-    $myhtml->closeTd(); 
+        if($myactivite->get_id()>0){echo 'Organisateur : '.$myactivite->infos['organisateur'];}
+    $myhtml->closeTd();
+    /*
     $myhtml->openTd();
         if($myactivite->get_id()>0){echo 'Date : '.$myactivite->infos['date_fr'];}
     $myhtml->closeTd(); 
+     * 
+     */
     $myhtml->closeTr();
     $myhtml->closeTable();
     
@@ -796,11 +841,9 @@ $myhtml->openDiv('participants');
         }
     $myhtml->closeTd();
     $myhtml->openTd('titre_id');
-        if($myactivite->infos['identification']=='materiel'){
+        if($myactivite->infos['flag'] & BY_IDMAT){
             echo 'ID mat.';
-        }elseif($myactivite->infos['identification']=='dossard'){
-            echo 'Dossard';
-        }elseif($myactivite->infos['identification']=='rfid'){
+        }elseif($myactivite->infos['flag'] & BY_RFID){
             echo 'Tag RFID';
         }
     $myhtml->closeTd();
@@ -811,7 +854,11 @@ $myhtml->openDiv('participants');
         $last_id_assoc = 0; $drawline = true;
         foreach ($participants as $participant) {
             $myhtml->openTr();
-            $myhtml->openTd('','height=22');
+            if(($myactivite->infos['flag'] & SHOW_TIME)&&($myactivite->infos['flag'] & SHOW_DATA)){
+                $myhtml->openTd('','height=46.8px');
+            }else{
+                $myhtml->openTd('','height=22');
+            }
             echo $participant["nom"];
             $myhtml->closeTd();
             $myhtml->openTd();
@@ -821,7 +868,7 @@ $myhtml->openDiv('participants');
                     $myform->checkbox('chkParts[]', $participant["id_participant"]);
                 }
             $myhtml->closeTd();
-            if($myactivite->infos['identification']=='materiel'){
+            if($myactivite->infos['flag'] & BY_IDMAT){
                 if($auth){
                     $myhtml->openTd('','onclick="tdedit(this);"');
                 }else{
@@ -829,11 +876,7 @@ $myhtml->openDiv('participants');
                 }
                 echo $participant['ref_id'];
                 $myhtml->closeTd();  
-            }elseif($myactivite->infos['identification']=='dossard'){
-                $myhtml->openTd();
-                echo $participant['ref_id'];
-                $myhtml->closeTd();   
-            }elseif($myactivite->infos['identification']=='rfid'){
+            }elseif($myactivite->infos['flag'] & BY_RFID){
                 if($auth){
                     $myhtml->openTd('tag','onclick="tdclick(this);"');
                 }else{

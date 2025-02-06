@@ -29,7 +29,8 @@ class Users {
     //put your code here
     private $_db = NULL;
     
-    public function __construct($mysqli) { // or any other method
+    public function __construct() { // or any other method
+        global $mysqli;
         $this->_db = $mysqli;
     }
 

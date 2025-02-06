@@ -81,6 +81,17 @@ select{
     width:25px;
 }
 
+#creer_activite
+{
+    background:url(img/plus25.png);
+    background-repeat:  no-repeat;
+    border:none;
+    height:25px;
+    width:25px;  
+    cursor: pointer;
+    margin-bottom:10px
+}
+
 .barre_menu 
 {
     float:left;
@@ -228,6 +239,10 @@ dialog{
     border-color: #e2e6f8;
 }
 
+.proprietebtn input[type=submit]{
+    margin: 3px;;
+}
+
 dialog::backdrop{
     background-color: rgba(0, 0, 0, 0.6);
 }
@@ -270,17 +285,18 @@ dialog::backdrop{
 }
 
 label {
-    width:130px;
+    width:250px;
     display: inline-block;
     font:14px Arial;
     padding:1px 3px;
 }
 
 .comment {
-    display: inline-block;
+    float:left;
     font:14px Arial;
     padding:1px 3px;
     margin-bottom: 10px;
+    clear:both;
 }
 
 

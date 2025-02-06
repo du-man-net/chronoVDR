@@ -23,18 +23,16 @@ function connect_db() {
     global $mysqli;
     global $username_db;
     global $password_db;
+    global $servername;
+    global $database;
     
-    if (!isset($mysqli)) {
-        $servername = "localhost";
-        $database = "chronoVDR";
-        $mysqli = new mysqli($servername, $username_db, $password_db, $database);
-        /* Vérification de la connexion */
-        if (mysqli_connect_errno()) {
-            printf("Échec de la connexion : %s\n", mysqli_connect_error());
-            exit();
-        }
-        $mysqli->set_charset("utf8");
+    $mysqli = new mysqli($servername, $username_db, $password_db, $database);
+    /* Vérification de la connexion */
+    if (mysqli_connect_errno()) {
+        printf("Échec de la connexion : %s\n", mysqli_connect_error());
+        exit();
     }
+    $mysqli->set_charset("utf8");
 }
 
 function close_db() {
@@ -42,5 +40,4 @@ function close_db() {
     mysqli_close($mysqli);
 }
 
-$mysqli = null;
-connect_db();
+if (!isset($mysqli)) {connect_db();}

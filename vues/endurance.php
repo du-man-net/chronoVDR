@@ -26,7 +26,7 @@
 require_once '../class/HtmlClass.php';
 require_once '../class/ActiviteClass.php';
 
-$myactivite = new Activite($mysqli);
+$myactivite = new Activite();
 $myhtml = new Html;
 
 /*

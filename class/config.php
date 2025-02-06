@@ -28,4 +28,5 @@ if (file_exists($mypwdfile)) {
 }    
 $username_db = "root";
 $admin_password = $password_db;
-
+$servername = "localhost";
+$database = "chronoVDR";

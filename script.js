@@ -37,10 +37,31 @@ window.onload = function () {
         //dans la base de donnée toutes les secondes pour affichage rapide
         
         if (document.getElementsByName('etat')[0].value == 2) {
-            
-               
+
             var xhttp = new XMLHttpRequest();
             xhttp.open("GET", encodeURI("last_update.php", true));
+            xhttp.onreadystatechange = function () {
+                if (this.readyState === 4 && this.status === 200) {
+                    //si la réponse AJAX n'est pas vide
+                    
+                    if (this.responseText.length > 0) {       
+                        //si la date de la dernière maj de la bdd est différente de celle mémorisée
+                        if(last_maj !== this.responseText){
+                            console.log(last_maj);
+                            //on enregistre la date de la maj
+                            last_maj = this.responseText;
+                            //on envoi un message à l'iframe pour la qu'elle mette les donées à jour
+                            document.getElementById('datas').contentWindow.postMessage("message", "*");
+                        }
+                    }
+                   
+                }
+            };
+            xhttp.send();
+            
+        }else if (document.getElementsByName('etat')[0].value == 1) {
+            var xhttp = new XMLHttpRequest();
+            xhttp.open("GET", encodeURI("files/logs.txt", true));
             xhttp.onreadystatechange = function () {
                 if (this.readyState === 4 && this.status === 200) {
                     //si la réponse AJAX n'est pas vide
@@ -51,8 +72,8 @@ window.onload = function () {
                         if(last_maj !== this.responseText){
                             //on enregistre la date de la maj
                             last_maj = this.responseText;
-                            //on envoi un message à l'iframe pour la qu'elle mette les donées à jour
-                            document.getElementById('datas').contentWindow.postMessage("message", "*");
+                            //on ajoute l'élément à la console de log
+                             console.log(last_maj);
                         }
                     }
                    
@@ -212,7 +233,6 @@ function tdclick(el) {
 function starting(state) {
     e = document.getElementsByName('etat')[0];
     e.value = state;
-    console.log(e);
     console.log(state);
     document.forms[0].submit();
 }
@@ -249,38 +269,41 @@ function setValue($name, $value) {
     document.getElementById($name).value = $value;
 }
 
-function show_dialog_activite($create) {
-    const $propriete_activite = document.getElementById("propriete_acivite");
-    const $show_activite = document.getElementById("show_activite");
-    const $btnaction = document.getElementById("btnaction");
-    const $titre = document.getElementById("proptitle");
-    if (!$propriete_activite.open) {
-        $show_activite.value = "open";
-        if ($create === true) {
-            if (document.getElementById('title_activite').value.length > 0) {
-                title_activite = saveValue('title_activite');
-                organisateur = saveValue('organisateur');
-                date_activite = saveValue('date_activite');
-                heure_activite = saveValue('heure_activite');
-            }
-            $btnaction.name = 'creer_activite';
-            $btnaction.innerHTML = 'Créer';
-            $titre.innerHTML = "création d'une nouvelle activité";
-
-        } else {
-            if (document.getElementById('title_activite').value.length === 0) {
-                setValue('title_activite', title_activite);
-                setValue('organisateur', organisateur);
-                setValue('date_activite', date_activite);
-                setValue('heure_activite', heure_activite);
-            }
-            $btnaction.name = 'enregistrer_activite';
-            $btnaction.innerthml = 'Enregistrer';
-            $titre.innerHTML = 'Paramètres de l\'activité';
-        }
-        $propriete_activite.show();
+function save_type_activite(el){
+    const save_activite = document.getElementById('change_activite');
+    if(save_activite) {
+        save_activite.value = "ok";
     }
+    el.form.submit();
 }
+//function show_dialog_activite($create) {
+//    const $propriete_activite = document.getElementById("propriete_acivite");
+//    const $show_activite = document.getElementById("show_activite");
+//    const $btnaction = document.getElementById("btnaction");
+//    const $titre = document.getElementById("proptitle");
+//    if (!$propriete_activite.open) {
+//        $show_activite.value = "open";
+//        if ($create === true) {
+//            if (document.getElementById('title_activite').value.length > 0) {
+//                title_activite = saveValue('title_activite');
+//                organisateur = saveValue('organisateur');
+//            }
+//            $btnaction.name = 'creer_activite';
+//            $btnaction.innerHTML = 'Créer';
+//            $titre.innerHTML = "création d'une nouvelle activité";
+//
+//        } else {
+//            if (document.getElementById('title_activite').value.length === 0) {
+//                setValue('title_activite', title_activite);
+//                setValue('organisateur', organisateur);
+//            }
+//            $btnaction.name = 'enregistrer_activite';
+//            $btnaction.innerthml = 'Enregistrer';
+//            $titre.innerHTML = 'Paramètres de l\'activité';
+//        }
+//        $propriete_activite.show();
+//    }
+//}
 
 function dialog($name, $value, $state) {
     const $el_dialog = document.getElementById($name);
@@ -296,6 +319,10 @@ function dialog($name, $value, $state) {
             $el_dialog.close();
         }
     }
+}
+
+function show_dialog_activite() {
+    dialog("propriete_acivite", "show_activite", "open");
 }
 
 function show_dialog_users() {

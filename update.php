@@ -22,10 +22,7 @@ ini_set("display_errors", 1);
 
 require_once 'class/db.php';
 
-$tabUrl =  $_SERVER [ 'REQUEST_URI' ] ;
-$myfile = fopen("files/log.txt", "w") or die("Unable to open file!");
-fwrite($myfile, $tabUrl . "\n");
-fclose($myfile);
+
 
 //lecture du ref_id passé en paramèrtre
 if (isset($_GET["id"])) {
@@ -70,17 +67,10 @@ if (isset($_GET["id"])) {
                 $str_data = "','" . $data;
                 $ins_data = ",data";
             }
-            
-            //Si le champ remps est présent, on l'utilise, sinon on utiltise la date/heure du système
-            if (isset($_GET["temps"])) {
-                $str_temps = $_GET["temps"];
-            }else{
-                $str_temps = date('Y-m-d H:i:s');
-            }
-            
+                       
             //insertion des données
             $mysqli->query("INSERT INTO datas (id_activite,id_participant,temps".$ins_data.") VALUES "
-                    . "('" . $id_activite . "','" . $id_participant . "','" . $str_temps . $str_data . "')");
+                    . "('" . $id_activite . "','" . $id_participant . "','" . date('Y-m-d H:i:s') . $str_data . "')");
             
             //création d'un fichier contenant l'id de la dernière donnée pour identifier la dernière modif de la bdd
             $myfile = fopen("files/lastupdate", "w");
@@ -88,8 +78,14 @@ if (isset($_GET["id"])) {
             fclose($myfile);
 
             echo "ok";
+            return;
         }
     }
 }
 
+    $tabUrl =  $_SERVER [ 'REQUEST_URI' ] ;
+    $myfile = fopen("files/logs.txt", "w") or die("Unable to open file!");
+    fwrite($myfile, $tabUrl . "\n");
+    fclose($myfile);
+    
 close_db($mysqli);
