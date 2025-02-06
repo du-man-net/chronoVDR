@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Hôte : localhost:3306
--- Généré le : lun. 03 fév. 2025 à 12:06
+-- Généré le : jeu. 06 fév. 2025 à 13:29
 -- Version du serveur : 10.11.6-MariaDB-0+deb12u1
 -- Version de PHP : 8.2.26
 
@@ -49,7 +49,7 @@ CREATE TABLE `datas` (
   `id_participant` int(11) NOT NULL,
   `id_activite` int(11) NOT NULL,
   `data` float DEFAULT NULL,
-  `temps` datetime DEFAULT NULL
+  `temps` datetime NOT NULL DEFAULT current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 -- --------------------------------------------------------
