@@ -1,6 +1,6 @@
 
 /* 
- * Copyright (C) 2024 gleon
+ * Copyright (C) 2025 Gérard Léon
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,23 +18,8 @@
 
 
 
-//import moment from 'moment';
-//moment.locale('fr');
-//import "chartjs-adapter-moment";
 import { Chart } from "chart.js/auto";
-//import * as Chartjs from "chart.js";
-//const controllers = Object.values(Chartjs).filter(
-//        (chart) => chart.id !== undefined
-//);
-//Chart.register(...controllers);
-//import { DateTime } from "luxon";
 import 'chartjs-adapter-luxon';
-//import "chartjs-adapter-date-fns";
-//import { DateTime } from "luxon";
-//luxon.Settings.defaultLocale = "fr";
-
-
-
 
 var myChart = {};
 window.addEventListener("resize", function () {

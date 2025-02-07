@@ -1,10 +1,10 @@
 <?php
-error_reporting(E_ALL & ~E_DEPRECATED);
-ini_set("display_errors", 1);
+//error_reporting(E_ALL & ~E_DEPRECATED);
+//ini_set("display_errors", 1);
 session_start();
 
 /* 
- * Copyright (C) 2024 gleon
+ * Copyright (C) 2025 Gérard Léon
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
