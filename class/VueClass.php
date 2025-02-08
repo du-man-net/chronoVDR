@@ -312,7 +312,7 @@ class Vue extends Activite {
         
         if ($delimiter) {
 
-            $export_data = (strpos($modele,"data") !== false);
+            $export_data = (strpos($modele,"datas") !== false);
             $export_time = (strpos($modele,"temps") !== false);
 
             if ( $export_time|| $export_data){
@@ -322,7 +322,7 @@ class Vue extends Activite {
             }
             //s'il il y a le mot data on ajoute les headers
             if($export_data){
-                $line = str_replace("data", substr($headers, 0, -1), $line);
+                $line = str_replace("datas", substr($headers, 0, -1), $line);
                 if($export_time){
                     $line = str_replace("temps".$delimiter, "", $line);
                     $line = str_replace($delimiter."temps", "", $line);
@@ -361,20 +361,18 @@ class Vue extends Activite {
                     if($export_data){
                         $line = str_replace("temps".$delimiter, "", $line);
                         $line = str_replace($delimiter."temps", "", $line);
-                        $line = str_replace("data", substr($line_data[0], 0, -1), $line);
+                        $line = str_replace("datas", substr($line_data[0], 0, -1), $line);
                         $lines[$index] = $line;
                         $index++;
                         
                         if($export_time){
                             //si il y a du temps on exporte la ligne de temps
-                            //on reconstruit une ligne vide avec les delimiters avants et après les temps
+                            //on reconstruit une ligne vide avec les delimiters avants et après
+                            //on fait correspondre les temps avec les datas de la ligne du dessus
                             $line = $modele;
-                            $line = str_replace("data".$delimiter, "", $line);
-                            $line = str_replace($delimiter."data", "", $line);
-                            
-                            $splt = explode("temps".$delimiter,$line);
+                            $splt = explode("datas".$delimiter,$line);
                             if(count($splt)==1){
-                                if(strpos($modele,"temps") === 0){
+                                if(strpos($modele,"datas") === 0){
                                     $line = substr($line_data[1], 0, -1).
                                             str_repeat($delimiter,substr_count($splt[1], $delimiter));
                                 }else{
