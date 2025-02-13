@@ -159,6 +159,7 @@ echo
 
 mkdir -p /var/www/html/chronoVDR/files
 touch /var/www/html/chronoVDR/files/lastupdate
+touch /var/www/html/chronoVDR/files/logs.txt
 cp -R $vdrpath/class /var/www/html/chronoVDR/
 cp -R $vdrpath/img /var/www/html/chronoVDR/
 cp -R $vdrpath/vues /var/www/html/chronoVDR/

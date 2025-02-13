@@ -255,9 +255,9 @@ def write_last_update(lastid):
 #====================================================
 def write_log(url):
     try:
-        with open(BASE_HTML + "/files/logs.txt","w") as f:
+        with open(BASE_HTML + "/files/logs.txt","a") as f:
             #print(url)
-            f.write(url)
+            f.write(url + "\n")
         f.close() 
     except:
         print ("erreur d'accès au fichier  de logs")
@@ -286,12 +286,16 @@ def start_for_all():
 #====================================================
 def insert_url(url):
     datas = url.split("&")
-    str_id = ""
+
     if len(datas)>0 :
         str_id = str(datas[0])
-    str_data = ""
+    else:
+        str_id = "0"
+
     if len(datas)>1 :
         str_data = str(datas[1])
+    else:
+        str_data = "0"
     
     if len(str_id) > 0:
         #print(str_id)
