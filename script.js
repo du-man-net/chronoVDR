@@ -305,18 +305,20 @@ function save_type_activite(el){
 //    }
 //}
 
-function dialog($name, $value, $state) {
-    const $el_dialog = document.getElementById($name);
-    const $el_value = document.getElementById($value);
-    if ($state === "open") {
-        if (!$el_dialog.open) {
-            $el_value.value = $state;
-            $el_dialog.show();
+function dialog(name, value, state) {
+    const el_dialog = document.getElementById(name);
+    const el_value = document.getElementById(value);
+    if (state === "open") {
+        if (!el_dialog.open) {
+            el_value.value = state;
+            el_dialog.left="800px";
+            el_dialog.top="10px";
+            el_dialog.show();
         }
     } else {
-        if ($el_dialog.open) {
-            $el_value.value = $state;
-            $el_dialog.close();
+        if (el_dialog.open) {
+            el_value.value = state;
+            el_dialog.close();
         }
     }
 }
@@ -344,6 +346,18 @@ function show_dialog_nettoyage() {
 
 function show_dialog_exportation() {
     dialog("propriete_exportation", "show_exportation", "open");
+}
+
+function show_dialog_logs() {
+    const el_dialog = document.getElementById("propriete_logs");
+    const el_value = document.getElementById("show_logs");
+    if (el_dialog.open) {
+        el_value.value = "close";
+        el_dialog.close();
+    } else {
+        el_value.value = "open";
+        el_dialog.show();
+    }
 }
 
 function cancel_dialog_users() {
@@ -380,5 +394,4 @@ function password_disconnect() {
     document.getElementById('auth').value = -1;
     document.forms[0].submit();
 }
-
 

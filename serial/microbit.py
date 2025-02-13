@@ -112,7 +112,7 @@ def find_rec_activite_id(cn,cur):
             return id_activite
 
     except:
-        print ("erreur SQL participants")
+        write_log("erreur SQL " + query)
     
     return False
 
@@ -130,7 +130,7 @@ def find_datas_for_actiivte(cn,cur,id_activite):
             return True
 
     except:
-        print ("erreur SQL participants")
+        write_log("erreur SQL " + query)
     
     return False
 
@@ -142,13 +142,13 @@ def insert_data_for_all(cn,cur,id_activite):
             "SELECT id_activite, participants.id, NOW() FROM participants " + \
             "WHERE participants.id_activite='"+id_activite+"'";  
     #print (query)
-    #try:
-    cur.execute(query)
-    lastid = str(cur.lastrowid)
-    cn.commit()
-    return lastid
-    #except:
-        #print ("erreur SQL participants")
+    try:
+        cur.execute(query)
+        lastid = str(cur.lastrowid)
+        cn.commit()
+        return lastid
+    except:
+        write_log("erreur SQL " + query)
     
     return False
 
@@ -184,7 +184,7 @@ def is_tag_alwready_used(cn,cur,str_id,id_participant):
             return True
 
     except:
-        print ("erreur SQL participants")
+        write_log("erreur SQL " + query)
 
     return False
 
@@ -199,7 +199,7 @@ def change_tag_participant(cn,cur,str_id,id_participant):
         cn.commit()
        
     except:
-        print ("erreur SQL participants")
+        write_log("erreur SQL " + query)
 
 #====================================================
 # récuperation des infos concernant l'activite et le participant
@@ -217,7 +217,7 @@ def get_uid_infos(cn,cur,str_id):
         return row
 
     except:
-        print ("erreur SQL participants")
+        write_log("erreur SQL " + query)
     
     return False
 
@@ -235,7 +235,8 @@ def insert_data_for_participant(cn,cur,id_activite,id_participant,str_data):
         return lastid
 
     except:
-        print ("erreur SQL insert data")
+        write_log("erreur SQL " + query)
+)
 
     return False
 
@@ -248,16 +249,16 @@ def write_last_update(lastid):
             f.write(lastid)
         f.close() 
     except:
-        print ("erreur d'accès au fichier lastupdate")
+        write_log("erreur d'accès au fichier lastupdate")
 
 #====================================================
 # on laisse une trace dans le fichier de log
 #====================================================
-def write_log(url):
+def write_log(log):
     try:
         with open(BASE_HTML + "/files/logs.txt","a") as f:
             #print(url)
-            f.write(url + "\n")
+            f.write( datetime.now() + " : " + log + "\n")
         f.close() 
     except:
         print ("erreur d'accès au fichier  de logs")

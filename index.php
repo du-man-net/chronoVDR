@@ -91,7 +91,7 @@ if(isset($_POST['creer_activite'])){
 function save_activite(){
     global $myactivite;
     
-    if(!empty($_POST['nom']))           {$myactivite->infos['nom']            = $_POST['title_activite'];}
+    if(!empty($_POST['title_activite'])){$myactivite->infos['nom']            = $_POST['title_activite'];}
     if(!empty($_POST['organisateur']))  {$myactivite->infos['organisateur']   = $_POST['organisateur'];}
     if(!empty($_POST['nb_max']))        {$myactivite->infos['nb_max']         = $_POST['nb_max'];}
     if(!empty($_POST['temps_max']))     {$myactivite->infos['temps_max']      = $_POST['temps_max'];}  
@@ -343,6 +343,8 @@ if(!isset($_POST['show_nettoyage'])){$_POST['show_nettoyage'] = "close";}
 $myform->hidden('show_nettoyage', $_POST["show_nettoyage"]);
 if(!isset($_POST['show_exportation'])){$_POST['show_exportation'] = "close";}
 $myform->hidden('show_exportation', $_POST["show_exportation"]);
+if(!isset($_POST['show_logs'])){$_POST['show_logs'] = "close";}
+$myform->hidden('show_logs', $_POST["show_logs"]);
 
 if(!isset($_POST['etat'])){$_POST['etat'] = $myactivite->infos['etat'];}
 $myform->hidden('etat', $_POST["etat"]);
@@ -368,6 +370,20 @@ $myhtml->openDiv('password');
     $myhtml->closeDialog();
 $myhtml->closeDiv();  
 
+/*
+ * ------------------------------------------------------
+ * Fenètre de paramétrage de l'activité
+ * Le bouton btnaction prend les valeurs créer ou enregistrer
+ * en fonction de l'utilisation -> javascript
+ * ------------------------------------------------------
+ */
+$myhtml->openDiv('activite');
+    $myhtml->openDialog('propriete_logs', $_POST["show_logs"]);
+    $myhtml->openDiv('','propriete');
+    echo "logs..;";
+    $myhtml->closeDiv();
+    $myhtml->closeDialog();
+$myhtml->closeDiv();    
 
 if($auth){// si pas d'authentiifcation, pas d'enregistrement ni de choix
 /*
@@ -724,41 +740,41 @@ if($auth){// si pas d'authentiifcation, pas d'enregistrement ni de choix
 
     if($myactivite->get_id()>0){
         
-    $myhtml->openDiv('','iconemenu');
-        echo '<img src="img/propriete.png" '.
-            'title="Paramètres de l\'activité" ';
-        if($enabled){echo ' onclick="show_dialog_activite();"';}
-        echo '/>';
-    $myhtml->closeDiv(); 
+        $myhtml->openDiv('','iconemenu');
+            echo '<img src="img/propriete.png" '.
+                'title="Paramètres de l\'activité" ';
+            if($enabled){echo ' onclick="show_dialog_activite();"';}
+            echo '/>';
+        $myhtml->closeDiv(); 
 
-    $myhtml->openDiv('','iconemenu');
-        if(intval($myactivite->infos['etat'])==2){
-            $img = 'stop1.png';
-            $action = 1;
-            $title = "Arréter l'enregistrement";
-        }else{
-            $img = 'start1.png';
-            $action = 2;
-            $title = "Démarrer l'enregistrement";
-        }
-        echo '<img src="img/'.$img.'" '.   
-            'title="'.$title.'" '.
-            ' onclick="starting('.$action.');"/>';           
-    $myhtml->closeDiv();
+        $myhtml->openDiv('','iconemenu');
+            if(intval($myactivite->infos['etat'])==2){
+                $img = 'stop1.png';
+                $action = 1;
+                $title = "Arréter l'enregistrement";
+            }else{
+                $img = 'start1.png';
+                $action = 2;
+                $title = "Démarrer l'enregistrement";
+            }
+            echo '<img src="img/'.$img.'" '.   
+                'title="'.$title.'" '.
+                ' onclick="starting('.$action.');"/>';           
+        $myhtml->closeDiv();
 
-    $myhtml->openDiv('','iconemenu');
-        echo '<img src="img/export.png" '.   
-            'title="Exporter les données" ';
-        if($enabled){echo ' onclick="show_dialog_exportation();"';}
-        echo '/>';
-    $myhtml->closeDiv(); 
-        
-    $myhtml->closeDiv(); 
-    
-    $myhtml->openDiv('','barre_menu');
-    $myhtml->openDiv('','titre');
-        echo "Vues : ";
-    $myhtml->closeDiv(); 
+        $myhtml->openDiv('','iconemenu');
+            echo '<img src="img/export.png" '.   
+                'title="Exporter les données" ';
+            if($enabled){echo ' onclick="show_dialog_exportation();"';}
+            echo '/>';
+        $myhtml->closeDiv(); 
+
+        $myhtml->closeDiv(); 
+
+        $myhtml->openDiv('','barre_menu');
+        $myhtml->openDiv('','titre');
+            echo "Vues : ";
+        $myhtml->closeDiv(); 
     
         $myform->openSelect('selVue', 'selVue', 'onchange="this.form.submit();"');
             $myform->option('', 'Choisir une vue');
@@ -774,6 +790,12 @@ if($auth){// si pas d'authentiifcation, pas d'enregistrement ni de choix
     }
     $myhtml->closeDiv(); 
 }
+        $myhtml->openDiv('','iconemenu');
+        echo '<img src="img/logs.png" '.   
+            'title="Exporter les données" '.
+            'onclick="show_dialog_logs();"/>';  
+        $myhtml->closeDiv(); 
+        
         $myhtml->openDiv('','iconemenu');
             if($auth){
                 $img = 'unlock.png';
