@@ -234,13 +234,13 @@ class Vue extends Activite {
         //------------------------------------------------
         if ($this->check(SHOW_TOTAL_DATA)) {
             $line[0][$this->_nb_max+1] = $total_data;
-            if($this->check(SHOW_TIME) || $force_all){
+            if($idy_time>0 || $force_all){
                 $line[$idy_time][$this->_nb_max+1] = '';
             }
         }
         if ($this->check(SHOW_NUMBER_LAPS)) {
             $line[0][$this->_nb_max+1] = $nb_laps;
-            if($this->check(SHOW_TIME) || $force_all){
+            if($idy_time>0 || $force_all){
                 $line[$idy_time][$this->_nb_max+1] = '';
             }
         }
