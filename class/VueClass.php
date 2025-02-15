@@ -376,7 +376,7 @@ class Vue extends Activite {
                                     $line = substr($line_data[1], 0, -1).
                                             str_repeat($delimiter,substr_count($splt[1], $delimiter));
                                 }else{
-                                    $line = str_repeat($delimiter,substr_count($splt[0], $delimiter)).
+                                    $line = str_repeat($delimiter,substr_count($splt[0], $delimiter)-1).
                                             substr($line_data[1], 0, -1);
                                 }
                             }else{

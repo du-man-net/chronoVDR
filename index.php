@@ -343,7 +343,7 @@ if(!isset($_POST['show_nettoyage'])){$_POST['show_nettoyage'] = "close";}
 $myform->hidden('show_nettoyage', $_POST["show_nettoyage"]);
 if(!isset($_POST['show_exportation'])){$_POST['show_exportation'] = "close";}
 $myform->hidden('show_exportation', $_POST["show_exportation"]);
-if(!isset($_POST['show_logs'])){$_POST['show_logs'] = "close";}
+if(!isset($_POST['show_logs'])){$_POST['show_logs'] = "none";}
 $myform->hidden('show_logs', $_POST["show_logs"]);
 
 if(!isset($_POST['etat'])){$_POST['etat'] = $myactivite->infos['etat'];}
@@ -377,12 +377,16 @@ $myhtml->closeDiv();
  * en fonction de l'utilisation -> javascript
  * ------------------------------------------------------
  */
-$myhtml->openDiv('activite');
-    $myhtml->openDialog('propriete_logs', $_POST["show_logs"]);
+if($_POST['show_logs'] == "none"){
+    $visible="style='display: none;'";
+}else{
+    $visible="style='display: normal;'";
+}
+$myhtml->openDiv('logs','',$visible);
     $myhtml->openDiv('','propriete');
     echo "logs..;";
     $myhtml->closeDiv();
-    $myhtml->closeDialog();
+    //$myhtml->closeDialog();
 $myhtml->closeDiv();    
 
 if($auth){// si pas d'authentiifcation, pas d'enregistrement ni de choix
@@ -530,20 +534,8 @@ $myhtml->openDiv('exportation');
         $myhtml->closeDiv();  
         $myhtml->openDiv('propriete');
         $myform->label('lstexport','modèle d\'export.');
-        $myform->textarea('lstexport', "nom;prenom;classe;nais;sexe;temps",2,50,false);
+        $myform->textarea('lstexport', "nom;prenom;classe;nais;sexe;temps;datas",2,50,false);
         $myhtml->closeDiv();   
-//        $myhtml->openDiv('','propriete');
-//            $myform->label('unite','Unité de temps');
-//            $myform->openSelect('unite','unite');
-//            $myform->option('h','heures');
-//            $myform->option('m','Minutes',true);
-//            $myform->option('s','Secondes');
-//            $myform->closeSelect();
-//        $myhtml->closeDiv();  
-        //$myhtml->openDiv('','propriete');
-        //    $myform->radio('modele','nom,prenom,classe,nais,sexe,data,temps');
-        //    $myform->label('modele','Endurance');
-        //$myhtml->closeDiv(); 
         $myhtml->openDiv('','proprietebtn');
             $myform->button('cancel_exportation', " X ",'onclick="return cancel_dialog_exportation()"');
             $myform->button('btn_exportation', "Exporter");
@@ -761,7 +753,13 @@ if($auth){// si pas d'authentiifcation, pas d'enregistrement ni de choix
                 'title="'.$title.'" '.
                 ' onclick="starting('.$action.');"/>';           
         $myhtml->closeDiv();
-
+        
+        $myhtml->openDiv('','iconemenu');
+        echo '<img src="img/logs.png" '.   
+            'title="Exporter les données" '.
+            'onclick="show_dialog_logs();"/>';  
+        $myhtml->closeDiv(); 
+        
         $myhtml->openDiv('','iconemenu');
             echo '<img src="img/export.png" '.   
                 'title="Exporter les données" ';
@@ -789,13 +787,7 @@ if($auth){// si pas d'authentiifcation, pas d'enregistrement ni de choix
         $myform->closeSelect();
     }
     $myhtml->closeDiv(); 
-}
-        $myhtml->openDiv('','iconemenu');
-        echo '<img src="img/logs.png" '.   
-            'title="Exporter les données" '.
-            'onclick="show_dialog_logs();"/>';  
-        $myhtml->closeDiv(); 
-        
+}      
         $myhtml->openDiv('','iconemenu');
             if($auth){
                 $img = 'unlock.png';

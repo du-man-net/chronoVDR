@@ -19,6 +19,7 @@ var askStopEditing = false;
 var tdInEdition = 0;
 var oFrame;
 var last_maj=0;
+var last_log=0;
 
 /**
  * Gestion dimensionnement en hauteur de l'iframe
@@ -58,28 +59,36 @@ window.onload = function () {
                 }
             };
             xhttp.send();
-            
         }else if (document.getElementsByName('etat')[0].value == 1) {
-            var xhttp = new XMLHttpRequest();
-            xhttp.open("GET", encodeURI("files/logs.txt", true));
-            xhttp.onreadystatechange = function () {
-                if (this.readyState === 4 && this.status === 200) {
-                    //si la réponse AJAX n'est pas vide
-                    
-                    if (this.responseText.length > 0) { 
-                                           
-                        //si la date de la dernière maj de la bdd est différente de celle mémorisée
-                        if(last_maj !== this.responseText){
-                            //on enregistre la date de la maj
-                            last_maj = this.responseText;
-                            //on ajoute l'élément à la console de log
-                             console.log(last_maj);
-                        }
-                    }
-                   
+            const el_dialog = document.getElementById("logs");
+            showlogs = true;
+            if (el_dialog.style.display) {
+                if (el_dialog.style.display==="none") {
+                    showlogs = false;
                 }
-            };
-            xhttp.send();
+            }
+            if (showlogs===true) {
+                var xhttp = new XMLHttpRequest();
+                xhttp.open("GET", encodeURI("last_logs.php", true));
+                xhttp.onreadystatechange = function () {
+                    if (this.readyState === 4 && this.status === 200) {
+                        //si la réponse AJAX n'est pas vide
+
+                        if (this.responseText.length > 0) { 
+                            content = this.responseText;
+                            //si la date de la dernière maj de la bdd est différente de celle mémorisée
+                            if(last_log !== content){
+                                //on enregistre la date de la maj
+                                last_log = content;
+                                //on ajoute l'élément à la console de log
+                                document.getElementById('logs').innerHTML = content;
+                            }
+                        }
+
+                    }
+                };
+                xhttp.send();
+            }
         }
 
     }, 500);
@@ -304,6 +313,21 @@ function save_type_activite(el){
 //        $propriete_activite.show();
 //    }
 //}
+function show_dialog_logs() {
+    const el_dialog = document.getElementById("logs");
+    const el_value = document.getElementById("show_logs");
+    if (el_dialog.style) {
+        if (el_dialog.style.display) {
+            if (el_dialog.style.display==="none") {
+                el_value.value = "normal";
+                el_dialog.style.display = null;
+                return;
+            }
+        }
+    }
+    el_value.value = "none";
+    el_dialog.style.display = "none";
+}
 
 function dialog(name, value, state) {
     const el_dialog = document.getElementById(name);
@@ -346,18 +370,6 @@ function show_dialog_nettoyage() {
 
 function show_dialog_exportation() {
     dialog("propriete_exportation", "show_exportation", "open");
-}
-
-function show_dialog_logs() {
-    const el_dialog = document.getElementById("propriete_logs");
-    const el_value = document.getElementById("show_logs");
-    if (el_dialog.open) {
-        el_value.value = "close";
-        el_dialog.close();
-    } else {
-        el_value.value = "open";
-        el_dialog.show();
-    }
 }
 
 function cancel_dialog_users() {

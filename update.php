@@ -1,6 +1,6 @@
 <?php
-//error_reporting(E_ALL);
-//ini_set("display_errors", 1);
+error_reporting(E_ALL);
+ini_set("display_errors", 1);
 
 /* 
  * Copyright (C) 2025 Gérard Léon
@@ -19,15 +19,32 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-
 require_once 'class/db.php';
+$str_log = "";
+$str_id="";
+$str_data=""; 
 
-
+function write_log($log){
+    $f = fopen("files/logs.txt", "a+") or die("Unable to open file!");
+    fwrite($f, date('H:i:s')." - ".$log . "\n");
+    fclose($f);   
+}  
 
 //lecture du ref_id passé en paramèrtre
 if (isset($_GET["id"])) {
-    $ref_id = $_GET["id"];
-    
+    $str_id = $_GET["id"];
+    if (strlen($str_id)>0){
+        $str_log = "id=".$str_id;
+    }
+}
+if (isset($_GET["data"])) {
+    $str_data = $_GET["data"];
+    if (strlen($str_data)>0){
+        $str_log .= " data=".$str_data;
+    }
+}
+
+if (strlen($str_id)>0){
     //Si le fichier tagToChange est présent, il s'agit d'un enregistrement de ref_id pour un participant
     if (file_exists("files/tagToChange")) {
         
@@ -37,12 +54,15 @@ if (isset($_GET["id"])) {
         fclose($myfile);
         
         //on vérifie que le ref_id n'est pas déjà utilisée dans cette activité
-        $result = $mysqli->query("SELECT id FROM participants WHERE ref_id='" . $ref_id . "' "
+        $result = $mysqli->query("SELECT id FROM participants WHERE ref_id='" . $str_id . "' "
                 . "AND id_activite IN (SELECT id_activite from participants WHERE id = '" . $id_participant . "')");  
         if ($result->num_rows == 0) {
             //si le ref_id n'est pas utilisé, on le modifie et on détruit le fichier pour dire que tout c'est bien passé
-            $mysqli->query("UPDATE participants SET ref_id = '" . $ref_id . "' WHERE id = '" . $id_participant . "'");
+            $mysqli->query("UPDATE participants SET ref_id = '" . $str_id . "' WHERE id = '" . $id_participant . "'");
             unlink("files/tagToChange");
+        }else{
+            $str_log .= " déjà utilisé";
+            write_log($str_log);
         }
         
     //Sinon, c'est un ajout de données
@@ -61,16 +81,15 @@ if (isset($_GET["id"])) {
             $id_participant = $row['idp'];
             
             //si le champs data est présent, on prépare son insertion
-            $str_data = ''; $ins_data='';
-            if (isset($_GET["data"])) {
-                $data = $_GET["data"];
-                $str_data = "','" . $data;
+            $val_data = ''; $ins_data='';
+            if (strl($str_data)>0){
+                $val_data = "','" . $str_data;
                 $ins_data = ",data";
             }
                        
             //insertion des données
             $mysqli->query("INSERT INTO datas (id_activite,id_participant,temps".$ins_data.") VALUES "
-                    . "('" . $id_activite . "','" . $id_participant . "','" . date('Y-m-d H:i:s') . $str_data . "')");
+                    . "('" . $id_activite . "','" . $id_participant . "','" . date('Y-m-d H:i:s') . $val_data . "')");
             
             //création d'un fichier contenant l'id de la dernière donnée pour identifier la dernière modif de la bdd
             $myfile = fopen("files/lastupdate", "w");
@@ -80,12 +99,14 @@ if (isset($_GET["id"])) {
             echo "ok";
             return;
         }
+        write_log($str_log);
     }
+        
+}else{
+    $str_log .= "Err. requète ".$_SERVER['QUERY_STRING'];
+    write_log($str_log);   
 }
 
-    $tabUrl =  $_SERVER [ 'REQUEST_URI' ] ;
-    $myfile = fopen("files/logs.txt", "w") or die("Unable to open file!");
-    fwrite($myfile, $tabUrl . "\n");
-    fclose($myfile);
+
     
 close_db($mysqli);

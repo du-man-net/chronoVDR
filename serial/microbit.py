@@ -21,7 +21,7 @@ import os
 import serial
 import serial.tools.list_ports as list_ports
 import time
-import datetime
+from datetime import datetime
 import socket
 import mysql.connector as connector
 
@@ -60,7 +60,7 @@ def mysql_connect():
         )
         return dataBase
     except:
-        print ("connection error")
+        write_log("Err. connexion MariaDB")
         exit(1)
 
 #====================================================
@@ -81,19 +81,19 @@ def get_ip_address():
 # Récupération de la connexion série
 #====================================================
 def find_comport(pid, vid, baud):
-    ''' return a serial port '''
+    #return a serial port
     ser_port = serial.Serial(timeout=TIMEOUT)
     ser_port.baudrate = baud
     ports = list(list_ports.comports())
-    print('scanning ports')
+    #print('scanning ports')
     for p in ports:
-        print('port: {}'.format(p))
+        write_log('port: {}'.format(p))
         try:
-            print('pid: {} vid: {}'.format(p.pid, p.vid))
+            write_log('pid: {} vid: {}'.format(p.pid, p.vid))
         except AttributeError:
             continue
         if (p.pid == pid) and (p.vid == vid):
-            print('found target device pid: {} vid: {} port: {}'.format(p.pid, p.vid, p.device))
+            write_log('Périphérique trouvé pid: {} vid: {} port: {}'.format(p.pid, p.vid, p.device))
             ser_port.port = str(p.device)
             return ser_port
     return None
@@ -112,7 +112,7 @@ def find_rec_activite_id(cn,cur):
             return id_activite
 
     except:
-        write_log("erreur SQL " + query)
+        write_log("Err. SQL " + query)
     
     return False
 
@@ -130,7 +130,7 @@ def find_datas_for_actiivte(cn,cur,id_activite):
             return True
 
     except:
-        write_log("erreur SQL " + query)
+        write_log("Err. SQL " + query)
     
     return False
 
@@ -148,7 +148,7 @@ def insert_data_for_all(cn,cur,id_activite):
         cn.commit()
         return lastid
     except:
-        write_log("erreur SQL " + query)
+        write_log("Err. SQL " + query)
     
     return False
 
@@ -184,7 +184,7 @@ def is_tag_alwready_used(cn,cur,str_id,id_participant):
             return True
 
     except:
-        write_log("erreur SQL " + query)
+        write_log("Err. SQL " + query)
 
     return False
 
@@ -199,7 +199,7 @@ def change_tag_participant(cn,cur,str_id,id_participant):
         cn.commit()
        
     except:
-        write_log("erreur SQL " + query)
+        write_log("Err. SQL " + query)
 
 #====================================================
 # récuperation des infos concernant l'activite et le participant
@@ -217,7 +217,7 @@ def get_uid_infos(cn,cur,str_id):
         return row
 
     except:
-        write_log("erreur SQL " + query)
+        write_log("Err. SQL " + query)
     
     return False
 
@@ -235,8 +235,7 @@ def insert_data_for_participant(cn,cur,id_activite,id_participant,str_data):
         return lastid
 
     except:
-        write_log("erreur SQL " + query)
-)
+        write_log("Err. SQL " + query)
 
     return False
 
@@ -249,16 +248,18 @@ def write_last_update(lastid):
             f.write(lastid)
         f.close() 
     except:
-        write_log("erreur d'accès au fichier lastupdate")
+        write_log("Err. accès au fichier lastupdate")
 
 #====================================================
 # on laisse une trace dans le fichier de log
 #====================================================
 def write_log(log):
     try:
+        now = datetime.now()
+        dt_string = now.strftime("%H:%M:%S")
         with open(BASE_HTML + "/files/logs.txt","a") as f:
-            #print(url)
-            f.write( datetime.now() + " : " + log + "\n")
+
+            f.write( dt_string + " : " + log + "\n")
         f.close() 
     except:
         print ("erreur d'accès au fichier  de logs")
@@ -287,19 +288,22 @@ def start_for_all():
 #====================================================
 def insert_url(url):
     datas = url.split("&")
-
+    strlog = ""
     if len(datas)>0 :
         str_id = str(datas[0])
+        if len(str_id) > 0:
+            strlog = "id="+str_id
     else:
         str_id = "0"
 
     if len(datas)>1 :
         str_data = str(datas[1])
+        if len(str_data) > 0:
+            strlog += " data="+str_data
     else:
         str_data = "0"
     
     if len(str_id) > 0:
-        #print(str_id)
         #si le fichier tagToChange existe on est en mode insertion de tag
         if os.path.isfile(BASE_HTML + "/files/tagToChange"):
             #on récupère l'id du tag à modifier dans le fichier
@@ -314,7 +318,11 @@ def insert_url(url):
                 cur.close()
                 #on détruit le fichier pour dire que tout c'est bien passé
                 delete_tag_to_change()
-                
+            else:
+                strlog += " déjà utilisé"
+            
+            write_log(strlog)
+            return
 
         else:
             cn = mysql_connect()
@@ -336,7 +344,10 @@ def insert_url(url):
                         accuse_rcp = "#" + str_id + "\n"
                         mb_serie.write(accuse_rcp.encode("utf-8"))
 
-    write_log(url)
+            write_log(strlog)
+            return
+
+    write_log("Err. requête - ?"+url)
 
 
 #
@@ -345,16 +356,24 @@ def insert_url(url):
 
 while True:
     # Boucle d'attente MB
-    print('Detection microbit')
+    #print('Detection microbit')
     mb_serie = find_comport(PID_MICROBIT, VID_MICROBIT, 115200)
     if not mb_serie:
-        print('microbit absente')
-        time.sleep(5)
+        time.sleep(2)
     else:
         mb_serie.open()
-        print('communication avec MB Maitre ouverte')
+        write_log("Essais de connexion à Micro:bit")
         msg_start = "CONNECT\n"
-        mb_serie.write(msg_start.encode("utf-8"))
+
+        ok = False
+        while not ok:
+            mb_serie.write(msg_start.encode("utf-8"))
+            time.sleep(0.1)
+            strdatas = mb_serie.readline().decode('utf-8')
+            if strdatas:
+                if strdatas == "ok":
+                    write_log("Connexion à Micro:bit réussie")
+                    ok = True
         #
         # boucle principale
         #

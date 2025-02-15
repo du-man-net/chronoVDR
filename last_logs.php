@@ -1,5 +1,6 @@
 <?php
-
+error_reporting(E_ALL & ~E_DEPRECATED);
+ini_set("display_errors", 1);
 /* 
  * Copyright (C) 2025 Gérard Léon
  *
@@ -17,12 +18,25 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-if (file_exists("files/lastupdate")) {
-    $myfile = fopen("files/lastupdate", "r");
-    $last_modifiy = fgets($myfile);
-    fclose($myfile);
-    echo $last_modifiy;
+
+$logs_file = "files/logs.txt";
+
+if (file_exists($logs_file)) {
+    $lines = file($logs_file);
+    $txtold = implode ("",$lines);
+    
+    $lines = array_slice ($lines,-15);
+    $txtnew = implode ("",$lines);
+    
+    if($txtnew != $txtold){
+        $f=fopen($logs_file,"w+" );
+        fwrite($f,$txtnew);
+        fclose($f);
+    }
+    
+    $txt = "";
+    foreach($lines as $line){
+        $txt .= $line."<br>";
+    }
+    echo $txt;
 }      
-
-
-

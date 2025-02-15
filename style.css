@@ -202,6 +202,22 @@ select{
     height:20px;
 }
 
+/*------------------------------------*/
+/*apparence de la boite de logs       */
+/*------------------------------------*/
+#logs{
+    font:12px Courier New;
+    border-width:1px;
+    padding: 5px;
+    margin: 0;
+    position: absolute;
+    left:528px;
+    top:30px;
+    width:550px;
+    color: white;
+    background-color: black;
+    box-shadow: 0 3px 7px rgba(0, 0, 0, 0.3);
+}
 
 /*------------------------------------*/
 /*apparence des boites de dialogues*/
