@@ -343,6 +343,7 @@ def insert_url(url):
                         write_last_update(lastid)
                         accuse_rcp = "#" + str_id + "\n"
                         mb_serie.write(accuse_rcp.encode("utf-8"))
+                return
 
             write_log(strlog)
             return

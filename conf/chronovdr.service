@@ -1,0 +1,13 @@
+[Unit]
+Description=Serial chronovdr service
+After=multi-user.target
+
+[Service]
+Type=simple
+WorkingDirectory=/var/www/html/chronoVDR/serial
+ExecStart=sudo /usr/bin/python3 /var/www/html/chronoVDR/serial/microbit.py
+KillSignal=SIGINT
+Restart=on-failure
+
+[Install]
+WantedBy=multi-user.target

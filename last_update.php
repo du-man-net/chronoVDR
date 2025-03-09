@@ -17,8 +17,16 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-if (file_exists("files/lastupdate")) {
-    $myfile = fopen("files/lastupdate", "r");
+
+//on récupère le dernier id de la table data qui est enregisté
+//dans files/lastupdate. 
+//Si l'id a changé, alors on met a jour l'affichage
+//en faisant une requète sql. 
+
+$lastupdate = "files/lastupdate";
+        
+if (file_exists($lastupdate)) {
+    $myfile = fopen($lastupdate, "r");
     $last_modifiy = fgets($myfile);
     fclose($myfile);
     echo $last_modifiy;

@@ -163,17 +163,19 @@ function tdedit(el) {
 
 function tdclick(el) {
     //si pas d'édition de TGA en cours, on lance l'édition
-    console.log(tdInEdition);
      if(tdInEdition === 0){
         tdInEdition = 1;
         resetTdColor();
 
         //on mémorise l'ancien tag et on passe la cellule en jaune
-        var old_RFID = el.innerHTML;
+        var old_RFID = "";
+        if(!!el.innerHTML){
+            old_RFID = el.innerHTML;
+        }
         console.log(old_RFID);
         //on marque le td en cours et on passe la cellule en jaune
         el.id = "tagToChange";
-        el.innerHTML = "Badgez...";
+        //el.innerHTML = "Badgez...";
         el.style.backgroundColor = "yellow";
 
         //on récupère l'id du participant sur la même ligne

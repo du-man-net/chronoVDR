@@ -204,6 +204,16 @@ chmod +x /var/www/html/chronoVDR/serial/serial.sh
 chmod +x /var/www/html/chronoVDR/serial/microbit.py
 udevadm control --reload
 
+if [ -f /lib/systemd/system/chronovdr.service ]; then
+echo "Service de communication série installé"
+else
+echo "Installation du service de communication série"
+cp $vdrpath/conf/chronovdr.service /lib/systemd/system/chronovdr.service
+chmod 644 /lib/systemd/system/chronovdr.service
+systemctl daemon-reload
+sudo systemctl enable chronovdr.service
+fi
+
 echo
 echo '------------------------------------------------------'
 echo Hotspot WIFI
