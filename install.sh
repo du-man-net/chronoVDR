@@ -211,7 +211,7 @@ echo "Installation du service de communication série"
 cp $vdrpath/conf/chronovdr.service /lib/systemd/system/chronovdr.service
 chmod 644 /lib/systemd/system/chronovdr.service
 systemctl daemon-reload
-sudo systemctl enable chronovdr.service
+systemctl enable chronovdr.service
 fi
 
 echo
