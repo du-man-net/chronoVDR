@@ -19,33 +19,45 @@ ini_set("display_errors", 1);
  */
 
 //Gestion des logs des entrée WIFI/série
-
 $logs_file = "files/logs.txt";
+$logs = [];$t_logs = [];
 
 if (file_exists($logs_file)) {
-    //lecture du fichiers de logs
+    
+    $last_index = 0;
+    if (isset($_GET['idx'])) {
+        $last_index = $_GET['idx'];
+    }
+
     $lines = file($logs_file);
-    //concaténation du tableau de ligne en un texte
-    $txtold = implode ("",$lines);
     
-    //On ne garde que les 15 dernière ligne de logs
-    $lines = array_slice ($lines,-15);
-    //concaténation du tableau de ligne en un texte
-    $txtnew = implode ("",$lines);
+    //Si plus de 15 lignes ont été ajoutée, 
+    //on place l'index au début des 15 dernières
+    $nb_lines  = count($lines);
+    if($nb_lines-$last_index>15){
+        $last_index = $nb_lines-15;
+    }
     
-    //si le fichier de log a changé
-    if($txtnew != $txtold){
+    //On ne lit que les ligne nouvelles
+    for($i=0;$i<$nb_lines;$i++){
+        if($i >= $last_index){
+            $logs[] = $lines[$i];
+        } 
+    }
+    
+    if ($nb_lines>15){
+        //On ne garde que les 15 dernières ligne de logs
+        $lines = array_slice ($lines,-15);
+        //concaténation du tableau de ligne en un texte
+        $txtnew = implode ("",$lines);
         //on ré-écrit le fichier avec le nouveau contenu 
-        //tronqué à 15 lignes
         $f=fopen($logs_file,"w+" );
         fwrite($f,$txtnew);
         fclose($f);
     }
-    //on écrit le contenu du fichier pour affichage ajax
-    //dans la fenètre de logs de l'application.
-    $txt = "";
-    foreach($lines as $line){
-        $txt .= $line."<br>";
-    }
-    echo $txt;
+    
+    $last_index = count($lines);
+    $t_logs["last_index"]=$last_index;
+    $t_logs["logs"]=$logs;
+    echo json_encode($t_logs);
 }      

@@ -38,7 +38,7 @@ class Html {
         echo $this->format('</html>');
     }
 
-    public function openHead($value) {
+    public function openHead() {
         echo $this->format('<head>');
     }
 
@@ -104,8 +104,12 @@ class Html {
         echo $this->format('</table>');
     }
 
-    public function openTr() {
-        echo $this->format('<tr>');
+    public function openTr($id='') {
+        $ret = '<tr ';
+        if (!empty($id)) {
+            $ret .= 'id = "' . $id . '" ';
+        }
+        echo $ret . '>';
     }
 
     public function closeTr() {

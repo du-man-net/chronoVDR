@@ -18,15 +18,22 @@
  */
 
 //base de données
-$mypwdfile = dirname(__FILE__)."/../config/mysql_password";
+$mysql_password_path = dirname(__FILE__)."/../config/mysql_password";
+$admin_password_path = dirname(__FILE__)."/../config/admin_password";
 
-if (file_exists($mypwdfile)) {
-    $myfile = fopen($mypwdfile, "r");
-    $password_db = fgets($myfile);
-    $password_db = str_replace("\n","",$password_db);
-    fclose($myfile);
-}    
+function readPW($path){
+    if (file_exists($path)) {
+        $myfile = fopen($path, "r");
+        $password = fgets($myfile);
+        $password = str_replace("\n","",$password);
+        fclose($myfile);
+        return $password;
+    }
+    return false;
+}
+ 
 $username_db = "root";
-$admin_password = $password_db;
+$password_db = readPW($mysql_password_path);
+$admin_password = readPW($admin_password_path);
 $servername = "localhost";
 $database = "chronoVDR";

@@ -1,5 +1,7 @@
-<?php
 
+<?php
+error_reporting(E_ALL & ~E_DEPRECATED);
+ini_set("display_errors", 1);
 /* 
  * Copyright (C) 2025 Gérard Léon
  *
@@ -17,11 +19,14 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+
 require_once '../class/ActiviteClass.php';
 
 $myactivite = new Activite();
 
 $last_index = 0;
+$myDatas = [];$t_datas = [];
+
 if (isset($_GET['idx'])) {
     $last_index = $_GET['idx'];
 }
@@ -34,26 +39,16 @@ if ($last_index==0){
 }
 
 foreach ($datas as $data) {
-    $point = [];
-    
-    $point['x'] = date('c', strtotime($data['temps'])); 
-    
-    if(is_null($data['data'])){
-        $point['y'] = 0;
-    }else{
-        $point['y'] = $data['data'];
-    }
-    $t_data[$data['id_participant']][] = $point;
-    
+    $myData = [];
+    $myData['id'] = $data['id_participant'];
+    $myData['temps'] = $data['temps'];
+    $myData['data'] = $data['data'];
+    $myDatas[]=$myData;
     if($data['id']>$last_index){
         $last_index = $data['id'];
     }
 }
 
 $t_datas["last_index"]=$last_index;
-$t_datas["datas"] = $t_data;
+$t_datas["datas"]=$myDatas;
 echo json_encode($t_datas);
-
-
-
-    

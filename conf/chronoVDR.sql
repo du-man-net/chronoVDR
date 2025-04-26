@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Hôte : localhost:3306
--- Généré le : jeu. 06 fév. 2025 à 13:29
+-- Généré le : sam. 26 avr. 2025 à 00:55
 -- Version du serveur : 10.11.6-MariaDB-0+deb12u1
 -- Version de PHP : 8.2.26
 
@@ -35,6 +35,7 @@ CREATE TABLE `activites` (
   `vue` varchar(32) DEFAULT NULL,
   `nb_max` int(11) DEFAULT NULL,
   `temps_max` int(11) DEFAULT NULL,
+  `delais_min` int(11) NOT NULL DEFAULT 0,
   `etat` tinyint(1) NOT NULL DEFAULT 0
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
@@ -47,7 +48,6 @@ CREATE TABLE `activites` (
 CREATE TABLE `datas` (
   `id` int(11) NOT NULL,
   `id_participant` int(11) NOT NULL,
-  `id_activite` int(11) NOT NULL,
   `data` float DEFAULT NULL,
   `temps` datetime NOT NULL DEFAULT current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
@@ -81,6 +81,28 @@ CREATE TABLE `users` (
   `sexe` varchar(1) DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
+-- --------------------------------------------------------
+
+--
+-- Doublure de structure pour la vue `v_rec_participants`
+-- (Voir ci-dessous la vue réelle)
+--
+CREATE TABLE `v_rec_participants` (
+`nb_max` int(11)
+,`idp` int(11)
+,`ref_id` varchar(8)
+,`nb_datas` bigint(21)
+);
+
+-- --------------------------------------------------------
+
+--
+-- Structure de la vue `v_rec_participants`
+--
+DROP TABLE IF EXISTS `v_rec_participants`;
+
+CREATE ALGORITHM=UNDEFINED DEFINER=`root`@`localhost` SQL SECURITY DEFINER VIEW `v_rec_participants`  AS SELECT `activites`.`nb_max` AS `nb_max`, `participants`.`id` AS `idp`, `participants`.`ref_id` AS `ref_id`, (select count(`datas`.`id`) from (`datas` join `participants`) where `datas`.`id_participant` = `idp` group by `datas`.`id_participant`) AS `nb_datas` FROM (`activites` join `participants`) WHERE `activites`.`etat` = '2' AND `activites`.`id` = `participants`.`id_activite` ;
+
 --
 -- Index pour les tables déchargées
 --
@@ -96,7 +118,6 @@ ALTER TABLE `activites`
 --
 ALTER TABLE `datas`
   ADD PRIMARY KEY (`id`),
-  ADD KEY `idx_id_epreuve` (`id_activite`),
   ADD KEY `idx_id_participant` (`id_participant`);
 
 --
@@ -105,7 +126,8 @@ ALTER TABLE `datas`
 ALTER TABLE `participants`
   ADD PRIMARY KEY (`id`),
   ADD KEY `idx_id_epreuve` (`id_activite`),
-  ADD KEY `idx_id_user` (`id_user`);
+  ADD KEY `idx_id_user` (`id_user`),
+  ADD KEY `ref_idx` (`ref_id`);
 
 --
 -- Index pour la table `users`
@@ -149,7 +171,6 @@ ALTER TABLE `users`
 -- Contraintes pour la table `datas`
 --
 ALTER TABLE `datas`
-  ADD CONSTRAINT `datas_ibfk_1` FOREIGN KEY (`id_activite`) REFERENCES `activites` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
   ADD CONSTRAINT `datas_ibfk_2` FOREIGN KEY (`id_participant`) REFERENCES `participants` (`id`) ON DELETE CASCADE ON UPDATE CASCADE;
 
 --

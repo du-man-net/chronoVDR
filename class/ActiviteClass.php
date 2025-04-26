@@ -51,6 +51,7 @@ class Activite {
         'flag' => 0,
         'nb_max' => '',
         'temps_max' => '',
+        'delais_min' => 0,
         'etat' => '');
     public $type_activite = array(
         0x1C95 => "Endurance tours limités", //001 110 0100 101 01
@@ -117,6 +118,16 @@ class Activite {
         }
     }
 
+    public function get_flag() {
+        if ($this->_id > 0) {
+            $result = $this->_db->query("SELECT flag FROM activites WHERE id='" . $this->_id . "'");
+            if ($result->num_rows > 0) {
+                $ep = $result->fetch_assoc();
+                return $ep['flag'];
+            }
+        }
+    }
+    
     public function get_temps_max() {
         if ($this->_id > 0) {
             $result = $this->_db->query("SELECT temps_max FROM activites WHERE id='" . $this->_id . "'");
@@ -168,8 +179,8 @@ class Activite {
     }
 
     public function create() {
-        $this->_db->query("INSERT INTO activites (nom,organisateur,flag,nb_max,temps_max,vue) " .
-                "VALUES ('Sans nom','Sans nom','334','10','30','tableau.php')");
+        $this->_db->query("INSERT INTO activites (nom,organisateur,flag,nb_max,temps_max,delais_min,vue) " .
+                "VALUES ('Sans nom','Sans nom','334','10','30','0','tableau.php')");
         //on récupère l'ID
         $this->set_id($this->_db->insert_id, true);
     }
@@ -179,7 +190,7 @@ class Activite {
         if ($this->_id > 0) {
             $this->_db->query("SET lc_time_names = 'fr_FR'");
             $result = $this->_db->query("SELECT  "
-                    . "nom, organisateur, flag, etat, vue, nb_max, temps_max "
+                    . "nom, organisateur, flag, etat, vue, nb_max, temps_max, delais_min "
                     . "FROM activites WHERE id = '" . $this->_id . "'");
             if ($result->num_rows > 0) {
                 $ep = $result->fetch_assoc();
@@ -187,9 +198,10 @@ class Activite {
                 $this->infos['organisateur'] = $ep['organisateur'];
                 $this->infos['flag'] = intval($ep['flag']);
                 $this->infos['nb_max'] = $ep['nb_max'];
-                $this->infos['temps_max'] = $ep['temps_max'];
+                $this->infos['temps_max'] = intval($ep['temps_max']);
+                $this->infos['delais_min'] = intval($ep['delais_min']);
                 $this->infos['vue'] = $ep['vue'];
-                $this->infos['etat'] = $ep['etat'];
+                $this->infos['etat'] = intval($ep['etat']);
                 return $this->infos;
             }
         }
@@ -217,6 +229,7 @@ class Activite {
             if(!empty($this->infos["organisateur"])){$query .= "organisateur = '" . $this->infos["organisateur"]."' ,";}
             if(!empty($this->infos["nb_max"]))      {$query .= "nb_max = '" . $this->infos["nb_max"]."' ,";}
             if(!empty($this->infos["temps_max"]))   {$query .= "temps_max = '" . $this->infos["temps_max"]."' ,";}
+            $query .= "delais_min = '" . $this->infos["delais_min"]."' ,";
             if(!empty($this->infos["flag"]))        {$query .= "flag = '" . $this->infos["flag"]."' ";}
             $query .= " WHERE id = '" . $this->_id . "'";
             $this->_db->query($query);
@@ -324,12 +337,9 @@ class Activite {
     public function delete_participant($id_participants) {
         if (is_array($id_participants)) {
             foreach ($id_participants as $id_participant) {
-
-                $result = $this->_db->query("SELECT id FROM datas WHERE id_participant = '" . $id_participant . "' "
-                        . "AND id_activite = '" . $this->_id . "'");
+                $result = $this->_db->query("SELECT id FROM datas WHERE id_participant = '" . $id_participant . "'");
                 if ($result->num_rows == 0) {
-                    $this->_db->query("DELETE FROM participants WHERE id_activite = '" . $this->_id . "' "
-                            . "AND id = '" . $id_participant . "'");
+                    $this->_db->query("DELETE FROM participants WHERE id = '" . $id_participant . "'");
                 }
             }
         }
@@ -349,8 +359,8 @@ class Activite {
         if ($this->_id > 0) {
             $result = $this->_db->query("SELECT MAX(y.num) as max_count "
                     . "FROM ( "
-                    . "SELECT COUNT(id_participant)as num FROM datas "
-                    . "WHERE id_activite = '" . $this->_id . "' "
+                    . "SELECT COUNT(id_participant)as num FROM datas,participants "
+                    . "WHERE id_participant = participants.id AND participants.id_activite = '" . $this->_id . "' "
                     . "GROUP BY id_participant) as y");
             $row = $result->fetch_assoc();
             return $row['max_count'];
@@ -360,14 +370,40 @@ class Activite {
 
     public function get_datas($id_participant) {
         if ($this->_id > 0) {
-            $result = $this->_db->query("SELECT data,temps FROM datas " .
-                    "WHERE id_activite = '" . $this->_id . "' AND " .
-                    "id_participant = '" . $id_participant . "'");
+            $result = $this->_db->query("SELECT id,data,temps FROM datas " .
+                    "WHERE id_participant = '" . $id_participant . "'");
             return $result;
         }
         return array();
     }
 
+    //recupération des dernière données à partir d'un index
+    //utilisé seulement pour la mise à jour d'une de l'interface en AJAX
+    public function get_all_datas() {
+        if ($this->_id > 0) {
+            $result = $this->_db->query("SELECT datas.id,id_participant,data,temps "
+                    . "FROM datas,participants "
+                    . "WHERE id_participant = participants.id "
+                    . "AND participants.id_activite = '" . $this->_id . "'");
+            return $result;
+        }
+        return array();
+    }
+    
+    //recupération des dernière données à partir d'un index
+    //utilisé seulement pour la mise à jour d'une de l'interface en AJAX
+    public function get_last_datas($last_index) {
+        if ($this->_id > 0) {
+            $result = $this->_db->query("SELECT datas.id,id_participant,data,temps "
+                    . "FROM datas,participants "
+                    . "WHERE id_participant = participants.id "
+                    . "AND participants.id_activite = '" . $this->_id . "' "
+                    . "AND datas.id > '".$last_index."'");
+            return $result;
+        }
+        return array();
+    }
+    
     /*
      * ------------------------------------------------------
      * Met en place les headers pour le téléchargement du fichier
@@ -410,6 +446,8 @@ class Activite {
     }
 
     public function delete_all_datas() {
-        $this->_db->query("DELETE FROM datas WHERE id_activite = '" . $this->_id . "'");
+        
+        $this->_db->query("DELETE FROM datas WHERE id IN "
+                ."(SELECT datas.id FROM datas,participants WHERE id_participant = participants.id AND participants.id_activite = '" . $this->_id . "')");
     }
 }

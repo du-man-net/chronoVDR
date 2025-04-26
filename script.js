@@ -20,12 +20,15 @@ var tdInEdition = 0;
 var oFrame;
 var last_maj=0;
 var last_log=0;
+var xhttpEdit;
+var last_logs_index = 0;
 
 /**
  * Gestion dimensionnement en hauteur de l'iframe
  */
 
 window.onload = function () {
+    console.log = console.info;
     oFrame = window.document.getElementById('datas');
     
     setInterval(function () {
@@ -48,7 +51,7 @@ window.onload = function () {
                     if (this.responseText.length > 0) {       
                         //si la date de la dernière maj de la bdd est différente de celle mémorisée
                         if(last_maj !== this.responseText){
-                            console.log(last_maj);
+                            //console.log(last_maj);
                             //on enregistre la date de la maj
                             last_maj = this.responseText;
                             //on envoi un message à l'iframe pour la qu'elle mette les donées à jour
@@ -59,7 +62,10 @@ window.onload = function () {
                 }
             };
             xhttp.send();
-        }else if (document.getElementsByName('etat')[0].value == 1) {
+        }
+        
+        if (document.getElementsByName('etat')[0].value > 0) {
+        //if (parseInt(document.getElementsByName('etat')[0].value) > 0) {
             const el_dialog = document.getElementById("logs");
             showlogs = true;
             if (el_dialog.style.display) {
@@ -68,26 +74,39 @@ window.onload = function () {
                 }
             }
             if (showlogs===true) {
-                var xhttp = new XMLHttpRequest();
-                xhttp.open("GET", encodeURI("last_logs.php", true));
-                xhttp.onreadystatechange = function () {
+
+                var xhttplog = new XMLHttpRequest();
+                xhttplog.open("GET", encodeURI("last_logs.php?idx="+last_logs_index, true));
+                xhttplog.onreadystatechange = function () {
                     if (this.readyState === 4 && this.status === 200) {
                         //si la réponse AJAX n'est pas vide
-
+                        
                         if (this.responseText.length > 0) { 
-                            content = this.responseText;
-                            //si la date de la dernière maj de la bdd est différente de celle mémorisée
-                            if(last_log !== content){
-                                //on enregistre la date de la maj
-                                last_log = content;
-                                //on ajoute l'élément à la console de log
-                                document.getElementById('logs').innerHTML = content;
+                            
+                            const datas = JSON.parse(this.responseText);
+                            
+                            last_logs = datas['logs'];
+                            if(last_logs.length>0){
+                                
+                                txt_logs = document.getElementById('logs');
+                                
+                                for (const last_log of last_logs) {
+                                    var newDiv = document.createElement("div");
+                                    var newContent = document.createTextNode(last_log);
+                                    newDiv.appendChild(newContent);
+                                    txt_logs.append(newDiv);
+                                    if (txt_logs.childElementCount > 15) {
+                                        txt_logs.firstElementChild.remove();
+                                    }
+                                }
+                                //on récupère le dernier index pour minimiser les reqêtes suivantes
+                                last_logs_index = datas['last_index'];
                             }
                         }
 
                     }
                 };
-                xhttp.send();
+                xhttplog.send();
             }
         }
 
@@ -134,18 +153,29 @@ function resetTdColor() {
 }
 
 function setNewId(el){
+    contenu = "";
     if (el.innerHTML){
-        var contenu = el.innerHTML;
+        var ctn = el.innerHTML;
+        console.log(ctn);
     }
-    contenu = contenu.split("<br>")[0];
-    var id_participant = getIdParticipantFromTD(el);
 
+    var id_participant = getIdParticipantFromTD(el);
+    //console.log(id_participant);
+    
     var xhttp = new XMLHttpRequest();
-    xhttp.open("GET", encodeURI("ajax_back.php?id_participant=" + id_participant + "&ref_id=" + contenu), true);
+    //on appelle le script de récupération de TAG
+    xhttp.onreadystatechange = function() {
+        if (this.readyState === XMLHttpRequest.DONE && this.status === 200) {
+            console.log("ref_id changé pour "+id_participant);
+            el.style.backgroundColor = "white";
+            el.setAttribute("contenteditable", false);
+            el.blur();
+        }
+    };
+    xhttp.open("GET", "ajax_back.php?id_participant=" + encodeURI(id_participant) + "&ref_id=" + encodeURI(ctn), true);
     xhttp.send();
-    el.style.backgroundColor = "white";
-    el.setAttribute("contenteditable", false);
-    el.blur();
+    
+
 }
 
 function tdedit(el) {
@@ -163,88 +193,93 @@ function tdedit(el) {
 
 function tdclick(el) {
     //si pas d'édition de TGA en cours, on lance l'édition
-     if(tdInEdition === 0){
+    if(xhttpEdit){
+        xhttpEdit.abort();
+        //console.log("xhttpEdit aborted");
+    }
+    xhttpEdit = new XMLHttpRequest();
+    
+    if(tdInEdition === 0){
         tdInEdition = 1;
+        
+        //on supprime les résidus de couleur jaune
         resetTdColor();
 
-        //on mémorise l'ancien tag et on passe la cellule en jaune
-        var old_RFID = "";
-        if(!!el.innerHTML){
-            old_RFID = el.innerHTML;
-        }
-        console.log(old_RFID);
         //on marque le td en cours et on passe la cellule en jaune
         el.id = "tagToChange";
-        //el.innerHTML = "Badgez...";
         el.style.backgroundColor = "yellow";
 
         //on récupère l'id du participant sur la même ligne
         var id_participant = getIdParticipantFromTD(el);
+        //console.log("id_participant="+id_participant);
 
         //on appelle le script de récupération de TAG
-        var xhttp = new XMLHttpRequest();
-        xhttp.open("GET", encodeURI("ajax_back.php?id_participant=" + id_participant), true);
+        xhttpEdit.onreadystatechange = function() {
+            //console.log (this.readyState + " " + this.status);
+            if (this.readyState === XMLHttpRequest.DONE && this.status === 200) {
 
-        xhttp.onreadystatechange = function () {
-            if (this.readyState === 4 && this.status === 200) {
-
-                //si on a une réponse positive de l'appelle AJAX
-                //on reprend le tag td en cours d'édition
-                var tagToChange = document.getElementById("tagToChange");
-
-                //si la réponse AJAX n'est pas vide
-                if (this.responseText.length > 0) {
-                    //si l'édition est toujours en mode scan
-                    //on clos l'édition et on passe à l'édition du tag suivant
-                    if (tdInEdition === 1) {
+                //si on est dans le mode scan
+                if (tdInEdition === 1) {
+                    //console.log("mode edition");
+                    
+                    //on retroue le case du RFID en cours d'édition
+                    var tagToChange = document.getElementById("tagToChange");
+                    //si on récupère un rfid
+                    if (this.responseText.length > 0) {
+                        //on enregistre le rfid
+                        //console.log(this.responseText);
                         tagToChange.innerHTML = this.responseText;
                         tagToChange.style.backgroundColor = "white";
                         nextTD = nextTDbyRow(tagToChange);
                         tagToChange.id = "";
                         tdInEdition = 0;
                         if (nextTD) {
+                            //on passe à l'éditon de la ligne suivante
+                            //console.log("edition case suivante");
                             tdclick(nextTD);
                         }
-                    }
-                } else {
-                    //si l'édition est toujours en mode scan
-                    //on clos l'édition
-                    if (tdInEdition === 1) {
-                        tagToChange.innerHTML = old_RFID;
+                    //si on ne résupère pas de rfid, le scan s'est mal passé 
+                    }else{
+                        //on remet tout en mode noral et on quitte le mode scan
+                        //console.log("retour ajax vide");
                         tagToChange.style.backgroundColor = "white";
                         tagToChange.id = "";
                         tdInEdition = 0;
-                        el.blur();
+                        el.blur(); 
                     }
+                //si on est plus dans le mode scan
+                }else{
+                    //console.log("mode edition quitté, ajax ignoré");
                 }
-
             }
         };
-        xhttp.send();
         
-    // si on a déja clicker une fois
+        xhttpEdit.open("GET", "ajax_back.php?id_participant=" + encodeURI(id_participant), true);
+        xhttpEdit.timeout = 15000;
+        xhttpEdit.send(null);
+        
+    // si on est déja en mode scan 
     } else if(tdInEdition === 1){
-        tdInEdition = 2;
-        resetTdColor();
-        el.setAttribute("contenteditable", true);
-        el.style.backgroundColor = "#f2f3f4";
-        el.focus();
-        el.addEventListener("keydown", function(event){
-            if (event.key === "Enter") {
-                tdInEdition = 0;
-                console.log("validation" + tdInEdition);
+        var tagToChange = document.getElementById("tagToChange");
+        if(tagToChange){
+            if(tagToChange===el){
+                //console.log("demande effacement de "+getIdParticipantFromTD(el));
+                tagToChange.innerHTML = "";
                 setNewId(el);
-                event.preventDefault();
-                return false;
+            }else{
+                //console.log("fin edition de "+getIdParticipantFromTD(tagToChange));
             }
-        },false);
+            tagToChange.style.backgroundColor = "white";   
+            tagToChange.id = "";
+        }
+        tdInEdition = 0;   
     }
 }
 
 function starting(state) {
     e = document.getElementsByName('etat')[0];
     e.value = state;
-    console.log(state);
+    //console.log(state);
     document.forms[0].submit();
 }
 
@@ -287,34 +322,17 @@ function save_type_activite(el){
     }
     el.form.submit();
 }
-//function show_dialog_activite($create) {
-//    const $propriete_activite = document.getElementById("propriete_acivite");
-//    const $show_activite = document.getElementById("show_activite");
-//    const $btnaction = document.getElementById("btnaction");
-//    const $titre = document.getElementById("proptitle");
-//    if (!$propriete_activite.open) {
-//        $show_activite.value = "open";
-//        if ($create === true) {
-//            if (document.getElementById('title_activite').value.length > 0) {
-//                title_activite = saveValue('title_activite');
-//                organisateur = saveValue('organisateur');
-//            }
-//            $btnaction.name = 'creer_activite';
-//            $btnaction.innerHTML = 'Créer';
-//            $titre.innerHTML = "création d'une nouvelle activité";
-//
-//        } else {
-//            if (document.getElementById('title_activite').value.length === 0) {
-//                setValue('title_activite', title_activite);
-//                setValue('organisateur', organisateur);
-//            }
-//            $btnaction.name = 'enregistrer_activite';
-//            $btnaction.innerthml = 'Enregistrer';
-//            $titre.innerHTML = 'Paramètres de l\'activité';
-//        }
-//        $propriete_activite.show();
-//    }
-//}
+
+function creer_activite(){
+    const el_dialog = document.getElementById("dialog_menu");
+    el_dialog.blur();
+    show_dialog_menu();
+    var evt = document.createEvent("MouseEvents");
+    evt.initMouseEvent("click", true, true, window,0, 0, 0, 0, 0, false, false, false, false, 0, null);
+    document.getElementById("btn_creer_activite").dispatchEvent(evt);
+    
+}
+
 function show_dialog_logs() {
     const el_dialog = document.getElementById("logs");
     const el_value = document.getElementById("show_logs");
@@ -329,6 +347,22 @@ function show_dialog_logs() {
     }
     el_value.value = "none";
     el_dialog.style.display = "none";
+}
+
+function show_dialog_menu() {
+    const el_dialog = document.getElementById("dialog_menu");
+    const el_value = document.getElementById("show_menu");
+    if (el_value.value==="open") {
+        //if (el_dialog.open) {
+            el_value.value = "close";
+            el_dialog.close();
+        //}
+    }else{
+        //if (!el_dialog.open) {
+            el_value.value = "open";
+            el_dialog.show();
+        //}
+    }
 }
 
 function dialog(name, value, state) {
@@ -347,6 +381,12 @@ function dialog(name, value, state) {
             el_dialog.close();
         }
     }
+}
+
+function setVue(vue){
+    const el_value = document.getElementById("selVue");
+    el_value.value = vue;
+    document.forms[0].submit();
 }
 
 function show_dialog_activite() {

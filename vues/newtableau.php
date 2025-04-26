@@ -85,21 +85,10 @@ echo '<style>
     }
     </style>';
 
-echo '<script language="JavaScript" type="text/JavaScript">';
-echo 'window.addEventListener("resize", function () {
-      const parentIframe = window.parent.frames;
-      if (parentIframe && parentIframe.ajusteIframe) {
-        parentIframe.ajusteIframe();
-      }
-    });';
-echo 'window.addEventListener("message", function(event) {
-  if (event.origin == " ") {
-    return;
-  }
-  window.location.reload();
+echo'
+<script type="module" src="_tableau.js"></script> 
+';
 
-});';
-echo '</script>';
     
 $myhtml->closeHead();
 
@@ -159,7 +148,7 @@ if (!empty($participants)) {
         }else{
             $nbdatas = 1;
         }
-        
+        $j = 0;
         foreach ($myvue->make_datas($participant['id_participant']) as $datas_line) {
             /*
              * ----------------------------------------------------------------
@@ -174,32 +163,24 @@ if (!empty($participants)) {
                 $nbline = 1;
             }
         
-            $myhtml->openTr();
+            $myhtml->openTr($participant['id_participant'].$j);
+            
             $myhtml->openTd('','height='.($nbline*23).'px');
             echo "&nbsp;";
             $myhtml->closeTd();
-            /*
-             * ----------------------------------------------------------------
-             * affichage d'une ligne de data
-             * ----------------------------------------------------------------
-             */
-
             $i = 0;
-            foreach($datas_line as $data){
+            foreach($myvue->make_headers() as $header){
                 if(($i == count($datas_line)-1) && ($myvue->infos['flag'] & IS_LIMIT)){
                     $myhtml->openTd('total');
                 }else{
                     $myhtml->openTd('data');
                 }
-                if (empty($data)){
-                    echo "&nbsp;";
-                }else{
-                    echo $data;
-                }
+                echo "&nbsp;";
                 $myhtml->closeTd();
                 $i++;
             }
             $myhtml->closeTr();
+            $j++;
         }
     }
 }

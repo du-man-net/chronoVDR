@@ -21,7 +21,32 @@
 import { Chart } from "chart.js/auto";
 import 'chartjs-adapter-luxon';
 
+var tabIdx = new Array();
+var last_index = 0;
+var flag = 0;
 var myChart = {};
+
+const BY_RFID = 0x1;
+const BY_IDMAT = 0x2;
+
+const SHOW_TIME = 0x4 ;
+const SHOW_DATA = 0x8 ;
+const SHOW_START = 0x10 ;
+
+const TIME_SINCE_START = 0x20;
+const HOUR_PER_LAP = 0x40;
+const TIME_PER_LAP = 0x80;
+//const DATA_PER_TEST = 0x100;
+
+const IS_LIMIT_TIME = 0x200;
+const IS_LIMIT_LAP = 0x400;
+const IS_LIMIT = 0x800;
+
+const SHOW_FINAL_TIME = 0x1000;
+const SHOW_NUMBER_LAPS = 0x2000;
+const SHOW_TOTAL_DATA = 0x4000;
+
+
 window.addEventListener("resize", function () {
     const parentIframe = window.parent.frames;
     if (parentIframe && parentIframe.ajusteIframe) {
@@ -42,8 +67,9 @@ window.onload = function () {
             data: {
                 labels: [],
                 datasets: [{
-                        pointRadius: 4,
+                        pointRadius: 1,
                         pointBackgroundColor: "rgba(0,0,255,1)",
+                        borderWidth: 1,
                         data: [],
                         fill: false
                     }]
@@ -88,29 +114,52 @@ window.onload = function () {
 
 function putAjaxDatasToGraph() {
     var xhttp = new XMLHttpRequest();
-    xhttp.open("GET", encodeURI("_graphique.php"), true);
+    xhttp.open("GET", encodeURI("_graphique.php?idx="+last_index), true);
     xhttp.onreadystatechange = function () {
         if (this.readyState === 4 && this.status === 200) {
             if (this.responseText.length > 0) {
 
-                var users_datas = JSON.parse(this.responseText);
+                const datas = JSON.parse(this.responseText);
+                
+                //on récupère les drapeaux de l'activité si ils sont transmis (une seule fois)
+                if(datas['flag']){
+                    flag = datas['flag'];
+                }
 
-                for (const users_data of users_datas) {
-                    var id = users_data['id'];
-                    var datas = users_data['datas'];
-                    console.log(datas);
-                    //var myChart = document.getElementById(id);
+                //on récupère le dernier index pour minimiser les reqêtes suivantes
+                last_index = datas['last_index'];
+                const users_datas = datas['datas'];
+                
+                for (var id in users_datas) {
+                    const udatas = users_datas[id];
 
                     // Create an array of ISO strings
-                    let datetimes_isos = [];
-                    let datatemp = [];
-                    datas.forEach(function (item) {
-                        datetimes_isos.push(new Date(item['x']));
-                        datatemp.push(item['y']);
+
+                    udatas.forEach(function (item) {
+                        
+                        let dt = new Date(item['x']);
+                        console.log(id);
+                        let labels = myChart[id].data.labels;
+                        labels.push(dt);
+                        
+                        if(check(TIME_PER_LAP)){
+                            
+                            if (labels.length>1){
+                                const datebefore = labels[labels.length-2];
+                                console.log(Date.parse(datebefore));
+                                console.log(Date.parse(dt));
+                                
+                                const diff = (Date.parse(dt) - Date.parse(datebefore))/1000;
+                                myChart[id].data.datasets[0].data.push(diff);
+                            }else{
+                                myChart[id].data.datasets[0].data.push(0);
+                            }
+                            
+                        }else{
+                            myChart[id].data.datasets[0].data.push(item['y']);
+                        }
+                        
                     });
-                    
-                    myChart[id].data.labels = datetimes_isos;
-                    myChart[id].data.datasets[0].data = datatemp;
                     myChart[id].update();
                 }
 
@@ -121,10 +170,17 @@ function putAjaxDatasToGraph() {
 }
 
 window.addEventListener("message", function (event) {
-    if (event.origin == " ") {
+    if (event.origin === " ") {
         return;
     }
+    console.log("refresh");
     putAjaxDatasToGraph();
 });
 
+function check(thisflag){
+    if ((flag & thisflag) === thisflag) {
+        return true;
+    }
+    return false;
+}
 

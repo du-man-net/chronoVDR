@@ -191,6 +191,7 @@ class Vue extends Activite {
                         if($data['temps']){
                             $dt2 = new DateTimeImmutable($data['temps']);
                             $interval = $dt1->diff($dt2);
+                            //echo $interval.'<br/>';
                             $dt1 = $dt2;
                             $line[$idy_time][$index] = $interval->format("%I:%S");
                         }else{
@@ -349,7 +350,7 @@ class Vue extends Activite {
                     $line_data = array();
                     $i = 0;
                     $id_participant = $this->get_assoc_parent($participant['id']);
-                    foreach ($this->make_datas($id_participant,true) as $datas_line) {
+                    foreach ($this->make_datas($id_participant,false) as $datas_line) {
                         $line_data[$i] = "";
                         foreach ($datas_line as $data) {
                             $line_data[$i] .= $data . $delimiter;

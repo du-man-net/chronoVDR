@@ -18,21 +18,47 @@
 
 
 vdrpath='chronoVDR-master'
+real_user="${SUDO_USER:-$(whoami)}"
 
 echo '------------------------------------------------------'
-while [ -z "$adminPW" ]; do
-echo "Entrez le mot de passe admin : "
+while [ -z "$mysql_password" ]; do
+echo "Mot de passe de la base de donnée : "
+echo 
+echo "- Utilisé par tous les modules de chrono.vdr"
+echo "- Utilisé par phpmyadmin"
+echo 
+echo "Mot de passe : "
 read -s first
-read -s -p "Confirmer le mot de passe admin: " second
+read -s -p "Confirmer le mot de passe: " second
 if [ $first == $second ];
 then
-adminPW=$first
+mysql_password=$first
 else
 echo "Les mots de passe sont différents. Reessayez..."
 continue
 fi
 break
 done
+
+echo '------------------------------------------------------'
+while [ -z "$admin_password" ]; do
+echo "Mot de passe admin : "
+echo 
+echo "- Utilisé pour un accès complet à chrono.vdr"
+echo 
+echo "Mot de passe : "
+read -s first
+read -s -p "Confirmer le mot de passe: " second
+if [ $first == $second ];
+then
+admin_password=$first
+else
+echo "Les mots de passe sont différents. Reessayez..."
+continue
+fi
+break
+done
+
 
 echo
 echo '------------------------------------------------------'
@@ -81,6 +107,20 @@ fi
 
 echo
 echo '------------------------------------------------------'
+echo Configartion de apache2 ssl
+echo
+if [ -d /etc/ssl/localcerts ]; then
+echo "certificats crées"
+else
+echo "Création des certificats"
+mkdir -p /etc/ssl/localcerts
+SUBJ="/C=FR/ST=chrono.vdr/O=chrono.vdr"
+openssl req -new -x509 -days 365 -nodes -out /etc/ssl/localcerts/apache.pem -keyout /etc/ssl/localcerts/apache.key -subj "$SUBJ"
+chmod 600 /etc/ssl/localcerts/apache*
+fi
+
+echo
+echo '------------------------------------------------------'
 echo Configartion de apache2
 echo
 
@@ -110,7 +150,7 @@ echo Sécurisation de mariadb-server
 echo
 
 mysql --user=root  <<EOF
-ALTER USER 'root'@'localhost' IDENTIFIED VIA mysql_native_password USING PASSWORD("$adminPW");
+ALTER USER 'root'@'localhost' IDENTIFIED VIA mysql_native_password USING PASSWORD("$mysql_password");
 DELETE FROM mysql.user WHERE USER LIKE '';
 DELETE FROM mysql.user WHERE user = 'root' and host NOT IN ('127.0.0.1', 'localhost');
 FLUSH PRIVILEGES;
@@ -123,8 +163,8 @@ echo '------------------------------------------------------'
 echo Mise en place de la base de donnée
 echo
 
-mysql --user=root --password=$adminPW --execute="create database chronoVDR;"
-mysql --user=root --password=$adminPW chronoVDR < $vdrpath/conf/chronoVDR.sql
+mysql --user=root --password=$mysql_password --execute="create database chronoVDR;"
+mysql --user=root --password=$mysql_password chronoVDR < $vdrpath/conf/chronoVDR.sql
 
 fi
 
@@ -141,8 +181,8 @@ export DEBIAN_FRONTEND=noninteractive
 debconf-set-selections <<< "phpmyadmin phpmyadmin/reconfigure-webserver multiselect apache2"
 debconf-set-selections <<< "phpmyadmin phpmyadmin/dbconfig-install boolean true"
 debconf-set-selections <<< "phpmyadmin phpmyadmin/db/app-user string root"
-debconf-set-selections <<< "phpmyadmin phpmyadmin/mysql/app-pass password $adminPW"
-debconf-set-selections <<< "phpmyadmin phpmyadmin/app-password-confirm password $adminPW"
+debconf-set-selections <<< "phpmyadmin phpmyadmin/mysql/app-pass password $mysql_password"
+debconf-set-selections <<< "phpmyadmin phpmyadmin/app-password-confirm password $mysql_password"
 apt install phpmyadmin -y -q 
 fi
 
@@ -175,10 +215,11 @@ if [ -f /var/www/html/chronoVDR/config/config.php ]; then
 echo "configuration chronoVDR OK"
 else
 mkdir -p /var/www/html/chronoVDR/config
-echo  $"$adminPW" > /var/www/html/chronoVDR/config/mysql_password
+echo  $"$mysql_password" > /var/www/html/chronoVDR/config/mysql_password
+echo  $"$admin_password" > /var/www/html/chronoVDR/config/admin_password
 fi
 
-chown -R pi:www-data /var/www/html/
+chown -R $real_user:www-data /var/www/html/
 chmod -R 770 /var/www/html/
 
 service apache2 restart
@@ -198,21 +239,9 @@ cp $vdrpath/conf/99-serial_background.rules /etc/udev/rules.d/99-serial_backgrou
 fi
 
 cp -R $vdrpath/serial /var/www/html/chronoVDR/
-chown -R pi:www-data /var/www/html/chronoVDR/serial/
-chmod -R 770 /var/www/html/chronoVDR/serial/
-chmod +x /var/www/html/chronoVDR/serial/serial.sh
-chmod +x /var/www/html/chronoVDR/serial/microbit.py
+chown -R $real_user:www-data /var/www/html/chronoVDR/serial
+chmod -R 770 /var/www/html/chronoVDR/serial
 udevadm control --reload
-
-if [ -f /lib/systemd/system/chronovdr.service ]; then
-echo "Service de communication série installé"
-else
-echo "Installation du service de communication série"
-cp $vdrpath/conf/chronovdr.service /lib/systemd/system/chronovdr.service
-chmod 644 /lib/systemd/system/chronovdr.service
-systemctl daemon-reload
-systemctl enable chronovdr.service
-fi
 
 echo
 echo '------------------------------------------------------'
@@ -241,7 +270,8 @@ echo "création du Hotspot wifi pour $wifidevice"
 nmcli con add type wifi ifname $wifidevice mode ap con-name Hotspot ssid chrono.vdr
 nmcli con modify Hotspot ipv4.method shared ipv4.address 172.16.1.1/24
 nmcli con modify Hotspot ipv6.method disabled
-nmcli con modify Hotspot wifi-sec.key-mgmt wpa-psk
+nmcli con modify Hotspot 802-11-wireless.band bg
+nmcli con modify Hotspot 802-11-wireless-security.pairwise ccmp 802-11-wireless-security.proto rsn
 nmcli con modify Hotspot wifi-sec.psk "12345678"
 nmcli con up Hotspot
 fi

@@ -43,9 +43,9 @@ class Form {
         echo $this->format('<label for="' . $name . '">' . $titre . ' : </label>');
     }
 
-    public function text($name, $value = '', $other = '') {
+    public function text($name, $value = null, $other = '') {
         $ret = '<input type="text" name="' . $name . '" id="' . $name . '" ';
-        if (!empty($value)) {
+        if (!is_null($value)) {
             $ret .= 'value="' . $value . '" ';
         }
         if (!empty($other)) {
@@ -59,14 +59,14 @@ class Form {
         if($readonly){
             $ret .= 'readonly="true"';
         }
-        echo $this->format($ret . 'name="'.$name.'" rows="'.$rows.'" cols="'.$cols.'">');
+        echo $this->format($ret . 'name="'.$name.'" id="'.$name.'" rows="'.$rows.'" cols="'.$cols.'">');
         echo $this->format($value);  
         echo $this->format('</textarea>');
     }
     
-    public function password($name, $value = '', $other = '') {
+    public function password($name, $value = null, $other = '') {
         $ret = '<input type="password" name="' . $name . '" id="' . $name . '" ';
-        if (!empty($value)) {
+        if (!is_null($value)) {
             $ret .= 'value="' . $value . '" ';
         }
         if (!empty($other)) {
@@ -75,9 +75,9 @@ class Form {
         echo $this->format($ret . '/>');
     }
     
-    public function time($name, $value = '', $other = '') {
+    public function time($name, $value = null, $other = '') {
         $ret = '<input step="1" type="time" name="' . $name . '" id="' . $name . '" ';
-        if (!empty($value)) {
+        if (!is_null($value)) {
             $ret .= 'value="' . $value . '" ';
         }
         if (!empty($other)) {
@@ -86,9 +86,9 @@ class Form {
         echo $this->format($ret . '/>');
     }
 
-    public function date($name, $value = '', $other = '') {
+    public function date($name, $value = null, $other = '') {
         $ret = '<input type="date" name="' . $name . '" id="' . $name . '" ';
-        if (!empty($value)) {
+        if (!is_null($value)) {
             $ret .= 'value="' . $value . '" ';
         }
         if (!empty($other)) {
@@ -97,9 +97,9 @@ class Form {
         echo $this->format($ret . '/>');
     }
 
-    public function button($name, $value = '', $other='') {
+    public function button($name, $value = null, $other='') {
         $ret = '<input type="submit" name="'.$name.'" id="'.$name.'" '; 
-        if (!empty($value)) {
+        if (!is_null($value)) {
             $ret .= 'value="'.$value.'" ';
         }
         if (!empty($other)) {
@@ -108,11 +108,11 @@ class Form {
         echo $this->format($ret.'/>');
     }
 
-    public function hidden($name, $value = '') {
+    public function hidden($name, $value = null) {
         echo $this->format('<input type="hidden" name="' . $name . '" id="' . $name . '" value="' . $value . '"/>');
     }
 
-    public function checkbox($name, $value = '', $other = '') {
+    public function checkbox($name, $value, $other = '') {
         $ret = '<input type="checkbox" name="' . $name . '" value="' . $value . '" ';
         if (!empty($other)) {
             $ret .= $other;
@@ -140,7 +140,7 @@ class Form {
         echo $this->format($ret . '/>');
     }
   
-    public function option($val, $value = '', $select = false) {
+    public function option($val, $value, $select = false) {
         $ret = '<option value="' . $val .'" ';
         if ($select) {
             $ret .= 'selected="selected"';

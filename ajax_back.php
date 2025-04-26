@@ -19,6 +19,12 @@
 
 require_once 'class/db.php';
 
+function write_log($log){
+    $f = fopen("files/logs_ajax.txt", "a+") or die("Unable to open file!");
+    fwrite($f, date('H:i:s')." - ".$log . "\n");
+    fclose($f);   
+}  
+
 function mstime() {
     $mstime = explode(' ', microtime());
     return $mstime[1] . '' . (int) ($mstime[0] * 1000);
@@ -26,7 +32,9 @@ function mstime() {
 
 if (isset($_GET['id_participant'])) {
     $id_participant = $_GET['id_participant'];
-
+    
+    //write_log($id_participant);
+    
     if (isset($_GET['ref_id'])) {
         
         $ref_id = $_GET['ref_id'];
@@ -38,14 +46,18 @@ if (isset($_GET['id_participant'])) {
         $myfile = fopen("files/tagToChange", "w") or die("Unable to open file!");
         fwrite($myfile, $id_participant . "\n");
         fclose($myfile);
-
-        //on attend 10 secondes que la page upload.php soit appelée pour 
+        
+        //write_log($id_participant . ' écrit dans tagToChange');
+        
+        //on attend 15 secondes que la page upload.php soit appelée pour 
         //récupérer l'id et ajouter le tag RFID dans la base donnée
         $debut = mstime();
         $last = $debut;
-        while (file_exists("files/tagToChange") && ((mstime() - $debut) < 10000)) {
+        while (file_exists("files/tagToChange") && ((mstime() - $debut) < 15000)) {
             
         }
+        //write_log('tagToChange '.$id_participant.' supprimé');
+        
         //Si le fichier n'existe plus, c'est que tout c'est bien passé
         if (!file_exists("files/tagToChange")) {
             //on retourne le RFID pour affichage Javascript dans l'interface
@@ -58,5 +70,6 @@ if (isset($_GET['id_participant'])) {
         }
     }
 }
+
 
 close_db($mysqli);
