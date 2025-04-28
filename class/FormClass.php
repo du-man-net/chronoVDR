@@ -39,8 +39,14 @@ class Form {
         echo $this->format('</form>');
     }
 
-    public function label($name, $titre) {
-        echo $this->format('<label for="' . $name . '">' . $titre . ' : </label>');
+    public function label($name, $titre, $other = '') {
+        $ret = '<label for="' . $name . '" ';
+        if (!empty($other)) {
+            $ret .= $other;
+        }else{
+            $titre .= ' : ';
+        }
+        echo $this->format($ret . '>' . $titre . '</label>');
     }
 
     public function text($name, $value = null, $other = '') {

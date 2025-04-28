@@ -324,13 +324,12 @@ function save_type_activite(el){
 }
 
 function creer_activite(){
-    const el_dialog = document.getElementById("dialog_menu");
-    el_dialog.blur();
-    show_dialog_menu();
-    var evt = document.createEvent("MouseEvents");
-    evt.initMouseEvent("click", true, true, window,0, 0, 0, 0, 0, false, false, false, false, 0, null);
-    document.getElementById("btn_creer_activite").dispatchEvent(evt);
-    
+    document.getElementById("show_menu").value="close";
+    setTimeout(()=> {
+        var evt = document.createEvent("MouseEvents");
+        evt.initMouseEvent("click", true, true, window,0, 0, 0, 0, 0, false, false, false, false, 0, null);
+        document.getElementById("btn_creer_activite").dispatchEvent(evt);
+    },50); 
 }
 
 function show_dialog_logs() {
@@ -404,6 +403,8 @@ function show_dialog_participants() {
 
 function show_dialog_password() {
     dialog("propriete_password", "show_password", "open");
+    document.getElementById("auth").focus();
+    
 }
 
 function show_dialog_nettoyage() {
@@ -445,7 +446,7 @@ function cancel_dialog_exportation() {
 }
 
 function password_disconnect() {
-    document.getElementById('auth').value = -1;
+    document.getElementById('auth').value = "none";
     document.forms[0].submit();
 }
 

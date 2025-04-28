@@ -52,16 +52,25 @@ if( isset($_SESSION['chronoVDR']) ) {
         $auth=1;
     }
 }
-if(isset($_POST['auth'])){
-    if( -1  ==  $_POST['auth'] ) {
+
+
+$message_password = "Mot de passe : ";
+$format_password = "";
+
+if(filter_has_var(INPUT_POST, 'auth')){
+    $password = filter_input(INPUT_POST, 'auth', FILTER_SANITIZE_STRING);
+    if( $password  ==  "none" ) {
         session_destroy();
         $auth=0;
     }
-    if( $admin_password  ==  $_POST['auth'] ) {
+    if( $password  ==  $admin_password ) {
         $_SESSION['chronoVDR'] = "all";
         $auth=1;
+        $_POST["show_password"]='close';
+    }else{
+        $message_password = 'Mot de passe incorect !';
+        $format_password = 'style="color:red;"';
     }
-    $_POST["show_password"]='close';
 }
 
 /*
@@ -69,9 +78,10 @@ if(isset($_POST['auth'])){
  * Retrouver la l'activité sélectionnée dans le formulaire
  * ------------------------------------------------------
  */
-if(!empty($_POST['selActivite'])){
-    if($myactivite->get_id() != $_POST['selActivite']){
-        $myactivite->set_id ($_POST['selActivite']);
+if(filter_has_var(INPUT_POST, 'selActivite')){
+    $myIdActivite = filter_input(INPUT_POST, 'selActivite', FILTER_SANITIZE_NUMBER_INT);
+    if($myactivite->get_id() != $myIdActivite){
+        $myactivite->set_id ($myIdActivite);
     }
 }
 
@@ -82,7 +92,7 @@ if($auth){// si pas d'authentiifcation, pas d'enregistrement ni de choix
  * création et/ou enregistrement des paramètres de l'activitée 
  * ------------------------------------------------------
  */
-    
+
 if(isset($_POST['btn_creer_activite'])){
     $myactivite->create();
     $_POST["show_activite"]='open';
@@ -90,16 +100,25 @@ if(isset($_POST['btn_creer_activite'])){
 
 function save_activite(){
     global $myactivite;
-    
-    if(!empty($_POST['title_activite'])){$myactivite->infos['nom']            = $_POST['title_activite'];}
-    if(!empty($_POST['organisateur']))  {$myactivite->infos['organisateur']   = $_POST['organisateur'];}
-    if(!empty($_POST['nb_max']))        {$myactivite->infos['nb_max']         = $_POST['nb_max'];}
-    if(!empty($_POST['temps_max']))     {$myactivite->infos['temps_max']      = $_POST['temps_max'];}  
-    if(isset($_POST['delais_min']))     {$myactivite->infos['delais_min']     = $_POST['delais_min'];}  
-    if(!empty($_POST['flag']))          {$myactivite->infos['flag']           = $_POST['flag'];}
-
+    if(filter_has_var(INPUT_POST, 'title_activite')){
+        $myactivite->infos['nom'] = filter_input(INPUT_POST, 'title_activite', FILTER_SANITIZE_STRING);
+    }
+    if(filter_has_var(INPUT_POST, 'organisateur')){
+        $myactivite->infos['organisateur'] = filter_input(INPUT_POST, 'organisateur', FILTER_SANITIZE_STRING);
+    }
+    if(filter_has_var(INPUT_POST, 'nb_max')){
+        $myactivite->infos['nb_max'] = filter_input(INPUT_POST, 'nb_max', FILTER_SANITIZE_NUMBER_INT);
+    }
+    if(filter_has_var(INPUT_POST, 'temps_max')){
+        $myactivite->infos['temps_max'] = filter_input(INPUT_POST, 'temps_max', FILTER_SANITIZE_NUMBER_INT);
+    }
+    if(filter_has_var(INPUT_POST, 'delais_min')){
+        $myactivite->infos['delais_min'] = filter_input(INPUT_POST, 'delais_min', FILTER_SANITIZE_NUMBER_INT);
+    }
+    if(filter_has_var(INPUT_POST, 'flag')){
+        $myactivite->infos['flag'] = filter_input(INPUT_POST, 'flag', FILTER_SANITIZE_NUMBER_INT);
+    }
     $myactivite->save();
-    
 }
 
 if(isset($_POST['enregistrer_activite'])){
@@ -126,19 +145,15 @@ if(isset($_POST['change_activite'])){
  * ------------------------------------------------------
  */
 
-if(isset($_POST['importer'])){
-    if(isset($_POST['lstusers'])){
-        $myusers->importUsers($_POST['lstusers']);      
-    }
-}
-
 $eleves_read = array();
 if(isset($_POST['readcsvfile'])){
     if(isset($_FILES['fileImport'])){
         $myimport->set_file($_FILES['fileImport']);
         if($myimport->is_csv_file()){
             $myimport->read_file(); 
-            if(isset($_POST['importClasse'])){$classe = $_POST['importClasse'];}
+            if(filter_has_var(INPUT_POST, 'importClasse')){
+                $classe = filter_input(INPUT_POST, 'importClasse', FILTER_SANITIZE_STRING);
+            }
             $eleves_read = $myimport->getElevesArray($classe);
         }
     }
@@ -151,8 +166,8 @@ if(isset($_POST['readcsvfile'])){
  * ------------------------------------------------------
  */
 if(isset($_POST['importer'])){
-    if(isset($_POST['lstusers'])){
-        $myusers->importUsers($_POST['lstusers']);
+    if(filter_has_var(INPUT_POST, 'lstusers')){
+        $myusers->importUsers(filter_input(INPUT_POST, 'lstusers', FILTER_SANITIZE_STRING));
     }
 }
 
@@ -162,9 +177,9 @@ if(isset($_POST['importer'])){
  * ------------------------------------------------------
  */
 if(isset($_POST['btn_exportation'])){
-    if(isset($_POST['lstexport'])){
+    if(filter_has_var(INPUT_POST, 'lstexport')){
         $myvue = new Vue;
-        $myvue->export($_POST['lstexport']);
+        $myvue->export(filter_input(INPUT_POST, 'lstexport', FILTER_SANITIZE_STRING));
     }
 }
 
@@ -246,11 +261,11 @@ if(isset($_POST['del_users'])){
 }
 /*
  * ------------------------------------------------------
- * Retrouver la classe sélectionnée dans le formulaire
- * ------------------------------------------------------
+ * Retrouver l---a classe sélectionnée dans le formulaire
+ * ---------------------------------------------------
  */
-if(!empty($_POST['selclasse'])){
-    $selectedClasse = $_POST['selclasse'];
+if(filter_has_var(INPUT_POST, 'selclasse')){
+    $selectedClasse = filter_input(INPUT_POST, 'selclasse', FILTER_SANITIZE_STRING);
     $eleves_classe = $myusers->getUsersFromClasse($selectedClasse);
 }else{
     $selectedClasse = '';
@@ -262,8 +277,8 @@ if(!empty($_POST['selclasse'])){
  * D'ajout de participants à une activité
  * ------------------------------------------------------
  */
-if(!empty($_POST['selclasseParticipants'])){
-    $selectedClassePartcipants = $_POST['selclasseParticipants'];
+if(filter_has_var(INPUT_POST, 'selclasseParticipants')){
+    $selectedClassePartcipants = filter_input(INPUT_POST, 'selclasseParticipants', FILTER_SANITIZE_STRING);
     $eleves_participants = $myactivite->get_participantsToAdd($selectedClassePartcipants);
     if(empty($eleves_participants)){
         $eleves_participants = array();
@@ -278,7 +293,7 @@ if(!empty($_POST['selclasseParticipants'])){
  * ------------------------------------------------------
  */
 if(!empty($_POST['selVue'])){
-    $myactivite->set_vue($_POST['selVue']);
+    $myactivite->set_vue(filter_input(INPUT_POST, 'selVue', FILTER_SANITIZE_STRING));
 }
 /*
  * ------------------------------------------------------
@@ -287,7 +302,8 @@ if(!empty($_POST['selVue'])){
  */
 
 if(isset($_POST['etat'])){
-    if(intval($_POST['etat'])==2){
+    $myEtat = filter_input(INPUT_POST, 'etat', FILTER_SANITIZE_NUMBER_INT);
+    if($myEtat==2){
         $myactivite->start();
     }else{
         $myactivite->stop();
@@ -367,10 +383,10 @@ $myhtml->openDiv('password');
             $myform->button('cancel_activite', " X ",'onclick="return cancel_dialog_password()"');
         $myhtml->closeDiv();
         $myhtml->openDiv('','titre_propriete');
-            echo 'Mdp pour '.$myactivite->infos['nom'];
+            echo 'Mot de passe admin';
         $myhtml->closeDiv();
         $myhtml->openDiv('','propriete');
-            $myform->label('auth','Mot de passe');
+            $myform->label('auth',$message_password,$format_password);
             $myform->password('auth','','onkeydown="touche(event.key);"');
         $myhtml->closeDiv(); 
         $myhtml->openDiv('','proprietebtn');
@@ -716,15 +732,6 @@ $myhtml->openDiv('dialog-menu');
         $myhtml->openDiv('','titre_propriete');
             echo 'Menu';
         $myhtml->closeDiv();
-        
-        $myhtml->openDiv('','propriete_menu','onclick="show_dialog_menu();show_dialog_nettoyage();"');
-        $myhtml->openDiv('','iconemenu');
-        echo '<img src="img/supprimer.png" title="Nettoyage"/>';
-        $myhtml->closeDiv();
-        $myhtml->openDiv('',"label_menu");
-        echo('Nettoyage...');
-        $myhtml->closeDiv(); 
-        $myhtml->closeDiv();
             
         $myhtml->openDiv('','propriete_menu','onclick="show_dialog_menu();show_dialog_users();"');
         $myhtml->openDiv('','iconemenu');
@@ -763,7 +770,14 @@ $myhtml->openDiv('dialog-menu');
         $myhtml->closeDiv(); 
         $myhtml->closeDiv(); 
         
-        
+        $myhtml->openDiv('','propriete_menu','onclick="show_dialog_menu();show_dialog_nettoyage();"');
+        $myhtml->openDiv('','iconemenu');
+        echo '<img src="img/supprimer.png" title="Nettoyage"/>';
+        $myhtml->closeDiv();
+        $myhtml->openDiv('',"label_menu");
+        echo('Nettoyage...');
+        $myhtml->closeDiv(); 
+        $myhtml->closeDiv();
         
     $myhtml->closeDialog();
 $myhtml->closeDiv();
@@ -866,11 +880,11 @@ if($auth){// si pas d'authentiifcation, pas d'enregistrement ni de choix
 }      
         $myhtml->openDiv('','iconemenu');
             if($auth){
-                $img = 'unlock.png';
+                $img = 'unlock1.png';
                 $action = 'password_disconnect(this)';
                 $title = "Se connecter";
             }else{
-                $img = 'lock.png';
+                $img = 'lock1.png';
                 $action = 'show_dialog_password()';
                 $title = "Se déconnecter";
             }
