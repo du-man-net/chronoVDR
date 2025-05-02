@@ -38,7 +38,7 @@ fi
 
 echo '------------------------------------------------------'
 if [ -f /var/www/html/chronoVDR/config/mysql_password ]; then
-    mysql_password =`cat /var/www/html/chronoVDR/config/mysql_password`
+    mysql_password=$(</var/www/html/chronoVDR/config/mysql_password)
     echo "Mot de passe base de donnée : OK"
 else
     mkdir -p /var/www/html/chronoVDR/config
@@ -54,7 +54,7 @@ else
         if [ $first == $second ]; then
             mysql_password=$first
             echo  $"$mysql_password" > /var/www/html/chronoVDR/config/mysql_password
-            else
+        else
             echo "Les mots de passe sont différents. Reessayez..."
             continue
         fi
@@ -66,7 +66,7 @@ echo
 echo
 echo '------------------------------------------------------'
 if [ -f /var/www/html/chronoVDR/config/admin_password ]; then
-    admin_password =`cat /var/www/html/chronoVDR/config/admin_password`
+    admin_password=$(</var/www/html/chronoVDR/config/admin_password)
     echo "Mot de passe admin : OK"
 else
     mkdir -p /var/www/html/chronoVDR/config
@@ -81,7 +81,7 @@ else
         if [ $first == $second ];then
             admin_password=$first
             echo  $"$admin_password" > /var/www/html/chronoVDR/config/admin_password
-            else
+        else
             echo "Les mots de passe sont différents. Reessayez..."
             continue
         fi
@@ -369,7 +369,7 @@ echo
 
 rm -r chronoVDR-master 
 rm master.zip
-rm install.sh
+rm setup_chronovdr
 echo "Fichiers d'installation supprimés"
 
 echo

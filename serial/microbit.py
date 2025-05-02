@@ -415,14 +415,14 @@ def insert_data_for_participant(cn, cur, id_participants, str_data):
         values.append(value)
 
     # print (query)
-    #try:
-    cur.executemany(query, values)
-    lastid = str(cur.lastrowid)
-    cn.commit()
-    return lastid
+    try:
+        cur.executemany(query, values)
+        lastid = str(cur.lastrowid)
+        cn.commit()
+        return lastid
 
-    #except:
-    write_log("Err. SQL " + query)
+    except:
+        write_log("Err. SQL " + query)
 
     return False
 
@@ -534,7 +534,7 @@ def insert_url(url):
                             insert_is_valid = True
                     else:
                         insert_is_valid = True
-                    
+                        
                     if insert_is_valid:
                         lastid = insert_data_for_participant(cn, cur, id_participants, str_data)
                         cur.close()
@@ -588,11 +588,13 @@ while True:
             if strdatas:
                 # print(strdatas)
                 if strdatas[0:1] == "?":
-                    insert_url(strdatas[1:])
+                    serial_datas = strdatas.split("?")
+                    for serial_data in serial_datas:
+                        if serial_data:
+                            insert_url(serial_data)
                 elif strdatas == "IP?":
                     ip = "IP" + get_ip_address() + "\n"
                     # print("ip" + ip)
                     mb_serie.write(ip.encode("utf-8"))
                 elif strdatas == "START?":
                     start_for_all()
-
