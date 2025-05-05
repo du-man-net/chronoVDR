@@ -16,13 +16,16 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-
-vdrpath='chronoVDR-master'
+vdr_name="chronoVDR"
+vdr_version="stable"
+vdr_path=$vdr_name-$vdr_version
+vdr_web_path="/var/www/html/"$vdr_name
+vdr_restart=0
 real_user="${SUDO_USER:-$(whoami)}"
 
 echo
 echo '------------------------------------------------------'
-if [ -d /var/www/html/chronoVDR ]; then
+if [ -d $vdr_web_path ]; then
     read -r -p "Voulez vous installer les mises à jour : [o/n] " maj
     case "$maj" in
         [oO])
@@ -37,11 +40,11 @@ else
 fi
 
 echo '------------------------------------------------------'
-if [ -f /var/www/html/chronoVDR/config/mysql_password ]; then
-    mysql_password=$(</var/www/html/chronoVDR/config/mysql_password)
+if [ -f $vdr_web_path/config/mysql_password ]; then
+    mysql_password=$(<$vdr_web_path/config/mysql_password)
     echo "Mot de passe base de donnée : OK"
 else
-    mkdir -p /var/www/html/chronoVDR/config
+    mkdir -p $vdr_web_path/config
     while [ -z "$mysql_password" ]; do
         echo "Mot de passe de la base de donnée : "
         echo 
@@ -53,7 +56,7 @@ else
         read -s -p "Confirmer le mot de passe: " second
         if [ $first == $second ]; then
             mysql_password=$first
-            echo  $"$mysql_password" > /var/www/html/chronoVDR/config/mysql_password
+            echo  $"$mysql_password" > $vdr_web_path/config/mysql_password
         else
             echo "Les mots de passe sont différents. Reessayez..."
             continue
@@ -65,11 +68,11 @@ fi
 echo
 echo
 echo '------------------------------------------------------'
-if [ -f /var/www/html/chronoVDR/config/admin_password ]; then
-    admin_password=$(</var/www/html/chronoVDR/config/admin_password)
+if [ -f $vdr_web_path/config/admin_password ]; then
+    admin_password=$(<$vdr_web_path/config/admin_password)
     echo "Mot de passe admin : OK"
 else
-    mkdir -p /var/www/html/chronoVDR/config
+    mkdir -p $vdr_web_path/config
     while [ -z "$admin_password" ]; do
         echo "Mot de passe admin : "
         echo 
@@ -80,7 +83,7 @@ else
         read -s -p "Confirmer le mot de passe: " second
         if [ $first == $second ];then
             admin_password=$first
-            echo  $"$admin_password" > /var/www/html/chronoVDR/config/admin_password
+            echo  $"$admin_password" > $vdr_web_path/config/admin_password
         else
             echo "Les mots de passe sont différents. Reessayez..."
             continue
@@ -95,22 +98,22 @@ echo '---------------------------------------'
 echo Téléchargement des sources depuis github
 echo
 
-if [ -f master.zip ]; then
-    rm master.zip
+if [ -f $vdr_version.zip ]; then
+    rm $vdr_version.zip
 fi
 
-wget -q --show-progress https://github.com/du-man-net/chronoVDR/archive/refs/heads/master.zip
+wget -q --show-progress https://github.com/du-man-net/chronoVDR/archive/refs/heads/$vdr_version.zip
 
 echo
 echo '------------------------------------------------------'
 echo Décompression des sources
 echo
 
-if [ -d chronoVDR-master ]; then
-    rm -r chronoVDR-master
+if [ -d $vdr_path ]; then
+    rm -r $vdr_path
 fi
 
-unzip -o master.zip  | awk 'BEGIN {ORS=""} {if(NR%2==0)print "."}'
+unzip -o $vdr_version.zip  | awk 'BEGIN {ORS=""} {if(NR%2==0)print "."}'
 
 echo
 echo '------------------------------------------------------'
@@ -124,10 +127,10 @@ else
 fi
 
 # mise en place des virtual host sur les ports 80, 8080, 3000
-if [ -d /var/www/html/chronoVDR ]; then
+if [ -d $vdr_web_path ]; then
     echo "Dossier web présent"
 else
-    mkdir /var/www/html/chronoVDR
+    mkdir $vdr_web_path
 fi
 
 echo
@@ -154,7 +157,7 @@ if [ -f /etc/apache2/sites-enabled/chronovdr_vhost.conf ]; then
 else
     a2enmod ssl
     a2dissite 000-default
-    cp $vdrpath/conf/chronovdr_vhost.conf /etc/apache2/sites-available/chronovdr_vhost.conf
+    cp $vdr_path/conf/chronovdr_vhost.conf /etc/apache2/sites-available/chronovdr_vhost.conf
     a2ensite chronovdr_vhost
     systemctl reload apache2
 fi
@@ -191,7 +194,7 @@ EOF
     echo
 
     mysql --user=root --password=$mysql_password --execute="create database chronoVDR;"
-    mysql --user=root --password=$mysql_password chronoVDR < $vdrpath/conf/chronoVDR.sql
+    mysql --user=root --password=$mysql_password chronoVDR < $vdr_path/conf/chronoVDR.sql
 
 fi
 
@@ -223,20 +226,20 @@ echo '------------------------------------------------------'
 echo Mise à jour des fichiers WEB
 echo
 
-mkdir -p /var/www/html/chronoVDR/files
-touch /var/www/html/chronoVDR/files/lastupdate
-touch /var/www/html/chronoVDR/files/logs.txt
-cp -R $vdrpath/class /var/www/html/chronoVDR/
-cp -R $vdrpath/img /var/www/html/chronoVDR/
-cp -R $vdrpath/vues /var/www/html/chronoVDR/
-cp -R $vdrpath/node_modules /var/www/html/chronoVDR/
-cp $vdrpath/ajax_back.php /var/www/html/chronoVDR/ajax_back.php
-cp $vdrpath/index.php /var/www/html/chronoVDR/index.php
-cp $vdrpath/script.js /var/www/html/chronoVDR/script.js
-cp $vdrpath/style.css /var/www/html/chronoVDR/style.css
-cp $vdrpath/update.php /var/www/html/chronoVDR/update.php
-cp $vdrpath/last_update.php /var/www/html/chronoVDR/last_update.php
-cp $vdrpath/last_logs.php /var/www/html/chronoVDR/last_logs.php
+mkdir -p $vdr_web_path/files
+touch $vdr_web_path/files/lastupdate
+touch $vdr_web_path/files/logs.txt
+cp -R $vdr_path/class $vdr_web_path/
+cp -R $vdr_path/img $vdr_web_path/
+cp -R $vdr_path/vues $vdr_web_path/
+cp -R $vdr_path/node_modules $vdr_web_path/
+cp $vdr_path/ajax_back.php $vdr_web_path/ajax_back.php
+cp $vdr_path/index.php $vdr_web_path/index.php
+cp $vdr_path/script.js $vdr_web_path/script.js
+cp $vdr_path/style.css $vdr_web_path/style.css
+cp $vdr_path/update.php $vdr_web_path/update.php
+cp $vdr_path/last_update.php $vdr_web_path/last_update.php
+cp $vdr_path/last_logs.php $vdr_web_path/last_logs.php
 
 chown -R $real_user:www-data /var/www/html/
 chmod -R 770 /var/www/html/
@@ -256,12 +259,12 @@ else
     apt -q -y install python3 python3-serial python3-pip at
     rm /usr/lib/python3.11/EXTERNALLY-MANAGED
     pip3 install mysql-connector
-    cp $vdrpath/conf/99-serial_background.rules /etc/udev/rules.d/99-serial_background.rules
+    cp $vdr_path/conf/99-serial_background.rules /etc/udev/rules.d/99-serial_background.rules
 fi
 
-cp -R $vdrpath/serial /var/www/html/chronoVDR/
-chown -R $real_user:www-data /var/www/html/chronoVDR/serial
-chmod -R 770 /var/www/html/chronoVDR/serial
+cp -R $vdr_path/serial $vdr_web_path/
+chown -R $real_user:www-data $vdr_web_path/serial
+chmod -R 770 $vdr_web_path/serial
 udevadm control --reload
 
 echo
@@ -340,8 +343,8 @@ fi
 #if [ -f /etc/NetworkManager/conf.d/00-use-dnsmasq.conf ]; then
 #    echo "plugin dnsmasq activé"
 #else
-#    cp $vdrpath/conf/00-use-dnsmasq.conf /etc/NetworkManager/conf.d/00-use-dnsmasq.conf
-#    cp $vdrpath/conf/00-chronovdr.conf /etc/NetworkManager/dnsmasq.d/00-chronovdr.conf
+#    cp $vdr_path/conf/00-use-dnsmasq.conf /etc/NetworkManager/conf.d/00-use-dnsmasq.conf
+#    cp $vdr_path/conf/00-chronovdr.conf /etc/NetworkManager/dnsmasq.d/00-chronovdr.conf
 #    sudo systemctl restart NetworkManager
 #fi
 
@@ -354,12 +357,16 @@ if grep -q "chronovdr" /etc/hostname; then
     echo "/etc/hostname vérifié"
 else
     echo "chronovdr" > /etc/hostname
+    echo "/etc/hostname modifié"
+    vdr_restart=1
 fi
 
 if grep -q "chronovdr" /etc/hosts; then
     echo "/etc/hosts vérifié"
 else
-    cp $vdrpath/conf/hosts /etc/hosts
+    cp $vdr_path/conf/hosts /etc/hosts
+    echo "/etc/hosts modifié"
+    vdr_restart=1
 fi
 
 echo
@@ -367,23 +374,24 @@ echo '------------------------------------------------------'
 echo Nettoyage
 echo
 
-rm -r chronoVDR-master 
-rm master.zip
-rm setup_chronovdr
+rm -r $vdr_path 
+rm $vdr_version.zip
+rm install_chronovdr
 echo "Fichiers d'installation supprimés"
 
 echo
 echo '------------------------------------------------------'
 echo fin de l\'installation
 echo
-
-echo "La configuration de chronoVDR nécessite un redémarage"
-read -r -p "Voulez vous redémarrer maintenant ? : [o/n] " redemarrer
-case "$redemarrer" in
-    [oO])
-        sudo reboot
-;;
-    [*])
-        ;;
-esac
+if (($vdr_restart)); then
+    echo "La configuration de chronoVDR nécessite un redémarage"
+    read -r -p "Voulez vous redémarrer maintenant ? : [o/n] " redemarrer
+    case "$redemarrer" in
+        [oO])
+            sudo reboot
+    ;;
+        [*])
+            ;;
+    esac
+fi
 
