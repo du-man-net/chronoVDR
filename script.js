@@ -180,7 +180,7 @@ function setNewId(el){
 
 function tdedit(el) {
     el.setAttribute("contenteditable", true);
-    el.style.backgroundColor = "#f2f3f4";
+    el.style.backgroundColor = "#edb939";
     el.focus();
     el.addEventListener("keydown", function(event){
         if (event.key === "Enter") {
