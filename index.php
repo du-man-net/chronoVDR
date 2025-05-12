@@ -871,13 +871,14 @@ if($auth){// si pas d'authentiifcation, pas d'enregistrement ni de choix
     }
     $myhtml->closeDiv(); 
     
+    } 
         $myhtml->openDiv('','iconemenu');
         echo '<img src="img/logs.png" '.   
             'title="Exporter les données" '.
             'onclick="show_dialog_logs();"/>';  
         $myhtml->closeDiv(); 
         
-}      
+     
         $myhtml->openDiv('','iconemenu');
             if($auth){
                 $img = 'unlock1.png';
