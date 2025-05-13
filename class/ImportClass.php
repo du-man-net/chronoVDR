@@ -151,22 +151,24 @@ class Import {
         foreach ($this->file_array as $row) {
             if ($i > 0) { //on importe pas les entètes
                 $eleve = $this->getEleveFromCsv(trim($row));
-                $this->_eleves[$i]['nom'] = $eleve[$titles['nom']];
-                $this->_eleves[$i]['prenom'] = $eleve[$titles['prenom']];
-                if(empty($eleve[$titles['nais']])){
-                    $this->_eleves[$i]['nais'] = "01/01/2000";
-                }else{
-                    $this->_eleves[$i]['nais'] = $eleve[$titles['nais']];
-                }
-                if(empty($eleve[$titles['sexe']])){
-                    $this->_eleves[$i]['sexe'] = "M";
-                }else{
-                    $this->_eleves[$i]['sexe'] = $eleve[$titles['sexe']];
-                }
-                if(empty($classe)){
-                    $this->_eleves[$i]['classe'] = $eleve[$titles['classe']];
-                }else{
-                    $this->_eleves[$i]['classe'] = $classe;
+                if(count($eleve)>1){
+                    $this->_eleves[$i]['nom'] = $eleve[$titles['nom']];
+                    $this->_eleves[$i]['prenom'] = $eleve[$titles['prenom']];
+                    if(empty($eleve[$titles['nais']])){
+                        $this->_eleves[$i]['nais'] = "01/01/2000";
+                    }else{
+                        $this->_eleves[$i]['nais'] = $eleve[$titles['nais']];
+                    }
+                    if(empty($eleve[$titles['sexe']])){
+                        $this->_eleves[$i]['sexe'] = "M";
+                    }else{
+                        $this->_eleves[$i]['sexe'] = $eleve[$titles['sexe']];
+                    }
+                    if(empty($classe)){
+                        $this->_eleves[$i]['classe'] = $eleve[$titles['classe']];
+                    }else{
+                        $this->_eleves[$i]['classe'] = $classe;
+                    }
                 }
             }
             $i++;
