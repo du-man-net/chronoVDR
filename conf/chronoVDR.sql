@@ -76,7 +76,7 @@ CREATE TABLE `users` (
   `id` int(11) NOT NULL,
   `nom` varchar(32) NOT NULL,
   `prenom` varchar(32) NOT NULL,
-  `classe` varchar(8) NOT NULL DEFAULT 'n_classé',
+  `classe` varchar(16) NOT NULL DEFAULT 'n_classé',
   `nais` varchar(10) DEFAULT NULL,
   `sexe` varchar(1) DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
