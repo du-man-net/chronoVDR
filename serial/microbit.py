@@ -23,6 +23,7 @@ import time
 from datetime import datetime
 # from time import strftime
 from numpy import size
+import threading
 
 import mysql.connector as connector
 import serial
@@ -36,8 +37,9 @@ VID_MICROBIT = 3368
 TIMEOUT = 0.1
 MYSQL_PASSWORD = ""
 
-id_activite_cache = 0
+id_activite_cache = '0'
 delais_cache = 0
+etat_cache = 0
 id_participants_cache = dict()
 
 
@@ -66,8 +68,8 @@ def mysql_connect():
         )
         return dataBase
     except:
-        write_log("Err. connexion MariaDB")
-        exit(1)
+        write_log("Err. connexion MariaDB ")
+        return False
 
 
 # ====================================================
@@ -85,6 +87,17 @@ def get_ip_address():
     return mon_ip
 
 
+# ====================================================
+# Implémentation de la fonction de répéttion
+# ====================================================
+def set_interval(func, sec):
+    def func_wrapper():
+        set_interval(func, sec)
+        func()
+    t = threading.Timer(sec, func_wrapper)
+    t.start()
+    return t
+    
 # ====================================================
 # Récupération de la connexion série
 # ====================================================
@@ -109,25 +122,15 @@ def find_comport(pid, vid, baud):
             ser_port.port = str(p.device)
             return ser_port
     return None
-
-
+    
+    
 # ====================================================
 # REcherche si des datas existent pour l'activité
 # ====================================================
-# def find_datas_for_activite(id_activite):
-#    path = BASE_HTML + "datas/" + id_activite
-#    if not os.path.exists(path):
-#        return False
-#    else:
-#        if len(os.listdir(path)) == 0:
-#            return False
-#    return True
-
-
-def find_datas_for_activite(cn, cur, id_activite):
+def find_datas_for_activite(cn, cur):
     query = (
         "SELECT datas.id FROM datas, participants WHERE id_participant = participants.id AND participants.id_activite='"
-        + id_activite
+        + id_activite_cache
         + "'"
     )
     # print (query)
@@ -147,35 +150,12 @@ def find_datas_for_activite(cn, cur, id_activite):
 # ====================================================
 # Insert l'heure de dépaart pour tous les participants
 # ====================================================
-# def insert_data_for_all(cn, cur, id_activite):
-#    path = BASE_HTML + "datas/" + id_activite
-#    if not os.path.exists(path):
-#        os.makedirs(path)
-#
-#    query = "SELECT id FROM participants WHERE id_activite='" + id_activite + "'"
-#    try:
-#        cur.execute(query)
-#        participants = cur.fetchall()
-#        for participant in participants:
-#            with open(path + "/" + participant, "w", encoding="utf8") as f:
-#                f.write(datetime.now().strftime("%Y/%m/%d %H:%M:%S.%f")[:-3])
-#                f.write(" ")
-#                f.write("0")
-#                f.write("\n")
-#        return True
-#
-#    except:
-#        write_log("Err. SQL " + query)
-#
-#    return False
-
-
-def insert_data_for_all(cn, cur, id_activite):
+def insert_data_for_all(cn, cur):
     query = (
         "INSERT INTO datas (id_participant,temps) "
         + "SELECT id, NOW() FROM participants "
         + "WHERE participants.id_activite='"
-        + id_activite
+        + id_activite_cache
         + "'"
     )
     # print (query)
@@ -216,25 +196,21 @@ def delete_tag_to_change():
 # ====================================================
 def is_tag_alwready_used(cn, cur, str_id, id_participant):
     query = (
-        "SELECT id FROM participants WHERE ref_id='"
-        + str_id
-        + "' "
-        + "AND id_activite IN (SELECT id_activite from participants WHERE id = '"
-        + id_participant
-        + "')"
+        "SELECT participants.id FROM participants, activites "
+        + "WHERE id_activite = activites.id "
+        + "AND etat>0 "
+        + "AND ref_id='" + str_id + "'"
     )
-    # print (query)
+    # print(query)
     try:
         cur.execute(query)
-        results = cur.fetchall()
-        # print (len(results))
-        if len(results) > 0:
-            return True
+        if len(cur.fetchall()) == 0:
+            return False
 
     except:
         write_log("Err. SQL " + query)
-
-    return False
+        
+    return True
 
 
 # ====================================================
@@ -260,26 +236,39 @@ def change_tag_participant(cn, cur, str_id, id_participant):
 # ====================================================
 # récuperation des infos concernant l'activite et le participant
 # ====================================================
-def get_activite_infos(cn, cur):
+def get_activite_infos():
     global id_activite_cache
     global delais_cache
+    global etat_cache
 
+    lcn = mysql_connect()
+    lcur = lcn.cursor()
+    
     query = (
-        "SELECT nb_max,temps_max,delais_min,id "
+        "SELECT id,etat,delais_min "
         + "FROM activites "
-        + "WHERE etat = '2' "
+        + "WHERE etat > 0 "
     )
     # print(query)
     try:
-        cur.execute(query)
-        row = cur.fetchone()
+        lcur.execute(query)
+        row = lcur.fetchone()
         if row:
-            if len(row) > 2:
-                if id_activite_cache != str(row[3]):
-                    id_participants_cache.clear()
-                delais_cache = int(row[2])
-                id_activite_cache = str(row[3])
-                return True
+            if etat_cache != int(row[1]):
+                id_participants_cache.clear()
+                etat_cache = int(row[1])
+            if id_activite_cache != str(row[0]):
+                id_participants_cache.clear()
+                id_activite_cache = str(row[0])
+            delais_cache = int(row[2])
+            lcn.close()
+            return True
+
+        id_activite_cache = '0'
+        id_participants_cache.clear()
+        etat_cache = 0
+        delais_cache = 0
+        
     except:
         write_log("Err. SQL " + query)
 
@@ -289,7 +278,7 @@ def get_activite_infos(cn, cur):
 # ====================================================
 # récuperation des infos concernant l'activite et le participant
 # ====================================================
-def get_participant_id(cn, cur, str_id, id_activite):
+def get_participant_id(cn, cur, str_id):
     global id_participants_cache
 
     if str_id in id_participants_cache:
@@ -297,35 +286,36 @@ def get_participant_id(cn, cur, str_id, id_activite):
     query = (
         "SELECT id "
         + "FROM participants "
-        + "WHERE id_activite ='" + id_activite + "' "
-        + "AND ref_id = '" + str_id + "'"
+        + "WHERE id_activite='" + id_activite_cache + "' AND ref_id='" + str_id + "' "
     )
     # print(query)
     try:
         cur.execute(query)
         row = cur.fetchone()
         if row:
-            if len(row) > 0:
-                id = int(row[0])
-                ids = get_association_id(cn, cur, id, id_activite)
-                if ids:
-                    id_participants_cache[str_id] = ids
-                else:
-                    id_participants_cache[str_id] = [id]
-                return True
+            # print("participant trouve")
+            id = int(row[0])
+            ids = get_association_id(cn, cur, id)
+            if ids:
+                id_participants_cache[str_id] = ids
+            else:
+                id_participants_cache[str_id] = [id]
+            # print(id_participants_cache)
+            return True
     except:
         write_log("Err. SQL " + query)
 
     return False
 
+
 # ====================================================
 # récuperation des infos concernant l'activite et le participant
 # ====================================================
-def get_association_id(cn, cur, id, id_activite):
+def get_association_id(cn, cur, id):
     query = (
         "SELECT id "
         + "FROM participants "
-        + "WHERE id_activite ='" + id_activite + "' "
+        + "WHERE id_activite ='" + id_activite_cache + "' "
         + "AND association = '" + str(id) + "'"
     )
     # print(query)
@@ -343,28 +333,11 @@ def get_association_id(cn, cur, id, id_activite):
 
     return False
 
+
 # ====================================================
 # vérifie si un enregistrement plus récent que delais existe
 # ====================================================
-# def delais_respected(id_activite, id_participant, delais):
-#
-#    path = BASE_HTML + "datas/" + id_activite + "/" + id_participant
-#    if os.path.exists(path):
-#        with open(
-#            path,
-#            "r",
-#            encoding="utf8",
-#        ) as f:
-#            for ligne in f.readlines()[-1:]:
-#                lastime = datetime.strptime(ligne[:19], "%Y/%m/%d %H:%M:%S")
-#                now = datetime.now()
-#                difference = now - lastime
-#                if difference.total_seconds() < delais:
-#                    return False
-#    return True
-
-
-def delais_respected(cn, cur, id_participants, delais):
+def delais_respected(cn, cur, id_participants):
     query = (
         "SELECT * FROM ( "
         + "SELECT MAX(temps) as tm "
@@ -373,10 +346,10 @@ def delais_respected(cn, cur, id_participants, delais):
         + str(id_participants[0])
         + "') last_entry "
         + "WHERE last_entry.tm > (NOW() - INTERVAL "
-        + str(delais)
+        + str(delais_cache)
         + " SECOND)"
     )
-    # print (query)
+    # print(query)
     try:
         cur.execute(query)
         row = cur.fetchone()
@@ -392,29 +365,19 @@ def delais_respected(cn, cur, id_participants, delais):
 # ====================================================
 # insertion d'un nouvel enrengistrement
 # ====================================================
-# def insert_data_for_participant(id_activite, id_participant, str_data):
-#    path = BASE_HTML + "datas/" + id_activite
-#    if not os.path.exists(path):
-#        os.makedirs(path)
-#
-#    path = path + "/" + id_participant
-#    with open(path, "a", encoding="utf8") as f:
-#        f.write(datetime.now().strftime("%Y/%m/%d %H:%M:%S.%f")[:-3])
-#        f.write(" ")
-#        f.write(str_data)
-#        f.write("\n")
-
-
 def insert_data_for_participant(cn, cur, id_participants, str_data):
 
     query = "INSERT INTO datas (id_participant,temps,data) VALUES (%s, %s, %s)"
     values = []
-    strnow = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+    strnow = datetime.now().strftime('%Y-%m-%d %H:%M:%S.%f')
+ 
     for id in id_participants:
-        value = (str(id), strnow, str_data)
+        str_data = str_data.rstrip('\r')
+        value = (str(id), strnow[:-3], str_data)
         values.append(value)
 
-    # print (query)
+    # print(query)
+    # print(values)
     try:
         cur.executemany(query, values)
         lastid = str(cur.lastrowid)
@@ -432,8 +395,10 @@ def insert_data_for_participant(cn, cur, id_participants, str_data):
 # ====================================================
 def write_last_update(lastid):
     try:
+        print(lastid)
+        print(BASE_HTML + "files/lastupdate")
         with open(BASE_HTML + "files/lastupdate", "w") as f:
-            f.write(lastid)
+            f.write(str(lastid))
     except:
         write_log("Err. accès au fichier lastupdate")
 
@@ -457,43 +422,28 @@ def write_log(log):
 def start_for_all():
     cn = mysql_connect()
     cur = cn.cursor()
-    row = get_activite_infos(cn, cur)
-    id_activite = str(row[0])
-    cur.close()
-    if id_activite:
-        if not find_datas_for_activite(id_activite):
-            insert_data_for_all(id_activite)
-            write_last_update(0)
-            accuse_rcp = "START\n"
-            mb_serie.write(accuse_rcp.encode("utf-8"))
+    get_activite_infos()
+    if id_activite_cache != '0':
+        if etat_cache > 1:
+            if not find_datas_for_activite(cn, cur):
+                insert_data_for_all(cn, cur)
+                write_last_update(0)
+                accuse_rcp = "START\n"
+                mb_serie.write(accuse_rcp.encode("utf-8"))
+    cn.close()
 
 
 # ====================================================
 # traitement d'un d'une commande concernant un id
 # ====================================================
-def insert_url(url):
+def insert_url(str_id, str_data):
     global id_participants_cache
     global id_activite_cache
     global delais_cache
-
-    datas = url.split("&")
-    strlog = ""
-
-    str_id = ""
-    temp_str = ""
-    if len(datas) > 0:
-        temp_str = str(datas[0])
-        if len(temp_str) > 0:
-            str_id = temp_str
-            strlog = "id=" + str_id
-
-    str_data = "0"
-    temp_str = ""
-    if len(datas) > 1:
-        temp_str = str(datas[1])
-        if len(temp_str) > 0:
-            str_data = temp_str
-            strlog += " data=" + str_data
+    global etat_cache
+    
+    strlog = "id=" + str_id
+    strlog += " data=" + str_data
 
     if len(str_id) > 0:
         # print("rfid lu")
@@ -504,53 +454,52 @@ def insert_url(url):
             id_participant = get_tag_to_change()
             # print(id_participant + " " + str_id)
             cn = mysql_connect()
-            cur = cn.cursor()
-            # si le ref_id n'est pas utilisé,
-            if not is_tag_alwready_used(cn, cur, str_id, id_participant):
-                # on le modifie pour l'utilisateur
-                change_tag_participant(cn, cur, str_id, id_participant)
-                # print("tag changé")
-                cur.close()
-                # on détruit le fichier pour dire que tout c'est bien passé
-                delete_tag_to_change()
-                # print("fichier détruit")
-            else:
-                # print("tag déja utilisé")
-                strlog += " déjà utilisé"
+            if cn:
+                cur = cn.cursor()
+                # si le ref_id n'est pas utilisé,
+                if not is_tag_alwready_used(cn, cur, str_id, id_participant):
+                    # on le modifie pour l'utilisateur
+                    change_tag_participant(cn, cur, str_id, id_participant)
+                    # print("tag changé")
+                    cur.close()
+                    # on détruit le fichier pour dire que tout c'est bien passé
+                    delete_tag_to_change()
+                    # print("fichier détruit")
+                else:
+                    # print("tag déja utilisé")
+                    strlog += " déjà utilisé"
 
         else:
-            # print("debut enregistrement")
             cn = mysql_connect()
-            cur = cn.cursor()
-            if get_activite_infos(cn, cur):
-                delais = delais_cache
-                id_activite = id_activite_cache
-                if get_participant_id(cn, cur, str_id, id_activite):
-                    id_participants = id_participants_cache[str_id]
+            if cn:
+                cur = cn.cursor()
+                get_activite_infos()
+                if etat_cache == 2:
+                    if id_activite_cache != '0':
+                        if get_participant_id(cn, cur, str_id):
+                            id_participants = id_participants_cache[str_id]
+                            insert_is_valid = False
+                            if delais_cache > 0:
+                                if delais_respected(cn, cur, id_participants):
+                                    insert_is_valid = True
+                            else:
+                                insert_is_valid = True
 
-                    insert_is_valid = False
-                    if delais > 0:
-                        if delais_respected(cn, cur, id_participants, delais):
-                            insert_is_valid = True
-                    else:
-                        insert_is_valid = True
-                        
-                    if insert_is_valid:
-                        lastid = insert_data_for_participant(cn, cur, id_participants, str_data)
-                        cur.close()
+                            if insert_is_valid:
+                                lastid = insert_data_for_participant(cn, cur, id_participants, str_data) 
 
-                        if lastid:
-                            write_last_update(lastid)
-                    else:
-                        write_log("delais non respécté")
-                        # print("delais non respécté")
-
+                                if lastid:
+                                    write_last_update(lastid)
+                            else:
+                                write_log("delais non respécté")
+                cn.close()
         write_log(strlog)
+        #print("#" + str_id)
         accuse_rcp = "#" + str_id + "\n"
         mb_serie.write(accuse_rcp.encode("utf-8"))
         return
 
-    write_log("Err. requête - ?" + url)
+    write_log("Err. requête")
 
 
 #
@@ -567,10 +516,10 @@ while True:
     else:
         mb_serie.open()
         write_log("Essais de connexion à Micro:bit")
-        msg_start = "CONNECT\n"
-
         ok = False
+
         while not ok:
+            msg_start = "CONNECT\n"
             mb_serie.write(msg_start.encode("utf-8"))
             time.sleep(0.1)
             strdatas = mb_serie.readline().decode("utf-8")
@@ -581,20 +530,23 @@ while True:
         #
         # boucle principale
         #
-
         while True:
             # Atttente d'une consigne du maitre
+            strdatas = ""
             strdatas = mb_serie.readline().decode("utf-8")
             if strdatas:
-                # print(strdatas)
-                if strdatas[0:1] == "?":
-                    serial_datas = strdatas.split("?")
-                    for serial_data in serial_datas:
-                        if serial_data:
-                            insert_url(serial_data)
-                elif strdatas == "IP?":
-                    ip = "IP" + get_ip_address() + "\n"
-                    # print("ip" + ip)
+                print(strdatas)
+                serial_datas = strdatas.split(":")
+                name = serial_datas[0]
+                if len(serial_datas) > 1:
+                    value = serial_datas[1]
+                else:
+                    value = ""
+                if name == "IP?":
+                    ip = "IP " + get_ip_address() + "\n"
+                    print(ip)
                     mb_serie.write(ip.encode("utf-8"))
-                elif strdatas == "START?":
+                elif name == "START?":
                     start_for_all()
+                else:
+                    insert_url(name, value)

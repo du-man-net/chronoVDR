@@ -279,7 +279,6 @@ class Export {
  */ 
     
     private function Array2CSVDownload($array, $filename = "export.csv", $delimiter=";") {
-        
         $data = [];
         foreach ($array as $item) {
             $values = array_values((array) $item);

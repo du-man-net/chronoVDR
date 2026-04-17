@@ -50,5 +50,7 @@ foreach ($datas as $data) {
 }
 
 $t_datas["last_index"]=$last_index;
+$t_datas["id_activite"]=$myactivite->id();
 $t_datas["datas"]=$myDatas;
 echo json_encode($t_datas);
+exit;

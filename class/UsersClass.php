@@ -56,6 +56,8 @@ class Users {
                 $this->_db->query("UPDATE users SET classe = '" . $newClasse . "' WHERE id = '" . $idUser . "'");
             }
         } else {
+            //On ne garde que la première lettre du champ sexe
+            $userInfo[4] = substr($userInfo[4], 0, 1);
             $this->_db->query("INSERT INTO users (nom, prenom, classe, nais, sexe) VALUES " .
                     "('" . $userInfo[0] . "','" . $userInfo[1] . "','" . $newClasse . "','" . $userInfo[3] ."','" . $userInfo[4] ."')");
         }
@@ -89,7 +91,6 @@ class Users {
     }  
     
     public function cleanUser($userId){
-        echo "UPDATE users SET classe = 'Bean' WHERE id = '" . $userId . "'";
         $this->_db->query("UPDATE users SET classe = 'Bean' WHERE id = '" . $userId . "'");
     }
     
@@ -114,12 +115,9 @@ class Users {
     }
 
     public function getClasses() {
-        $result = $this->_db->query("SELECT DISTINCT classe FROM users");
-        if ($result->num_rows > 0) {
-            return $result;
-        }
-        return array();
-    }
+        $result = $this->_db->query("SELECT DISTINCT classe FROM users ORDER BY classe  ");
+        return $result;
+    } 
     
     public function deleteUsersBin(){
         $this->_db->query("DELETE FROM users Where classe = 'Bean' "

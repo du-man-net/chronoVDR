@@ -104,10 +104,16 @@ class Html {
         echo $this->format('</table>');
     }
 
-    public function openTr($id='') {
+    public function openTr($id='',$class = '', $other = '') {
         $ret = '<tr ';
         if (!empty($id)) {
             $ret .= 'id = "' . $id . '" ';
+        }
+        if (!empty($class)) {
+            $ret .= 'class = "' . $class . '" ';
+        }
+        if (!empty($other)) {
+            $ret .= $other;
         }
         echo $ret . '>';
     }
@@ -116,8 +122,11 @@ class Html {
         echo $this->format('</tr>');
     }
 
-    public function openTd($class = '', $other = '') {
+    public function openTd($id='',$class = '', $other = '') {
         $ret = '<td ';
+        if (!empty($id)) {
+            $ret .= 'id = "' . $id . '" ';
+        }
         if (!empty($class)) {
             $ret .= 'class = "' . $class . '" ';
         }
@@ -130,4 +139,23 @@ class Html {
     public function closeTd() {
         echo $this->format('</td>');
     }
+
+    public function openTh($id='',$class = '', $other = '') {
+        $ret = '<th ';
+        if (!empty($id)) {
+            $ret .= 'id = "' . $id . '" ';
+        }
+        if (!empty($class)) {
+            $ret .= 'class = "' . $class . '" ';
+        }
+        if (!empty($other)) {
+            $ret .= $other;
+        }
+        echo $ret . '>';
+    }
+    
+    public function closeTh() {
+        echo $this->format('</th>');
+    }
+    
 }

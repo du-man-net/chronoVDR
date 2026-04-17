@@ -32,7 +32,7 @@ function get_tag_to_change() {
     if (file_exists("files/tagToChange")) {
         //on récupère dans le fichier l'id du participant dont il faut changer le TAG
         $myfile = fopen("files/tagToChange", "r");
-        $id_participant = substr(fgets($myfile), 0, -1);
+        $id_participant = trim(fgets($myfile));
         fclose($myfile);
         return $id_participant;
     }
@@ -67,6 +67,7 @@ function is_tag_alwready_used($str_id,$id_participant) {
 //================================================
 function change_tag_participant($str_id,$id_participant) {
     global $mysqli;
+    echo "UPDATE participants SET ref_id = '" . $str_id . "' WHERE id = '" . $id_participant . "'";
     $mysqli->query("UPDATE participants SET ref_id = '" . $str_id . "' WHERE id = '" . $id_participant . "'");
 }
 
@@ -198,7 +199,7 @@ if (isset($_GET["data"])) {
 
 if (strlen($str_id) > 0) {
     //Si le fichier tagToChange est présent, il s'agit d'un enregistrement de ref_id pour un participant
-    if (file_exists("files/tagToChange")) {
+    if (is_file("files/tagToChange")) {
 
         //on récupère l'id du tag à modifier dans le fichier
         $id_participant = get_tag_to_change();
@@ -209,8 +210,16 @@ if (strlen($str_id) > 0) {
             # on détruit le fichier pour dire que tout c'est bien passé
             unlink("files/tagToChange");
         }else{
-            $strlog += " déjà utilisé";
+            $str_log .= " déjà utilisé";
         }
+    
+    //Si le fichier scan_balise est présent, il s'agit d'un enregistrement de balise
+    }elseif (is_file("files/scan_balise")) {
+        file_put_contents("files/tag_balise",$str_id);
+        unlink("files/scan_balise");
+        echo "ok";
+        return;
+        
         
     //Sinon, c'est un ajout de données
     } else {

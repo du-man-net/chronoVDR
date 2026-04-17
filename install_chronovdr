@@ -257,8 +257,12 @@ if [ -f /etc/udev/rules.d/99-serial_background.rules ]; then
     echo "Configration communication avec Micro:bit OK"
 else
     apt -q -y install python3 python3-serial python3-pip at
-    rm /usr/lib/python3.11/EXTERNALLY-MANAGED
-    pip3 install mysql-connector
+    apt -q -y install util-linux-extra
+    python3 -m pip config set global.break-system-packages true
+    pip3 install  mysql-connector
+    pip3 install  matplotlib
+    pip3 install  pandas-stubs
+    pip3 install  numpy
     cp $vdr_path/conf/99-serial_background.rules /etc/udev/rules.d/99-serial_background.rules
 fi
 

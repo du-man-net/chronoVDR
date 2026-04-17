@@ -36,7 +36,7 @@ if ($last_index==0){
 foreach ($datas as $data) {
     $point = [];
     
-    $point['x'] = date('c', strtotime($data['temps'])); 
+    $point['x'] = $data['temps'];//date('c', strtotime($data['temps'])); 
     
     if(is_null($data['data'])){
         $point['y'] = 0;
@@ -53,7 +53,7 @@ foreach ($datas as $data) {
 $t_datas["last_index"]=$last_index;
 $t_datas["datas"] = $t_data;
 echo json_encode($t_datas);
-
+exit;
 
 
     
