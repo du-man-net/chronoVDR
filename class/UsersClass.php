@@ -1,6 +1,6 @@
 <?php
 
-/* 
+/*
  * Copyright (C) 2025 Gérard Léon
  *
  * This program is free software: you can redistribute it and/or modify
@@ -28,7 +28,7 @@ class Users {
 
     //put your code here
     private $_db = NULL;
-    
+
     public function __construct() { // or any other method
         global $mysqli;
         $this->_db = $mysqli;
@@ -36,11 +36,11 @@ class Users {
 
     public function findUser($userInfos, &$classe) {
         $result = $this->_db->query("SELECT id,classe FROM users WHERE " .
-                "nom = '" . $userInfos[0] . "' AND " .
-                "prenom = '" . $userInfos[1] . "'");
+                "nom = '" . $userInfos["nom"] . "' AND " .
+                "prenom = '" . $userInfos["prenom"] . "'");
         $usr = $result->fetch_assoc();
         if (is_array($usr)) {
-            $classe  = $usr['classe'];
+            $classe = $usr['classe'];
             return $usr['id'];
         }
         return false;
@@ -48,81 +48,79 @@ class Users {
 
     public function insertUser($userInfo) {
         $oldClasse = '';
-        $newClasse = $userInfo[2];
+        $newClasse = $userInfo['classe'];
         $idUser = $this->findUser($userInfo, $oldClasse);
-        
+
         if ($idUser) {
             if ($oldClasse != $newClasse) {
                 $this->_db->query("UPDATE users SET classe = '" . $newClasse . "' WHERE id = '" . $idUser . "'");
             }
         } else {
             //On ne garde que la première lettre du champ sexe
-            $userInfo[4] = substr($userInfo[4], 0, 1);
+            $userInfo["sexe"] = substr($userInfo["sexe"], 0, 1);
             $this->_db->query("INSERT INTO users (nom, prenom, classe, nais, sexe) VALUES " .
-                    "('" . $userInfo[0] . "','" . $userInfo[1] . "','" . $newClasse . "','" . $userInfo[3] ."','" . $userInfo[4] ."')");
+                    "('" . $userInfo["nom"] . "','" . $userInfo["prenom"] . "','" . $newClasse . "','" . $userInfo["nais"] . "','" . $userInfo["sexe"] . "')");
         }
     }
-    
-    public function getUsersFromClasse($classe){
+
+    public function getUsersFromClasse($classe) {
         $result = $this->_db->query("SELECT * FROM users WHERE classe = '" . $classe . "'");
-        if(!empty($result)){
+        if (!empty($result)) {
             return $result;
         }
         return array();
     }
-    
-    public function cleanUsersFromClasse($users, $classe){
+
+    public function cleanUsersFromClasse($users, $classe) {
         $usrs = $this->getUsersFromClasse($classe);
         foreach ($usrs as $usr) {
             $find = false;
             foreach ($users as $user) {
-                if($this->getUserInfos($user)){
-                    if ($user[0] == $usr['nom'] &&
-                        $user[1] == $usr['prenom'] &&
-                        $user[3] == $usr['nais']){
-                        $find = true;
-                    }
+                if ($user["nom"] == $usr['nom'] &&
+                        $user["prenom"] == $usr['prenom'] &&
+                        $user["nais"] == $usr['nais']) {
+                    $find = true;
                 }
             }
-            if(!$find){
+            if (!$find) {
                 $this->cleanUser($usr["id"]);
             }
         }
-    }  
-    
-    public function cleanUser($userId){
+    }
+
+    public function cleanUser($userId) {
         $this->_db->query("UPDATE users SET classe = 'Bean' WHERE id = '" . $userId . "'");
     }
-    
-    public function getUserInfos(&$user){
+
+    public function getUserInfos(&$user) {
         $user = substr($user, 0, -1);
         if (strlen($user) > 8) {
-            $user = explode(",", $user);  
+            $user = explode(",", $user);
             return $user;
         }
         return false;
     }
-    
+
     public function importUsers($lstusers) {
         $users = explode("\n", $lstusers);
         foreach ($users as $user) {
-            if($this->getUserInfos($user)){
+            if ($this->getUserInfos($user)) {
                 $classe = $user[2];
                 $this->insertUser($user);
             }
         }
-        $this->cleanUsersFromClasse($users,$classe);
+        $this->cleanUsersFromClasse($users, $classe);
     }
 
     public function getClasses() {
         $result = $this->_db->query("SELECT DISTINCT classe FROM users ORDER BY classe  ");
         return $result;
-    } 
-    
-    public function deleteUsersBin(){
+    }
+
+    public function deleteUsersBin() {
         $this->_db->query("DELETE FROM users Where classe = 'Bean' "
-                                    . "AND users.id NOT IN (SELECT id_user as id FROM participants)");
+                . "AND users.id NOT IN (SELECT id_user as id FROM participants)");
         $this->_db->query("DELETE FROM users Where classe = '' "
-                                    . "AND users.id NOT IN (SELECT id_user as id FROM participants)");
+                . "AND users.id NOT IN (SELECT id_user as id FROM participants)");
     }
 }
