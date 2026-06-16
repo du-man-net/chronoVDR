@@ -1,0 +1,434 @@
+/* 
+ * Copyright (C) 2024 gleon
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
+
+
+/* 
+    Created on : 25 oct. 2024, 18:05:00
+    Author     : gleon
+*/
+
+
+body {
+    padding-top: 60px;
+    margin: 0;
+}
+
+body.modal-open {
+    width: 100% !important;
+    padding-right: 0 !important;
+    overflow-y: scroll !important;
+}
+
+
+table{
+    border-collapse : collapse;
+}
+
+#parts th,td{
+    box-sizing: border-box;
+}
+
+#parts thead, tbody {
+    display: block;
+}
+
+#parts tbody {
+    overflow-y: auto;
+    max-height: 85vh
+}
+
+#recipeTable th,td{
+    box-sizing: border-box;
+}
+
+#recipeTable thead, tbody {
+    display: block;
+}
+
+#recipeTable tbody {
+    overflow-y: auto;
+    max-height: 35vh
+}
+
+#baliseToAdd th,td{
+    box-sizing: border-box;
+}
+
+#baliseToAdd thead, tbody {
+    display: block;
+}
+
+#baliseToAdd tbody {
+    overflow-y: auto;
+    max-height: 35vh
+}
+
+.nom_toadd{
+    max-width:150px;
+    min-width:150px;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+}
+
+#ptoadd{
+    width: 100px
+}
+
+
+.navbar-text{
+    min-width:70px;
+}
+
+#off_menu span{
+    margin-left: 15px;
+}
+
+#off_menu  {
+    --bs-offcanvas-width: 250px;
+    bottom: initial;
+}
+
+.navbar{
+    --bs-navbar-padding-y: 0rem;
+}
+
+#off_menu .nav-link,.nav-res {
+    padding-right : 3px !important;
+    padding-left : 3px !important;
+    text-align:left;
+}
+#off_menu .nav-link:hover ,.nav-res:hover {
+    background:#11ADE8;
+    padding: 6px 0;
+}
+
+#navbar .nav-link{
+    padding:6px!important;
+}
+ 
+#sel_activite{
+    margin-right:5px;
+    width: 150px;
+}
+.red {
+    background:red!important;
+}
+
+.chart-container {
+  overflow-x: scroll;
+  overflow-y: hidden;
+  height: 160px;
+  width: calc(100vw - 350px);
+}
+
+chartWrapper{
+    
+}
+
+.modal{
+    overflow-y:auto;
+}
+.modal-open{
+    overflow:auto;
+}
+
+#hour{
+    margin-top:.5rem;
+    margin-bottom:.5rem;
+}
+#htime #stime{
+    --bs-badge-padding-y:0rem!important;
+
+}
+.bg-custom {
+    --bs-bg-opacity: .4;
+    background-color: rgba(13,202,240,var(--bs-bg-opacity));
+    font-weight:normal;
+    color:#555;
+}
+
+.bg-custom2 {
+    background-color:#CCC!important;
+    font-weight:normal;
+    color:#555;
+}
+
+.bg-custom3 {
+    --bs-bg-opacity: .4;
+    background-color:rgba(255,193,7,var(--bs-bg-opacity));
+    font-weight:normal;
+    color:#555;
+}
+
+.col-4 div:hover{
+    --bs-bg-opacity: .4;
+    --bs-dropdown-link-hover-bg:rgba(13,202,240,var(--bs-bg-opacity))!important;
+}
+
+#sel_idCo_menu li{
+    --bs-bg-opacity: .4;
+    --bs-dropdown-link-active-bg:#AAA!important;
+}
+#sel_idCo_menu li:hover{
+    --bs-bg-opacity: .4;
+    --bs-dropdown-link-hover-bg:rgba(13,202,240,var(--bs-bg-opacity))!important;
+}
+.legend{
+    float :left;
+    margin-right:20px;
+    padding-bottom: 2px;
+}
+
+/*------------------------------------*/
+/* aparence de la boite de logs       */
+/*------------------------------------*/
+#logs{
+    font:12px Courier New;
+    border-width:1px;
+    padding: 5px;
+    margin: 0;
+    position: absolute;
+    left:330px;
+    top:50px;
+    width:550px;
+    color: white;
+    background-color: black;
+    box-shadow: 0 3px 7px rgba(0, 0, 0, 0.3);
+}
+
+
+/*************************************************/
+/*tableau de résultats*/
+/*************************************************/
+
+
+#parts{
+    border:1px solid #DDDDDD;
+    font: 13px Arial;
+    width: 100%;
+}
+/*largeur colomne participants*/
+#parts .nom{
+    min-width:200px;
+    max-width:200px;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+}
+
+#parts .titre_nom{
+    min-width:200px;
+    font-weight: bold;
+    white-space: pre-wrap;
+    display: flex;
+    padding:0.25rem 0.25rem;
+}
+.txticone{
+    width: 110px;
+    margin-top:14px;
+}
+#parts .e{
+    min-width:46px;
+    max-width:46px;
+    padding-left:15px
+}
+
+#parts .e_titre{
+    font-weight: bold;
+    min-width:46px;
+    max-width:46px;
+    padding-top:0rem!important;
+}
+
+#parts .rid_titre{
+    min-width:85px;
+    max-width:85px;
+    background-color:#F5F5F5;
+    font-weight: bold;
+}
+
+#parts .idmat_titre{
+    min-width:55px;
+    max-width:55px;
+    background-color:#F5F5F5;
+    font-weight: bold;
+}
+
+#parts .idco_titre{
+    min-width:85px;
+    max-width:85px;
+    background-color:#F5F5F5;
+    font-weight: bold;
+}
+
+#parts .idmat {
+    max-width:55px;
+    min-width:55px;
+    background-color:#F5F5F5;
+    padding:0.1rem;
+}
+ 
+#parts .rid, .idco{
+    min-width:85px;
+    background-color:#F5F5F5;
+    padding:0.1rem;
+}
+
+/*largeur colomne donnée*/
+#parts .title{
+    border:1px solid #6c757d;
+    color:#6c757d;
+    min-width: 70px;
+}
+
+/*affichage données*/
+#parts .data{
+    padding:3px;
+    min-width: 70px;
+}
+
+/*affichage colomne total*/
+#parts .total{
+    border:1px solid blue;
+    background-color:#EEEEEE;
+    text-align:center;
+    padding:1px;
+    min-width: 80px;
+    font-size: 16px;
+}
+
+/*affichage colomne vide*/
+#parts .empty_th{
+    width:100%;
+}
+
+#parts .np
+{
+    width:220px;
+    font:12px Arial;
+}
+.spinner{
+/*    dummy*/
+}
+
+
+
+/*************************************************/
+/*Course d'orientation'*/
+/*************************************************/
+
+.co_tab{
+    min-width:30px;
+    float:left;
+    padding-left:10px;
+}
+
+.btn-group{
+    float:left;
+}
+
+.co{
+    width:100px;
+    text-align:center;
+    border:1px solid grey;
+    float:left;
+    margin:0px;
+}
+
+.co td{
+    border:1px solid #c6c7c8;
+    padding:1px;
+}
+
+.co .name{
+    min-width:70px;
+    text-align:left;
+}
+
+.co .start{
+    text-align:left;
+}
+
+.co .pts{
+    min-width:50px;
+    text-align:right;
+}
+
+.co .tps{
+    text-align:right;
+}
+
+.co .good{
+    min-width:40px;
+    background-color: rgba(25, 135, 84, .7);
+}
+
+.co .mid{
+    min-width:40px;
+    background-color: #ffc107;
+}
+
+.co .false{
+    min-width:40px;
+    background-color: #dc3545;
+}
+
+.co .forget{
+    min-width:40px;
+    background-color: #6c757d;
+}
+
+.input-row .mb-3{
+    margin-bottom:0px !important;
+}
+
+.balise_tag{
+    min-width:110px !important;
+    max-width:110px !important;
+}
+
+.balise_nom{
+    min-width:190px !important;
+    max-width:190px !important;
+}
+
+.balise_dummy1{
+    min-width:6px !important;
+    max-width:6px !important;
+}
+.balise_dummy2{
+    min-width:35px !important;
+    max-width:35px !important;
+}
+
+/*************************************************/
+/*recipient drag drop
+/*************************************************/
+
+.drag-handler {
+  width: 2em;
+  position: relative;
+  background-color: RGBA(var(--bs-secondary-rgb),var(--bs-bg-opacity,1));
+  /*background-image: linear-gradient(45deg, #E4E6EB, #E4E6EB 2px, #fff 2px, #fff 4px, #E4E6EB 4px, #E4E6EB 9px, #fff 9px, #fff 11px, #E4E6EB 11px, #E4E6EB 16px, #fff 16px, #fff 18px, #E4E6EB 18px, #E4E6EB 22px);*/
+  cursor: move;
+  color: #000;
+}
+.drag-handler:active {
+  /*background-image: linear-gradient(45deg, #bab86c, #bab86c 2px, #fff 2px, #fff 4px, #bab86c 4px, #bab86c 9px, #fff 9px, #fff 11px, #bab86c 11px, #bab86c 16px, #fff 16px, #fff 18px, #bab86c 18px, #bab86c 22px);*/
+  background-size: 10px 20px; 
+}

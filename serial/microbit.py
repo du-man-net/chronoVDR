@@ -19,7 +19,7 @@
 
 import os
 import socket
-import time
+import time, threading
 from datetime import datetime
 # from time import strftime
 from numpy import size
@@ -87,17 +87,6 @@ def get_ip_address():
     return mon_ip
 
 
-# ====================================================
-# Implémentation de la fonction de répéttion
-# ====================================================
-def set_interval(func, sec):
-    def func_wrapper():
-        set_interval(func, sec)
-        func()
-    t = threading.Timer(sec, func_wrapper)
-    t.start()
-    return t
-    
 # ====================================================
 # Récupération de la connexion série
 # ====================================================
@@ -192,6 +181,17 @@ def delete_tag_to_change():
 
 
 # ====================================================
+# Implémentation de la fonction de répéttion
+# ====================================================
+def set_interval(func, sec):
+    def func_wrapper():
+        set_interval(func, sec)
+        func()
+    t = threading.Timer(sec, func_wrapper)
+    t.start()
+    return t
+    
+# ====================================================
 # on vérifie que le ref_id n'est pas déjà utilisé dans cette activité
 # ====================================================
 def is_tag_alwready_used(cn, cur, str_id, id_participant):
@@ -240,37 +240,45 @@ def get_activite_infos():
     global id_activite_cache
     global delais_cache
     global etat_cache
-
-    lcn = mysql_connect()
-    lcur = lcn.cursor()
     
-    query = (
-        "SELECT id,etat,delais_min "
-        + "FROM activites "
-        + "WHERE etat > 0 "
-    )
-    # print(query)
-    try:
-        lcur.execute(query)
-        row = lcur.fetchone()
-        if row:
-            if etat_cache != int(row[1]):
-                id_participants_cache.clear()
-                etat_cache = int(row[1])
-            if id_activite_cache != str(row[0]):
-                id_participants_cache.clear()
-                id_activite_cache = str(row[0])
-            delais_cache = int(row[2])
-            lcn.close()
-            return True
-
-        id_activite_cache = '0'
-        id_participants_cache.clear()
+    # print("infos")
+    if os.path.exists(BASE_HTML + "files/clearcash"):
+        os.remove(BASE_HTML + "files/clearcash")
         etat_cache = 0
-        delais_cache = 0
+        id_activite_cache = 0 
+        # print("clear")
         
-    except:
-        write_log("Err. SQL " + query)
+    if id_activite_cache == 0:
+        lcn = mysql_connect()
+        lcur = lcn.cursor()
+
+        query = (
+            "SELECT id,etat,delais_min "
+            + "FROM activites "
+            + "WHERE etat > 0 "
+        )
+        # print(query)
+        try:
+            lcur.execute(query)
+            row = lcur.fetchone()
+            if row:
+                if etat_cache != int(row[1]):
+                    id_participants_cache.clear()
+                    etat_cache = int(row[1])
+                if id_activite_cache != str(row[0]):
+                    id_participants_cache.clear()
+                    id_activite_cache = str(row[0])
+                delais_cache = int(row[2])
+                lcn.close()
+                return True
+
+            id_activite_cache = '0'
+            id_participants_cache.clear()
+            etat_cache = 0
+            delais_cache = 0
+        
+        except:
+            write_log("Err. SQL " + query)
 
     return False
 
@@ -389,20 +397,6 @@ def insert_data_for_participant(cn, cur, id_participants, str_data):
 
     return False
 
-
-# ====================================================
-# on met à jour l'id du dernier enregistrement dans lasupdate
-# ====================================================
-def write_last_update(lastid):
-    try:
-        print(lastid)
-        print(BASE_HTML + "files/lastupdate")
-        with open(BASE_HTML + "files/lastupdate", "w") as f:
-            f.write(str(lastid))
-    except:
-        write_log("Err. accès au fichier lastupdate")
-
-
 # ====================================================
 # on laisse une trace dans le fichier de log
 # ====================================================
@@ -412,6 +406,7 @@ def write_log(log):
         dt_string = now.strftime("%H:%M:%S")
         with open(BASE_HTML + "files/logs.txt", "a") as f:
             f.write(dt_string + " : " + log + "\n")
+            # print(dt_string + " : " + log + "\n")
     except:
         print("erreur d'accès au fichier  de logs")
 
@@ -422,12 +417,12 @@ def write_log(log):
 def start_for_all():
     cn = mysql_connect()
     cur = cn.cursor()
-    get_activite_infos()
+    # get_activite_infos()
     if id_activite_cache != '0':
         if etat_cache > 1:
             if not find_datas_for_activite(cn, cur):
                 insert_data_for_all(cn, cur)
-                write_last_update(0)
+                # write_last_update(0)
                 accuse_rcp = "START\n"
                 mb_serie.write(accuse_rcp.encode("utf-8"))
     cn.close()
@@ -473,7 +468,7 @@ def insert_url(str_id, str_data):
             cn = mysql_connect()
             if cn:
                 cur = cn.cursor()
-                get_activite_infos()
+                # get_activite_infos()
                 if etat_cache == 2:
                     if id_activite_cache != '0':
                         if get_participant_id(cn, cur, str_id):
@@ -488,13 +483,10 @@ def insert_url(str_id, str_data):
                             if insert_is_valid:
                                 lastid = insert_data_for_participant(cn, cur, id_participants, str_data) 
 
-                                if lastid:
-                                    write_last_update(lastid)
                             else:
                                 write_log("delais non respécté")
                 cn.close()
         write_log(strlog)
-        #print("#" + str_id)
         accuse_rcp = "#" + str_id + "\n"
         mb_serie.write(accuse_rcp.encode("utf-8"))
         return
@@ -517,25 +509,28 @@ while True:
         mb_serie.open()
         write_log("Essais de connexion à Micro:bit")
         ok = False
-
+        
         while not ok:
             msg_start = "CONNECT\n"
             mb_serie.write(msg_start.encode("utf-8"))
             time.sleep(0.1)
             strdatas = mb_serie.readline().decode("utf-8")
             if strdatas:
-                if strdatas == "ok":
+                if strdatas == "OK":
                     write_log("Connexion à Micro:bit réussie")
                     ok = True
+
         #
         # boucle principale
         #
+        get_activite_infos()
+        t = set_interval(get_activite_infos, 2)
         while True:
             # Atttente d'une consigne du maitre
             strdatas = ""
             strdatas = mb_serie.readline().decode("utf-8")
             if strdatas:
-                print(strdatas)
+                # print(strdatas)
                 serial_datas = strdatas.split(":")
                 name = serial_datas[0]
                 if len(serial_datas) > 1:
@@ -543,8 +538,8 @@ while True:
                 else:
                     value = ""
                 if name == "IP?":
-                    ip = "IP " + get_ip_address() + "\n"
-                    print(ip)
+                    ip = get_ip_address() + "\n"
+                    # print(ip)
                     mb_serie.write(ip.encode("utf-8"))
                 elif name == "START?":
                     start_for_all()
