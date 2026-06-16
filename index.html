@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<!--
+Copyright (C) 2026 gleon
+
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program.  If not, see <http://www.gnu.org/licenses/>.
+-->
+<!doctype html>
+<html>
+    <head>
+        <!-- Required meta tags -->
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+        <!-- Bootstrap CSS -->   
+        <link href="node_modules/bootstrap/dist/css/bootstrap.css" rel="stylesheet">
+        <link href="./node_modules/bootstrap-icons/font/bootstrap-icons.css" rel="stylesheet">
+        <link rel="icon" type="image/x-icon" href="/favicon.ico">
+        <!-- Custom styles for this template -->
+
+        <title>ChronoVDR</title>
+
+    </head>
+    <body>
+
+        <h1 class="text-dark text-center mt-5">
+            ChronoVDR
+        </h1>
+        <div class="container mt-4">
+            <div class="row justify-content-center">
+                <div class="col-md-3">
+                    <div class="card mb-3" >
+                        <div class="card-header text-bg-dark">Je suis un organisateur</div>
+                        <div class="card-body">
+                            <form id="adminForm" action="">
+                                <select id="sel_admin" class="form-select" style="width:100%;">
+
+                                </select>
+
+                                <input type="password" 
+                                       class="form-control" 
+                                       id="admin_pw" 
+                                       placeholder="Mot de passe"
+                                       required />
+                                <div class="d-flex  justify-content-end mt-2">
+                                    <button id="btn_login_admin" class="btn btn-info">
+                                        S'identifier
+                                    </button>
+                                </div>
+                            </form>
+
+                        </div>
+                    </div>
+
+                    <div class="card mb-3 " >
+                        <div class="card-header text-bg-dark">Je suis un élève</div>
+                        <div class="card-body">
+                            <form id="eleveForm" action="">
+                                <div class="form-group">
+                                    <label for="sel_admin">
+                                        Le numéro de mon matériel
+                                    </label>
+                                    <select id="sel_idmat" class="form-select" style="width:100%;">
+
+                                    </select>
+                                </div>
+                                <div class="d-flex  justify-content-end mt-2">
+                                    <button id="btn_login_eleve" class="btn btn-info">
+                                        S'identifier
+                                    </button>
+                                </div>
+                            </form>
+
+                        </div>
+                    </div>
+                    <p id="result">res</p>
+                </div>
+            </div>
+        </div>
+ 
+        <script type="importmap">
+            {
+            "imports": {
+            "@popperjs/core": "./node_modules/@popperjs/core/dist/umd/popper.js",
+            "bootstrap": "./node_modules/bootstrap/dist/js/bootstrap.js",
+            "login": "./js/login.js"
+            }
+            }
+        </script>
+        <script type="module">
+            import * as bootstrap from 'bootstrap'
+            import * as login from 'login';
+        </script>
+    </body>
+</html>

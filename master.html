@@ -1,0 +1,788 @@
+<!DOCTYPE html>
+<!--
+Copyright (C) 2026 gleon
+
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program.  If not, see <http://www.gnu.org/licenses/>.
+-->
+<!doctype html>
+<html>
+    <head>
+        <!-- Required meta tags -->
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+        <!-- Bootstrap CSS -->   
+        <link href="node_modules/bootstrap/dist/css/bootstrap.css" rel="stylesheet">
+        <link href="node_modules/bootstrap-icons/font/bootstrap-icons.css" rel="stylesheet">
+        <!-- Custom styles for this template -->
+        <link href="scss/style.css" rel="stylesheet">
+        <title>ChronoVDR</title>
+        <link rel="icon" type="image/x-icon" href="/favicon.ico">
+
+    </head>
+    <body>
+
+        <template id="tmpl_spinner">
+            <div class="text-center spinner">
+                <div class="spinner-border text-info spinner-border-sm" role="status">
+                    <span class="visually-hidden">Loading...</span>
+                </div>
+            </div>
+        </template>
+
+        <template id="tmpl_charts">
+            <div class="chart-container">
+                <canvas class="canvas"></canvas>
+            </div>
+        </template>
+
+        <template id="tmpl_co_legend">
+            <div class = "legend">
+                <div>Parcours inscrit</div>
+                <span class="badge bg-custom2">parcours</span>
+            </div>
+            <div class = "legend">
+                <div>Parcours commencé</div>
+                <span class="badge bg-custom3">parcours</span>
+            </div>
+            <div class = "legend">
+                <div>Balise trouvée</div>
+                <span class="badge text-bg-success">A1</span>
+            </div>
+            <div class = "legend">
+                <div>Balise désordonnée</div>
+                <span class="badge text-bg-warning">A1</span>
+            </div>
+            <div class = "legend">
+                <div>Balise oubliée</div>
+                <span class="badge text-bg-secondary">A1</span>
+            </div>
+            <div class = "legend">
+                <div>Balise en trop</div>
+                <span class="badge text-bg-danger">A1</span>
+            </div>
+        </template>
+        
+        <template id="tmpl_co">
+            <div class="btn-group" role="group">
+                <button type="button" class="btn btn-outline-secondary co_left">
+                    &laquo;
+                </button>
+                <button type="button" class="btn btn-outline-secondary co_right">
+                    &raquo;
+                </button>
+            </div>
+            <table class="co">
+                <tr>
+                    <td rowspan="2">
+                        <span class="badge text-bg-danger co_n"></span>
+                    </td>
+                    <td class="name"></td>
+                </tr>
+                <tr>
+                    <td class="start"></td>
+                </tr>
+            </table>
+
+        </template>
+
+        <template id="tmpl_parcours">
+            <td class="input-row">
+                <div class="input-group mb-3"  data-bs-theme="dark">
+                    <button type="button" class="btn-close pb_del"></button>
+                    <input type="text" class="form-control pb_nom">
+                    <span class="input-group-text pb_tag"></span>
+                    <select class="form-select pb_value" style="max-width:60px;">
+                        <option value="1" selected>1</option>
+                        <option value="2" >2</option>
+                        <option value="3">3</option>
+                        <option value="4">4</option>
+                        <option value="5">5</option>
+                        <option value="6">6</option>
+                        <option value="7">7</option>
+                        <option value="8">8</option>
+                        <option value="9">9</option>
+                    </select>
+                    <span class="input-group-text drag-handler">1</span>
+                </div>
+            </td>
+        </template>
+
+        <template id="tmpl_balise">
+            <td class="input-row">
+                <div class="input-group mb-3"  data-bs-theme="dark">
+                    <button type="button" class="btn-close"></button>
+                    <span class="input-group-text balise_nom"></span>
+                    <span class="input-group-text balise_tag"></span>
+                    <button class="btn btn-info pb_add" type="button">+</button>
+                </div>
+            </td>
+        </template>
+
+        <template id="tmpl_sel_idmat">
+            <div class="dropdown">
+                <button 
+                    class="btn dropdown-toggle visually-hidden"
+                    type="button"
+                    id="sel_idmat_btn"
+                    data-bs-toggle="dropdown"
+                    aria-expanded="false">
+                </button>
+                <div class="dropdown-menu" id="sel_idmat_menu">
+                    <div class="row">
+                        <div class="col-4" id="col0">
+                        </div>
+                        <div class="col-4" id="col1">
+                        </div>
+                        <div class="col-4" id="col2">
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </template>
+
+        <template id="tmpl_sel_idCo">
+            <div class="dropdown">
+                <button 
+                    class="btn dropdown-toggle visually-hidden"
+                    type="button"
+                    id="sel_idCo_btn"
+                    data-bs-toggle="dropdown"
+                    aria-expanded="false">
+                </button>
+                <ul class="dropdown-menu" id="sel_idCo_menu">
+
+                </ul>
+            </div>
+        </template>
+
+        <nav  id="navbar" class="navbar navbar-dark bg-dark fixed-top">
+            <div class="container-fluid">
+                <button class="navbar-toggler" 
+                        type="button" 
+                        data-bs-toggle="offcanvas" 
+                        data-bs-target="#off_menu" 
+                        aria-controls="off_menu" 
+                        aria-label="Toggle navigation"
+                        id="btn_off_menu">
+                    <span class="navbar-toggler-icon"></span>
+                </button>
+                <!--<a class="navbar-brand" href="#">ChronoVDR</a>-->
+
+                <ul class="nav me-auto mb-0 mb-lg-0">
+                    <li class="nav-item">
+                        <select class="form-select form-select-sm mt-3" id="sel_activite">
+                            <option value="empty" selected>Aucune actvité</option>
+                        </select>
+                    </li>
+                    <li class="nav-item">
+                        <a id="startStop" class="nav-link" href="#">
+                            <i class="bi bi-record-circle text-light" style="font-size: 2rem;"></i>
+                            <!--<img src="img/start1.png" alt="Logo" width="32" height="32" >!-->
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a id="change_vue" class="nav-link" href="#">
+                            <i class="bi bi-graph-up text-light" style="font-size: 1.9rem;"></i>
+                            <!--<img src="img/graphique.png" alt="Logo" width="30" height="30">!-->
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#">
+                            <i class="bi bi-terminal text-light" style="font-size: 2rem;"></i>
+                            <!--<img src="img/logsw.png" alt="Logo" width="30" height="30">!-->
+                        </a>
+                    </li>
+                    <li class="nav-item badge text-bg-black text-wrap" id="hour">
+                        <div class="text-secondary float-start font-monospace" id="htime"></div><br/>
+                        <div class="text-secondary float-start font-monospace fs-4" id="stime"></div>
+                    </li>
+
+                </ul>
+
+            </div>
+        </nav>
+
+
+        <div class="offcanvas offcanvas-start text-bg-dark" id="off_menu" aria-labelledby="off_menu_title">
+
+            <div class="offcanvas-body d-flex flex-column flex-shrink-0">
+                <a href="/" class="mb-3 mb-md-0 me-md-auto text-white text-decoration-none">
+                    <div class="fs-4">ChronoVDR</div>
+                    <div class="fs-6 text-secondary" id="menu_a_name"></div>
+                </a>
+                <hr>
+                <a class="btn btn-dark nav-res" data-bs-toggle="collapse" href="#collapseReseau" role="button" aria-expanded="false" aria-controls="collapseReseau">
+                    <i class="bi bi-ethernet" style="font-size: 1.5rem;"></i>
+                    <span>Informations réseau</span>
+                </a>
+                <div class="collapse" id="collapseReseau">
+                    <div class="card text-bg-dark border-warning mb-3">
+                        <div id="reseau" class="card-body">
+
+                        </div>
+                    </div>
+                </div>
+
+                <ul class="nav nav-pills flex-column ">
+                    <li class="nav-item">
+                        <a href="#" class="nav-link text-white" id="add_activite">
+                            <i class="bi bi-plus-square" style="font-size: 1.5rem;"></i>
+                            <span>Créer une activité</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="#" class="nav-link text-white" id="props_activite" data-bs-toggle="offcanvas" data-bs-target="#off_props">
+                            <i class="bi bi-gear" style="font-size: 1.5rem;"></i>
+                            <span>Propriété de l'activité</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="#" class="nav-link text-white" id="props_co" data-bs-toggle="offcanvas" data-bs-target="#off_co">
+                            <i class="bi bi-geo" style="font-size: 1.5rem;"></i>
+                            <span>Pacrours CO</span>
+                        </a>
+                    </li >
+                    <li class="nav-item">
+
+                        <a href="#" class="nav-link text-white"  id="import_activite" data-bs-toggle="modal" data-bs-target="#modal_import">
+                            <i class="bi bi-people" style="font-size: 1.5rem;"></i>
+                            <span>Importation</span>
+                        </a>
+                    </li>
+                    <li  class="nav-item">
+                        <a href="#" class="nav-link text-white" id="export_activite" data-bs-toggle="modal" data-bs-target="#modal_export">
+                            <i class="bi bi-filetype-csv" style="font-size: 1.5rem;"></i>
+                            <span>Exporter les données</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="#" class="nav-link text-white" id="props_admin" data-bs-toggle="offcanvas" data-bs-target="#off_admin">
+                            <i class="bi bi-person-vcard" style="font-size: 1.5rem;"></i>
+                            <span>Comptes admin.</span>
+                        </a>
+                    </li >
+                    <li class="nav-item">
+                        <a href="#" class="nav-link text-white" id="power_off">
+                            <i class="bi bi-power" style="font-size: 1.5rem;"></i>
+                            <span>Se deconnecter</span>
+                        </a>
+                    </li >
+                </ul>
+
+            </div>
+        </div>
+
+        <div class="offcanvas offcanvas-start text-bg-dark" id="off_admin" aria-labelledby="off_admin_title">
+
+            <div class="offcanvas-header">
+                <div class="d-flex flex-column">
+                    <div class="offcanvas-title fs-4">Administration</div>
+                    <div class="fs-6 text-secondary text-bg-dark" id="admin_a_name"></div>
+                </div>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+            </div>
+            <div class="offcanvas-body d-flex flex-column flex-shrink-0">
+
+                <div class="input-group mb-3 " data-bs-theme="dark">
+                    <button type="button" class="btn btn-warning" id="admin_del">
+                        <i class="bi bi-person-dash" style="font-size: 1.1rem;"></i>
+                    </button>
+                    <select class="form-select form-select" id="sel_admin">
+                        <option value="-1">Aucun admin</option>
+                    </select>
+                    <button type="button" class="btn btn-info" id="admin_add">
+                        <i class="bi bi-person-plus" style="font-size: 1.1rem;"></i>
+                    </button>
+                    <button type="button" class="btn btn-light " id="admin_save">
+                        <i class="bi bi-floppy" style="font-size: 1.1rem;"></i>
+                    </button>
+                </div>
+
+                <div class="input-group mb-3" data-bs-theme="dark">
+                    <label for="admin_login" class="col col-form-label">Identifiant : </label>
+                    <input id="admin_login" type="text" class="form-control bg-dark text-white border-secondary" placeholder="login" aria-label="login">
+
+
+                </div>
+
+                <div class="input-group mb-3" data-bs-theme="dark">
+                    <label for="admin_nom" class="col col-form-label ">Nom : </label>
+                    <input id="admin_nom" type="text" class="form-control bg-dark text-white border-secondary" placeholder="Nom" aria-label="Nom">
+
+                </div>
+
+
+                <div class="input-group mb-3" data-bs-theme="dark">
+                    <label for="admin_pw" class="col col-form-label">Mot de passe : </label>
+                    <input id="admin_pw" type="password" class="form-control bg-dark text-white border-secondary" placeholder="mot de passe" aria-label="mot de passe">
+
+                </div>
+
+            </div>
+        </div>
+
+        <div class="offcanvas offcanvas-start text-bg-dark" data-bs-backdrop="static" tabindex="-1" id="off_co" aria-labelledby="off_co_title">
+            <div class="offcanvas-header">
+                <h5 class="offcanvas-title" id="off_co_title">Course d'orientation</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+            </div>
+            <div class="offcanvas-body d-flex flex-column flex-shrink-0">
+
+                <a class="btn btn-outline-secondary btn-sm" data-bs-toggle="collapse" href="#collapseParcours" role="button" aria-expanded="false" aria-controls="collapseParcours">
+                    Parcours
+                </a>
+                <div class="collapse" id="collapseParcours">
+                    <div class="input-group mb-3 " data-bs-theme="dark">
+                        <button type="button" class="btn btn-warning btn-sm" id="del_parcours">X</button>
+                        <select class="form-select form-select" id="sel_parcours">
+                            <option value="-1">Aucun parcours</option>
+                        </select>
+                        <input type="text" class="form-control-sm" id="nom_parcours">
+                        <button type="button" class="btn btn-info btn-sm" id="add_parcours">+</button>
+                    </div>
+
+
+                    <div class="d-flex justify-content-between">
+                        <label  for="ordre_parcours" class="form-label h5 text-info">Balises du parcours :</label>
+                        <div class="mb-3">
+                            <label for="ordre_parcours" class="form-label">Ordre compte</label>
+                            <input class="form-check-input" type="checkbox" id="ordre_parcours" />
+                        </div>
+                    </div>
+
+                    <table id="recipeTable">
+                        <thead>
+                            <tr>
+                                <td></td>
+                                <td></td>
+                                <td></td>
+                            </tr>
+                        </thead>
+                        <tbody id="recipeTableBody">
+
+                        </tbody>
+                    </table>
+
+
+
+                </div>
+                <a class="btn btn-outline-secondary btn-sm" data-bs-toggle="collapse" href="#collapseScanBalise" role="button" aria-expanded="false" aria-controls="collapseScanBalise">
+                    Scanner une balises
+                </a>
+
+                <div class="collapse" id="collapseScanBalise">
+
+                    <div class="row mb-3">
+                        <div class="input-group" data-bs-theme="dark">
+                            <span class="input-group-text">Tag :</span>
+                            <input type="text" class="form-control" id="tag_balise">
+                            <span class="input-group-text">Nom :</span>
+                            <input type="text" class="form-control" id="nom_balise">
+                            <button type="button" class="btn btn-primary btn-info btn-sm" id="save_balise">+</button>
+                        </div>
+                    </div>
+                </div>
+                <a class="btn btn-outline-secondary btn-sm" data-bs-toggle="collapse" href="#collapseBalises" role="button" aria-expanded="false" aria-controls="collapseBalises">
+                    Liste des balises à ajouter
+                </a>
+                <div class="collapse" id="collapseBalises">
+                    <table id="baliseToAdd">
+                        <thead>
+                            <tr>
+
+                                <td class="input-row">
+                                    <div class="input-group mb-3"  data-bs-theme="dark">
+                                        <span class="input-group-text balise_dummy1"></span>
+                                        <span class="input-group-text balise_nom">Nom</span>
+                                        <span class="input-group-text balise_tag">Tag</span>
+                                        <span class="input-group-text balise_dummy2"></span>
+                                    </div>
+                                <td>
+                            </tr>
+                        </thead>
+                        <tbody id="liste_balises">
+
+                        </tbody>
+                    </table>
+                </div>
+
+            </div>
+
+        </div>
+
+        <!-- Modal -->
+        <div class="modal fade" 
+             id="modal_conf" 
+             data-bs-backdrop="static" 
+             data-bs-keyboard="false" 
+             tabindex="-1" 
+             aria-labelledby="modal_conf_title" 
+             aria-hidden="true">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h1 class="modal-title fs-5" id="modal_conf_title">dummy</h1>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body" id="modal_conf_body">
+                        ...
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annnuler</button>
+                        <button type="button" class="btn btn-primary" id="btn_modal_conf">Supprimer</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Modal -->
+        <div class="modal fade" 
+             id="modal_alert" 
+             data-bs-backdrop="static" 
+             data-bs-keyboard="false" 
+             tabindex="-1" 
+             aria-labelledby="modal_alert_title" 
+             aria-hidden="true">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h1 class="modal-title fs-5" id="modal_alert_title">dummy</h1>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body" id="modal_alert_body">
+                        ...
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-primary" id="btn_modal_alert">Ok</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Modal -->
+        <div class="modal fade" id="modal_export" 
+             data-bs-backdrop="static" 
+             data-bs-keyboard="false" 
+             tabindex="-1" 
+             aria-labelledby="modal_export_title" 
+             aria-hidden="true">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h1 class="modal-title fs-5" id="modal_export_title">Exporter les données</h1>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body" id="modal_export_body">
+                        <span>
+                            Pour exporter les données, adaptez le <b>modèle</b> d'exportation<br/>
+                            Chaque champ sera remplacé par les données correspondantes<br/>
+                        </span>
+                        <hr>
+                        <span>
+                            Un modèle complet :<br/>
+                            <b>nom;prenom;classe;nais;sexe;temps;datas</b><br/><br/>
+                            N'utilisez les champs <b>datas</b> et <b>temps</b> que si ils sont présents dans les données.<br/><br/>
+                        </span>
+
+
+                        <input class="form-control" 
+                               type="text" 
+                               id="liste_exportation" 
+                               placeholder="nom;prenom;classe;nais;sexe;temps;datas"
+                               aria-label="modele d'exportation/">
+
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annnuler</button>
+                        <button type="button" class="btn btn-primary" id="btn_modal_export">Exporter</button>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+        <div class="modal fade" id="modal_import" 
+             data-bs-backdrop="static" 
+             data-bs-keyboard="false" 
+             tabindex="-1" 
+             aria-labelledby="modal_export_title" 
+             aria-hidden="true">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <form id="form_import" action="../api/activite.php" method="POST">
+                        <div class="modal-header">
+                            <h1 class="modal-title fs-5" id="modal_import_title">Importer des noms \ classes</h1>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                        </div>
+                        <div class="modal-body" id="modal_import_body">
+                            <span>les bases de nom des participants sont importées :</span>
+                            <ul>
+                                <li>
+                                    <span>Soit à partir des exportations de classe de Pronote</span>
+                                </Li>
+                                <li>
+                                    <span>Soit à partir de fichier csv comportant au minimum<br/>
+                                        les champs : <b>nom, prénom, classe</b></span>
+                                </Li>
+                            </ul>
+                            <div class="mb-3">
+                                <label for="formFile" class="form-label">Sélectionner un fichier csv à importer</label>
+                                <input class="form-control" type="file" id="formFile" name="formFile" />
+                                <span><br/>n'oubliez pas le nom de la classe pour les fichiers Pronote</span>
+                                <input class="form-control" 
+                                       type="text" 
+                                       name="importClasse" 
+                                       id="importClasse" 
+                                       placeholder="3A"
+                                       aria-label="Classe/">
+                            </div>
+                            <div class="accordion" id="accordionExample">
+                                <div class="accordion-item">
+                                    <h2 class="accordion-header">
+                                        <button class="accordion-button" id="formFileStatus" type="button" data-bs-toggle="collapse" data-bs-target="#formFileCollapse" aria-expanded="true" aria-controls="formFileCollapse">
+                                            Résultats
+                                        </button>
+                                    </h2>
+                                    <div id="formFileCollapse" class="accordion-collapse collapse" data-bs-parent="#accordionExample">
+                                        <div class="accordion-body" id="formFileResult">
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annnuler</button>
+                            <button type="submit" class="btn btn-primary" id="btn_modal_lecture">Lire le fichier</button>
+                            <button type="submit" class="btn btn-primary" id="btn_modal_import">Importer</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <div class="offcanvas offcanvas-start text-bg-dark" data-bs-backdrop="static" tabindex="-1" id="off_props" aria-labelledby="staticBackdropLabel">
+            <div class="offcanvas-header">
+                <h5 class="offcanvas-title" id="staticBackdropLabel">Propriété de l'activité</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+            </div>
+            <div class="offcanvas-body">
+                <div class="row mb-3">
+                    <label for="nom_activite" class="col col-form-label ">Nom de l'activité : </label>
+                    <div class="col">
+                        <input id="nom_activite" type="text" class="form-control form-control-sm bg-dark text-white border-secondary" placeholder="Nom de l'activité" aria-label="Nom de l'activité">
+                    </div>
+                </div>
+                <div class="row mb-3">
+                    <label for="nom_orga" class="col col-form-label">Organisateur : </label>
+                    <div class="col">
+                        <input id="nom_orga" type="text" class="form-control form-control-sm bg-dark text-white border-secondary" placeholder="Organisateur" aria-label="Organisateur">
+                    </div>
+                </div>
+                <hr class="hr" />
+                <div class="row mb-3">
+                    <label for="sel_type_activite" class="col col-form-label">Type d'activité : </label>
+                    <div class="col">
+                        <select class="form-select form-select-sm  bg-dark text-white border-secondary" id="sel_type_activite">
+
+                        </select>
+                    </div>
+                </div>
+                <!--
+                <div class="row mb-3">
+                    <label for="temps_max" id="temps_max_lbl" class="col col-form-label">Temps max : </label>
+                    <div class="col">
+                        <input id="temps_max" type="text" class="form-control form-control-sm" placeholder="30" aria-label="30">
+                    </div>
+                </div>
+                <div class="row mb-3">
+                    <label for="nb_max" id="nb_max_lbl"class="col col-form-label">Nb enregistrements : </label>
+                    <div class="col">
+                        <input id="nb_max" type="text" class="form-control form-control-sm" placeholder="10" aria-label="10">
+                    </div>
+                </div>
+                -->
+                <div class="row mb-3">
+                    <label for="delais_min" id="delais_min_lbl" class="col col-form-label">Temps minimum entre 2 enregistrements (sec) : </label>
+                    <div class="col">
+                        <input id="delais_min" type="text" class="form-control form-control-sm  bg-dark text-white border-secondary" placeholder="0" aria-label="0">
+                    </div>
+                </div>
+
+
+                <div class="form-check form-switch">
+                    <label class="form-check-label text-warning" for="switchDetails">Afficher le paramétrage détaillé</label>
+                    <input class="form-check-input" type="checkbox" role="switch" id="switchDetails" data-bs-toggle="collapse" data-bs-target="#collapseDetails" aria-controls="collapseDetails">
+
+                </div>
+
+                <div class="collapse" id="collapseDetails">
+
+                    <div class="row mb-3">
+                        <label for="sel_id_type" class="col col-form-label">Authentification : </label>
+                        <div class="col">
+                            <select class="form-select form-select-sm bg-dark text-white border-secondary" id="sel_id_type">
+                                <option value="1">RFID</option>
+                                <option value="2">Id_matériel</option>
+                            </select>
+                        </div>
+                    </div>
+                    <hr class="hr" />
+                    <div class="form-check ">
+                        <input class="form-check-input bg-dark text-white border-secondary" type="checkbox" role="switch" id="flag_show_data" value="8">
+                        <label class="form-check-label" for="flag_show_data">
+                            Afficher la ligne des données
+                        </label>
+                    </div>
+                    <div class="form-check">
+                        <input class="form-check-input bg-dark text-white border-secondary" type="checkbox" role="switch" id="flag_show_time" value="4">
+                        <label class="form-check-label" for="flag_show_time">
+                            Afficher la ligne de temps
+                        </label>
+                    </div>
+                    <hr class="hr" />
+                    <div class="form-check ">
+                        <input class="form-check-input bg-dark text-white border-secondary" type="checkbox" role="switch" id="flag_show_startTime" value="16">
+                        <label class="form-check-label" for="flag_show_startTime">
+                            Afficher l'heure de départ
+                        </label>
+                    </div>
+                    <hr class="hr" />
+                    <div class="row mb-3">
+                        <label for="how_show_time" class="col col-form-label">Affichage du temps : </label>
+                        <div class="col">
+                            <select class="form-select form-select-sm bg-dark text-white border-secondary" id="how_show_time">
+                                <option value="128">min/sec par tours</option>
+                                <option value="64">heure par tour</option>
+                                <option value="32">Temps depuis le départ</option>
+                            </select>
+                        </div>
+                    </div>
+                    <hr class="hr" />
+
+                    <div class="form-check ">
+                        <input class="form-check-input bg-dark text-white border-secondary" type="checkbox" role="switch"  id="flag_final_time" value="4096">
+                        <label class="form-check-label" for="flag_final_time">
+                            Afficher le temps total
+                        </label>
+                    </div>
+                    <div class="form-check">
+                        <input class="form-check-input bg-dark text-white border-secondary" type="checkbox" role="switch" id="flag_number_laps" value="8192">
+                        <label class="form-check-label" for="flag_number_laps">
+                            Afficher le nombre de tours
+                        </label>
+                    </div>
+                    <div class="form-check">
+                        <input class="form-check-input bg-dark text-white border-secondary" type="checkbox" role="switch" id="flag_total_datas" value="16384">
+                        <label class="form-check-label" for="flag_total_datas">
+                            Afficher le total des données
+                        </label>
+                    </div>
+
+                </div>
+
+                <hr/>
+
+                <p class="d-flex justify-content-between">
+                    <button type="button" class="btn btn-primary btn-warning" id="del_datas">Supprimer données</button>
+                    <button type="button" class="btn btn-primary btn-info" id="save_props_activite">Enregistrer propriétés</button>
+                </p>
+                <p class="d-flex justify-content-start">
+                    <button type="button" class="btn btn-primary btn-danger" id="del_activite">Supprimer l'activité</button>
+                </p>
+            </div>
+        </div>
+
+        <div class="offcanvas offcanvas-start text-bg-dark" 
+             data-bs-backdrop="static" 
+             tabindex="-1" 
+             id="off_ptoadd" 
+             aria-labelledby="off_ptoadd_title">
+            <div class="offcanvas-header">
+                <h5 class="offcanvas-title" id="off_ptoadd_title">Ajouter des participants</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+            </div>
+            <div class="offcanvas-body">
+                <div>
+                    <table class="table table-bordered table-dark" id="toadd">
+                        <tr>
+                            <th class="tdchk">
+                                <input type="checkbox" name="check_users" value="all" id="tout_ptoadd">
+                            </th>
+                            <th class="nom_toadd">
+                                <select class="form-select form-select-sm" id="selclasseParticipants">
+
+                                </select>
+                            </th>
+                            <th class="nom_toadd">
+                                <button type="button" class="btn btn-info btn-sm" id="ptoadd">Ajouter >>></button>
+                            </th>
+                        </tr>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <table class="table table-bordered table-fixed table-hover table-light" id="parts">
+            <thead>
+                <tr>
+                    <th class = "titre_nom" >
+                        <div class="txticone">Partipants</div>
+                        <button type="button" class="btn btn-warning btn-sm" id="ptodel" style="margin-right:8px;"><!-- @whitespace
+                            --><i class="bi bi-person-dash" style="font-size: 1.1rem;"></i><!-- @whitespace
+                            --></button>
+                        <button type="button" class="btn btn-info btn-sm" data-bs-toggle="offcanvas" data-bs-target="#off_ptoadd" aria-controls="off_ptoadd"><!-- @whitespace
+                            --><i class="bi bi-person-plus" style="font-size: 1.1rem;"></i><!-- @whitespace
+                            --></button>
+                    </th>
+                    <th class = "e_titre" >
+                        <button type="button" class="btn btn-secondary btn-sm" id="create_equipe"><!-- @whitespace
+                            --><i class="bi bi-link" style="font-size: 1.1rem;"></i><!-- @whitespace
+                            --></button>
+                    </th>
+                    <th id="ref_id"></th>
+                    <th class = "empty_th">
+
+                    </th>
+                </tr>
+            </thead>
+            <tbody>
+            </tbody>
+        </table>
+
+
+
+
+
+        <script type="importmap">
+            {
+            "imports": {
+            "chart.js": "./node_modules/chart.js/dist/chart.js",
+            "@kurkle/color": "./node_modules/@kurkle/color/dist/color.esm.js",
+            "chartjs-adapter-luxon": "./node_modules/chartjs-adapter-luxon/dist/chartjs-adapter-luxon.esm.js",
+            "luxon": "./node_modules/luxon/src/luxon.js",
+            "bootstrap": "./node_modules/bootstrap/dist/js/bootstrap.bundle.js",
+            "sortablejs": "./node_modules/sortablejs/modular/sortable.esm.js",
+            "main": "./js/main.js"
+
+            }
+            }
+        </script>
+        <script type="module">
+            import * as bootstrap from 'bootstrap'
+            import * as main from 'main';
+        </script>
+
+    </body>
+</html>

@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<!--
+Copyright (C) 2026 gleon
+
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program.  If not, see <http://www.gnu.org/licenses/>.
+-->
+<!doctype html>
+<html>
+    <head>
+        <!-- Required meta tags -->
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+        <!-- Bootstrap CSS -->   
+        <link href="node_modules/bootstrap/dist/css/bootstrap.css" rel="stylesheet">
+        <link href="node_modules/bootstrap-icons/font/bootstrap-icons.css" rel="stylesheet">
+        <!-- Custom styles for this template -->
+        <link href="scss/style.css" rel="stylesheet">
+        <title>ChronoVDR</title>
+        <link rel="icon" type="image/x-icon" href="/favicon.ico">
+
+        <title>ChronoVDR</title>
+
+    </head>
+    <body>
+
+        <nav  id="navbar" class="navbar navbar-dark bg-dark fixed-top">
+            <div class="container-fluid">
+                <!--<button class="navbar-toggler" 
+                        type="button" 
+                        data-bs-toggle="offcanvas" 
+                        data-bs-target="#off_menu" 
+                        aria-controls="off_menu" 
+                        aria-label="Toggle navigation">
+                    <span class="navbar-toggler-icon"></span>
+                </button>
+                <a class="navbar-brand" href="#">ChronoVDR</a>-->
+
+                <div class="nav me-auto mb-0 mb-lg-0">
+                    <div class="nav-item">
+                        <a id="poweroff" class="nav-link" href="#">
+                            <i class="bi bi-power text-light" style="font-size: 2rem;"></i>
+                        </a>
+                    </div>
+
+                    <div class="nav-item" style="padding-top:17px;">
+                        <span class="navbar-text h6" >Nom de l'activité</span>
+                    </div>
+
+                    <div class="nav-item">
+                        <a id="startStop" class="nav-link" href="#">
+                            <i class="bi bi-pause-fill text-light" style="font-size: 2rem;"></i>
+                            <i class="bi bi-play-fill text-light" style="font-size: 2rem;"></i>
+                        </a>
+                    </div>
+                    <div class="nav-item">
+                        <a id="change_vue" class="nav-link" href="#">
+                            <i class="bi bi-graph-up text-light" style="font-size: 1.9rem;"></i>
+                        </a>
+                    </div>
+                    <div class="nav-item">
+                        <a class="nav-link" href="#">
+                            <i class="bi bi-terminal text-light" style="font-size: 2rem;"></i>
+                        </a>
+                    </div>
+                    <div class="nav-item badge text-bg-black text-wrap" id="hour">
+                        <div class="text-secondary float-start font-monospace" id="htime"></div><br/>
+                        <div class="text-secondary float-start font-monospace fs-4" id="stime"></div>
+                    </div>
+
+                </div>
+
+            </div>
+        </nav>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+        <script type="importmap">
+            {
+            "imports": {
+            "chart.js": "./node_modules/chart.js/dist/chart.js",
+            "@kurkle/color": "./node_modules/@kurkle/color/dist/color.esm.js",
+            "chartjs-adapter-luxon": "./node_modules/chartjs-adapter-luxon/dist/chartjs-adapter-luxon.esm.js",
+            "luxon": "./node_modules/luxon/src/luxon.js",
+            "bootstrap": "./node_modules/bootstrap/dist/js/bootstrap.bundle.js",
+            "sortablejs": "./node_modules/sortablejs/modular/sortable.esm.js",
+            "main": "./js/main.js"
+
+            }
+            }
+        </script>
+        <script type="module">
+            import * as bootstrap from 'bootstrap'
+            import * as main from 'main';
+        </script>
+
+    </body>
+</html>

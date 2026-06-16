@@ -17,6 +17,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 $dt = new DateTime("now", new DateTimeZone('Europe/Paris')); 
-echo $dt->format('Y,m,d,N,H,i,s');
+
+echo json_encode(["time" => $dt->format('Y,m,d,N,H,i,s')]);
 //echo date("Y-m-d H:i:s"); 
 
