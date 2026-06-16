@@ -1,6 +1,8 @@
 <?php
-
-/* 
+error_reporting(E_ALL & ~E_DEPRECATED);
+ini_set("display_errors", 1);
+session_start();
+/*
  * Copyright (C) 2025 Gérard Léon
  *
  * This program is free software: you can redistribute it and/or modify
@@ -21,9 +23,9 @@ require_once "db.php";
 define("BY_RFID", 0x1);
 define("BY_IDMAT", 0x2);
 
-define( "SHOW_TIME", 0x4 );
-define( "SHOW_DATA", 0x8 );
-define( "SHOW_START", 0x10 );
+define("SHOW_TIME", 0x4);
+define("SHOW_DATA", 0x8);
+define("SHOW_START", 0x10);
 
 define("TIME_SINCE_START", 0x20);
 define("HOUR_PER_LAP", 0x40);
@@ -40,7 +42,7 @@ define("SHOW_TOTAL_DATA", 0x4000);
 
 define("SHOW_PARCOURS", 0x8000);
 
-define ("PERSONAL_CONFIG", 0x10000);
+define("PERSONAL_CONFIG", 0x10000);
 
 class Activite {
 
@@ -49,7 +51,7 @@ class Activite {
     private $_db = NULL;
     private $_nb_max = 0;
     public $infos = array('nom' => '',
-        'organisateur' => '',
+        'id_admin' => 0,
         'vue' => '',
         'flag' => 0,
         'nb_max' => '',
@@ -58,16 +60,16 @@ class Activite {
         'etat' => '');
     public $type_activite = array(
         0x1C95 => "Endurance tours limités", //001 110 0100 101 01
-        0x2A95 => "Endurance temps limité",  //010 101 0100 101 01 
-        0xDDE3 => "Course d'orientation",    //1 101 110 1001 111 10
-        0x4B3E => "Match",                   //100 101 1001 111 10
+        0x2A95 => "Endurance temps limité", //010 101 0100 101 01 
+        0xDDE3 => "Course d'orientation", //1 101 110 1001 111 10
+        0x4B3E => "Match", //100 101 1001 111 10
         0x14E => "Données phys. ou sportive" //000 000 1010 011 10
     );
 
     public function __construct() { // or any other method
         global $mysqli;
         $this->_db = $mysqli;
-        $this->get_id();
+        $this->get_id($_SESSION['id']);
     }
 
     /*
@@ -76,14 +78,18 @@ class Activite {
      * ------------------------------------------------------
      */
 
-    public function get_id() {
-        $result = $this->_db->query("SELECT id FROM activites WHERE etat>0");
+    public function get_id($id_admin) {
+        $query = "SELECT id FROM activites WHERE etat>0";
+        if ($id_admin>1) {$query .= " AND id_admin='".$id_admin."'";}
+        $result = $this->_db->query($query);
         if ($result->num_rows > 0) {
             $ep = $result->fetch_assoc();
             $this->_id = $ep['id'];
         }
         if ($this->_id == 0) {
-            $result = $this->_db->query("SELECT id FROM activites");
+            $query = "SELECT id FROM activites";
+            if ($id_admin>1) {$query .= " WHERE id_admin='".$id_admin."'";}
+            $result = $this->_db->query($query);
             if ($result->num_rows > 0) {
                 $ep = $result->fetch_assoc();
                 $this->_id = $ep['id'];
@@ -91,15 +97,15 @@ class Activite {
         }
         return $this->_id;
     }
-    
-    public function id(){
+
+    public function id() {
         return $this->_id;
     }
-    
-    public function infos(){
+
+    public function infos() {
         return $this->infos;
     }
-    
+
     public function set_id($id, $force = false) {
         if ($id > 0) {
             $curent_activite = 0;
@@ -116,6 +122,8 @@ class Activite {
                 $this->_db->query("UPDATE activites SET etat = '1' WHERE id = '" . $id . "'");
                 $this->_id = $id;
             }
+            //on écrit un petit fichier pour nettoyer le cache du démon serial python
+            file_put_contents("../files/clearcash", "1", LOCK_EX);
         }
     }
 
@@ -138,7 +146,7 @@ class Activite {
             }
         }
     }
-    
+
     public function get_temps_max() {
         if ($this->_id > 0) {
             $result = $this->_db->query("SELECT temps_max FROM activites WHERE id='" . $this->_id . "'");
@@ -150,7 +158,7 @@ class Activite {
     }
 
     public function get_list() {
-        $result = $this->_db->query("SELECT id,nom FROM activites");
+        $result = $this->_db->query("SELECT id,nom,id_admin FROM activites");
         if ($result->num_rows > 0) {
             return $result;
         }
@@ -177,21 +185,22 @@ class Activite {
         }
     }
 
-    public function start() {
+    public function startStop($start) {
         if ($this->_id > 0) {
-            $this->_db->query("UPDATE activites SET etat = '2' WHERE id = '" . $this->_id . "'");
+            if($start){
+                $etat = 2;
+            }else{
+                $etat = 1;
+            }
+            $this->_db->query("UPDATE activites SET etat = '".$etat."' WHERE id = '" . $this->_id . "'");
+            //on écrit un petit fichier pour nettoyer le cache du démon serial python
+            file_put_contents("../files/clearcash", "1", LOCK_EX);
         }
     }
 
-    public function stop() {
-        if ($this->_id > 0) {
-            $this->_db->query("UPDATE activites SET etat = '1' WHERE id = '" . $this->_id . "'");
-        }
-    }
-
-    public function create() {
-        $this->_db->query("INSERT INTO activites (nom,organisateur,flag,nb_max,temps_max,delais_min,vue) " .
-                "VALUES ('Sans nom','Sans nom','334','10','30','0','tableau')");
+    public function create($id_admin) {
+        $this->_db->query("INSERT INTO activites (nom,id_admin,flag,nb_max,temps_max,delais_min,vue) " .
+                "VALUES ('Sans nom','".$id_admin."','334','10','30','0','tableau')");
         //on récupère l'ID
         $this->set_id($this->_db->insert_id, true);
     }
@@ -201,12 +210,16 @@ class Activite {
         if ($this->_id > 0) {
             $this->_db->query("SET lc_time_names = 'fr_FR'");
             $result = $this->_db->query("SELECT  "
-                    . "nom, organisateur, flag, etat, vue, nb_max, temps_max, delais_min "
-                    . "FROM activites WHERE id = '" . $this->_id . "'");
+                    . "activites.nom, admin.id as id_admin, admin.nom as nom_admin, flag, etat, vue, nb_max, temps_max, delais_min "
+                    . "FROM activites,admin "
+                    . "WHERE activites.id = '" . $this->_id . "' "
+                    . "AND activites.id_admin = admin.id");
             if ($result->num_rows > 0) {
                 $ep = $result->fetch_assoc();
+                $this->infos['id'] = $this->_id;
                 $this->infos['nom'] = $ep['nom'];
-                $this->infos['organisateur'] = $ep['organisateur'];
+                $this->infos['id_admin'] = $ep['id_admin'];
+                $this->infos['nom_admin'] = $ep['nom_admin'];
                 $this->infos['flag'] = intval($ep['flag']);
                 $this->infos['nb_max'] = $ep['nb_max'];
                 $this->infos['temps_max'] = intval($ep['temps_max']);
@@ -222,38 +235,51 @@ class Activite {
                 } else {
                     $this->_nb_max = $this->get_max_datas();
                 }
-                if($this->_nb_max < 5){$this->_nb_max = 5;}
-                
+                if ($this->_nb_max < 5) {
+                    $this->_nb_max = 5;
+                }
+
                 return $this->infos;
             }
         }
         return false;
     }
 
-    public function delete() {
-        $this->delete_all_datas();
-        $this->delete_all_participants();
-        $temp_id = $this->_id;
-        $result = $this->_db->query("SELECT id FROM activites WHERE id != '".$this->_id."'");
-        if ($result->num_rows > 0) {
-            $ep = $result->fetch_assoc();
-            $this->set_id($ep['id']);
+    public function delete($id) {
+        if ($id > 0) {
+            $this->delete_all_datas($id);
+            $this->delete_all_participants($id);
+            $result = $this->_db->query("SELECT id FROM activites WHERE id != '" . $id . "' ORDER BY id DESC");
+            if ($result->num_rows > 0) {
+                $ep = $result->fetch_assoc();
+                $this->set_id($ep['id']);
+            }
+            $this->_db->query("DELETE FROM activites WHERE id = '" . $id . "'");
         }
-        $this->_db->query("DELETE FROM activites WHERE id = '" . $temp_id . "'");
-        
     }
 
     public function save() {
         if ($this->_id > 0) {
-            
+
             $query = "UPDATE activites SET ";
-            if(!empty($this->infos["nom"]))         {$query .= "nom = '" . $this->infos["nom"]."' ,";}
-            if(!empty($this->infos["organisateur"])){$query .= "organisateur = '" . $this->infos["organisateur"]."' ,";}
-            if(!empty($this->infos["nb_max"]))      {$query .= "nb_max = '" . $this->infos["nb_max"]."' ,";}
-            if(!empty($this->infos["temps_max"]))   {$query .= "temps_max = '" . $this->infos["temps_max"]."' ,";}
-            $query .= "delais_min = '" . $this->infos["delais_min"]."' ,";
-            if(!empty($this->infos["flag"]))        {$query .= "flag = '" . $this->infos["flag"]."' ";}
+            if (!empty($this->infos["nom"])) {
+                $query .= "nom = '" . $this->infos["nom"] . "' ,";
+            }
+            if (!empty($this->infos["id_admin"])) {
+                $query .= "id_admin = '" . $this->infos["id_admin"] . "' ,";
+            }
+            if (!empty($this->infos["nb_max"])) {
+                $query .= "nb_max = '" . $this->infos["nb_max"] . "' ,";
+            }
+            if (!empty($this->infos["temps_max"])) {
+                $query .= "temps_max = '" . $this->infos["temps_max"] . "' ,";
+            }
+            $query .= "delais_min = '" . $this->infos["delais_min"] . "' ,";
+            if (!empty($this->infos["flag"])) {
+                $query .= "flag = '" . $this->infos["flag"] . "' ";
+            }
             $query .= " WHERE id = '" . $this->_id . "'";
+
             $this->_db->query($query);
             return true;
         }
@@ -272,10 +298,22 @@ class Activite {
                     . "WHERE id = '" . $ref_id . "'");
             return true;
         }
-
         return false;
     }
 
+    public function get_all_ref_id($id_participant) {
+        if ($this->_id > 0) {
+            $result = $this->_db->query("SELECT ref_id FROM participants "
+                    . "WHERE id != '" . $id_participant . "' "
+                    . "AND id_activite = '" . $this->_id . "' "
+                    . "AND ref_id IS NOT NULL AND ref_id !=''");
+            if ($result->num_rows > 0) {
+                return $result;
+            }
+        }
+        return array();
+    }
+    
     public function add_participants($id_user) {
         if ($this->_id > 0) {
             $result = $this->_db->query("SELECT id FROM participants WHERE " .
@@ -324,7 +362,7 @@ class Activite {
                 return $result;
             }
         }
-        return false;
+        return array();
     }
 
     public function get_participantsToAdd($classe) {
@@ -356,19 +394,24 @@ class Activite {
         return array();
     }
 
-    public function delete_participant($id_participants) {
-        if (is_array($id_participants)) {
-            foreach ($id_participants as $id_participant) {
-                $result = $this->_db->query("SELECT id FROM datas WHERE id_participant = '" . $id_participant . "'");
-                if ($result->num_rows == 0) {
-                    $this->_db->query("DELETE FROM participants WHERE id = '" . $id_participant . "'");
-                }
-            }
+    public function delete_participant($id_participant) {
+        $result = $this->_db->query("SELECT id FROM datas WHERE id_participant = '" . $id_participant . "'");
+        if ($result->num_rows == 0) {
+            $this->_db->query("DELETE FROM participants WHERE id = '" . $id_participant . "'");
+        } else {
+            $result = $this->_db->query("SELECT nom,prenom,classe FROM users,participants "
+                    . "WHERE id_user=users.id "
+                    . "AND participants.id = '" . $id_participant . "'");
+            $ep = $result->fetch_assoc();
+            return $ep['prenom'] . " " . $ep['nom'] . " - " . $ep['classe'];
         }
+        return "ok";
     }
 
-    public function delete_all_participants() {
-        $this->_db->query("DELETE FROM participants WHERE id = '" . $this->_id . "'");
+    public function delete_all_participants($id) {
+        if ($id > 0) {
+            $this->_db->query("DELETE FROM participants WHERE id = '" . $id . "'");
+        }
     }
 
     /*
@@ -410,7 +453,7 @@ class Activite {
         }
         return array();
     }
-    
+
     //recupération des dernière données à partir d'un index
     //utilisé seulement pour la mise à jour d'une de l'interface en AJAX
     public function get_last_datas($last_index) {
@@ -419,12 +462,12 @@ class Activite {
                     . "FROM datas,participants "
                     . "WHERE id_participant = participants.id "
                     . "AND participants.id_activite = '" . $this->_id . "' "
-                    . "AND datas.id > '".$last_index."'");
+                    . "AND datas.id > '" . $last_index . "'");
             return $result;
         }
         return array();
     }
-    
+
     /*
      * ------------------------------------------------------
      * Met en place les headers pour le téléchargement du fichier
@@ -438,7 +481,7 @@ class Activite {
                     . "WHERE association IN ("
                     . "SELECT association "
                     . "FROM participants "
-                    . "WHERE id = '".$id_participant."') "
+                    . "WHERE id = '" . $id_participant . "') "
                     . "AND id=association");
             if ($result->num_rows > 0) {
                 $row = $result->fetch_assoc();
@@ -465,18 +508,20 @@ class Activite {
             }
         }
     }
-
+ 
     public function delete_all_datas() {
-        
-        $this->_db->query("DELETE FROM datas WHERE id IN "
-                ."(SELECT datas.id FROM datas,participants WHERE id_participant = participants.id AND participants.id_activite = '" . $this->_id . "')");
+        if ($this->_id > 0) {
+            $this->_db->query("DELETE FROM datas WHERE id IN "
+                    . "(SELECT datas.id FROM datas,participants WHERE id_participant = participants.id AND participants.id_activite = '" . $this->_id . "')");
+        }
     }
-    
+
     /*
      * ------------------------------------------------------
      * construction des descripteurs
      * ------------------------------------------------------
      */
+
     private function get_start_prefix() {
         if ($this->infos['flag'] & DATA_PER_TEST) {
             return "data";
@@ -496,7 +541,8 @@ class Activite {
      * ------------------------------------------------------
      * construction des descripteurs
      * ------------------------------------------------------
-     */     
+     */
+
     private function get_end_prefix() {
         if ($this->infos['flag'] & SHOW_FINAL_TIME) {
             return "Temps";
@@ -508,8 +554,8 @@ class Activite {
             return "Total";
         }
     }
-    
-     /*
+
+    /*
      * ------------------------------------------------------
      * Vérificateur de flag
      * ------------------------------------------------------
@@ -523,17 +569,17 @@ class Activite {
         return false;
     }
 
-     /*
+    /*
      * ------------------------------------------------------
      * constructuer d'entête de tableau
      * ------------------------------------------------------
      */
-    
+
     public function make_headers() {
 
         $index = 1;
         $line = [];
-        $srtline='';
+        $srtline = '';
         $max = 0;
 
         //DEBUT
@@ -541,32 +587,31 @@ class Activite {
         $prefix = $this->get_start_prefix();
         if ($this->infos['flag'] & SHOW_START) {
             $line[$index] = "Départ";
-        }else{
+        } else {
             $line[$index] = $prefix . $index;
         }
-  
+
         //MILIEU
         // nombre de tours limités : de 1 à nb_max
-        if($this->infos['flag'] & IS_LIMIT_LAP){
+        if ($this->infos['flag'] & IS_LIMIT_LAP) {
             $max = $this->_nb_max;
-            for($i = 2; $i <= $max ; $i++){
+            for ($i = 2; $i <= $max; $i++) {
                 $line[$i] = $prefix . $i;
             }
-        }else if($this->infos['flag'] & IS_LIMIT_TIME){
+        } else if ($this->infos['flag'] & IS_LIMIT_TIME) {
             $max = $this->get_max_datas();
-            for($i = 2; $i <= $max ; $i++){
+            for ($i = 2; $i <= $max; $i++) {
                 $line[$i] = $prefix . $i;
-            }    
-        }              
-        
+            }
+        }
+
         //FIN
         // colomne bilan à nb_max
         $endtitle = $this->get_end_prefix();
         if ($this->infos['flag'] & IS_LIMIT) {
-            $line[$max+1] = $endtitle;
+            $line[$max + 1] = $endtitle;
         }
         return $line;
-
     }
 
     /*
@@ -579,7 +624,7 @@ class Activite {
      * ------------------------------------------------------
      */
 
-    public function make_datas($id_participant,$force_all = false) {
+    public function make_datas($id_participant, $force_all = false) {
 
         $index = 1;
         $line = [];
@@ -589,7 +634,7 @@ class Activite {
         $nb_laps = 0;
         $total_data = 0;
         $idy_time = 0;
-        
+
         //si les donnée et le temps sont présents,
         //on place les donées de temps dans une seconde ligne
         if ($this->check(SHOW_DATA) || $force_all) {
@@ -597,7 +642,7 @@ class Activite {
                 $idy_time = 1;
             }
         }
-       
+
         $datas = $this->get_datas($id_participant);
         foreach ($datas as $data) {
 
@@ -605,7 +650,7 @@ class Activite {
                 $line[0][$index] = $data['data'];
                 $total_data += intval($data['data']);
             }
- 
+
             if ($this->check(SHOW_TIME) || $force_all) {
                 if ($index == 1) {
                     $dt_start = new DateTimeImmutable($data['temps']);
@@ -613,22 +658,22 @@ class Activite {
                     $line[$idy_time][$index] = $dt_start->format('H:i:s');
                 } else {
                     if ($this->check(TIME_PER_LAP)) {
-                        if($data['temps']){
+                        if ($data['temps']) {
                             $dt2 = new DateTimeImmutable($data['temps']);
                             $interval = $dt1->diff($dt2);
                             //echo $interval.'<br/>';
                             $dt1 = $dt2;
                             $line[$idy_time][$index] = $interval->format("%I:%S");
-                        }else{
+                        } else {
                             $line[$idy_time][$index] = '';
                         }
                     }
                     if ($this->check(TIME_SINCE_START)) {
-                        if($data['temps']){
+                        if ($data['temps']) {
                             $dt2 = new DateTimeImmutable($data['temps']);
                             $interval = $dt_start->diff($dt2);
                             $line[$idy_time][$index] = $interval->format("%I:%S");
-                        }else{
+                        } else {
                             $line[$idy_time][$index] = '';
                         }
                     }
@@ -647,7 +692,7 @@ class Activite {
         //------------------------------------------------
         //on complète les données avec des cases vides
         //------------------------------------------------
-        for ($i = $index  ; $i <= $this->_nb_max; $i++) {
+        for ($i = $index; $i <= $this->_nb_max; $i++) {
             $line[0][$i] = "";
             $line[$idy_time][$i] = "";
         }
@@ -655,41 +700,42 @@ class Activite {
         //on ajoute les la colomne de résultas
         //------------------------------------------------
         if ($this->check(SHOW_TOTAL_DATA)) {
-            $line[0][$this->_nb_max+1] = $total_data;
-            if($idy_time>0 || $force_all){
-                $line[$idy_time][$this->_nb_max+1] = '';
+            $line[0][$this->_nb_max + 1] = $total_data;
+            if ($idy_time > 0 || $force_all) {
+                $line[$idy_time][$this->_nb_max + 1] = '';
             }
         }
         if ($this->check(SHOW_NUMBER_LAPS)) {
-            $line[0][$this->_nb_max+1] = $nb_laps;
-            if($idy_time>0 || $force_all){
-                $line[$idy_time][$this->_nb_max+1] = '';
+            $line[0][$this->_nb_max + 1] = $nb_laps;
+            if ($idy_time > 0 || $force_all) {
+                $line[$idy_time][$this->_nb_max + 1] = '';
             }
         }
         if ($this->check(SHOW_FINAL_TIME)) {
             if (!empty($dt_start) and !empty($dt2)) {
                 $interval = $dt_start->diff($dt2);
-                $line[$idy_time][$this->_nb_max+1] = $interval->format("%I:%S");
-            }else{
-                $line[$idy_time][$this->_nb_max+1] = '';
+                $line[$idy_time][$this->_nb_max + 1] = $interval->format("%I:%S");
+            } else {
+                $line[$idy_time][$this->_nb_max + 1] = '';
             }
         }
         return $line;
     }
-    
+
     /*
      * ------------------------------------------------------
      * Création des entête pour le téléchargement du fichier csv 
      * pour exporter les données.
      * ------------------------------------------------------
      */
+
     private function Array2CSVDownload($array, $filename = "export.csv", $delimiter = ";") {
 
         // flush buffer
         ob_flush();
         // mixing items
         $csvData = join("", $array);
-        
+
         //setup headers to download the file
         header('Content-Disposition: attachment; filename="' . $filename . '";');
         //setup utf8 encoding
@@ -708,7 +754,7 @@ class Activite {
     private function find_delimiter($modele) {
         $demlimiters = array(",", ";", "|", ":", "/");
         foreach ($demlimiters as $delimiter) {
-            if (substr_count($modele, $delimiter) > 2) {
+            if (substr_count($modele, $delimiter) > 1) {
                 return $delimiter;
             }
         }
@@ -721,121 +767,119 @@ class Activite {
      * On remplace les mots clefs d'un modèle pour plus de souplesse
      * ------------------------------------------------------
      */
-
+ 
     public function export($modele) {
 
         $delimiter = $this->find_delimiter($modele);
         $lines = [];
         $index = 0;
-
+        
         //affichage des colomnes liées au temps
         $line = $modele;
         $headers = "";
-        
+
         if ($delimiter) {
 
-            $export_data = (strpos($modele,"datas") !== false);
-            $export_time = (strpos($modele,"temps") !== false);
-            
-            if ( $export_time|| $export_data){
+            $export_data = (strpos($modele, "datas") !== false);
+            $export_time = (strpos($modele, "temps") !== false);
+
+            if ($export_time || $export_data) {
                 foreach ($this->make_headers() as $header) {
                     $headers .= $header . $delimiter;
                 }
             }
             //s'il il y a le mot data on ajoute les headers
-            if($export_data){
+            if ($export_data) {
                 $line = str_replace("datas", substr($headers, 0, -1), $line);
-                if($export_time){
-                    $line = str_replace("temps".$delimiter, "", $line);
-                    $line = str_replace($delimiter."temps", "", $line);
+                if ($export_time) {
+                    $line = str_replace("temps" . $delimiter, "", $line);
+                    $line = str_replace($delimiter . "temps", "", $line);
                 }
-            }else if($export_time){
+            } else if ($export_time) {
                 $line = str_replace("temps", substr($headers, 0, -1), $line);
             }
-            $lines[$index] = $line."\r";
+            $lines[$index] = $line . "\r";
             $index++;
-            
+
             $participants = $this->get_participants_to_export();
             //if (!empty($participants)) {
-                foreach ($participants as $participant) {
-                    
-                    //construction des données du participants
-                    $line = $modele;
-                    $line = str_replace("prenom", $participant["prenom"], $line);
-                    $line = str_replace("nom", $participant["nom"], $line);
-                    $line = str_replace("classe", $participant["classe"], $line);
-                    $line = str_replace("nais", $participant["nais"], $line);
-                    $line = str_replace("sexe", $participant["sexe"], $line);
-                    
-                    //on récupère la ou les deux lignes de donnée(data et temps)
-                    $line_data = array();
-                    $i = 0;
-                    $id_participant = $this->get_assoc_parent($participant['id']);
-                    $res = $this->make_datas($id_participant, false);
-                    if($res){
-                        foreach ($res as $datas_line) {
-                            $line_data[$i] = "";
-                            foreach ($datas_line as $data) {
-                                $line_data[$i] .= $data . $delimiter;
-                            } 
-                            $i++;
+            foreach ($participants as $participant) {
+
+                //construction des données du participants
+                $line = $modele;
+                $line = str_replace("prenom", $participant["prenom"], $line);
+                $line = str_replace("nom", $participant["nom"], $line);
+                $line = str_replace("classe", $participant["classe"], $line);
+                $line = str_replace("nais", $participant["nais"], $line);
+                $line = str_replace("sexe", $participant["sexe"], $line);
+
+                //on récupère la ou les deux lignes de donnée(data et temps)
+                $line_data = array();
+                $i = 0;
+                $id_participant = $this->get_assoc_parent($participant['id']);
+                $res = $this->make_datas($id_participant, false);
+                if ($res) {
+                    foreach ($res as $datas_line) {
+                        $line_data[$i] = "";
+                        foreach ($datas_line as $data) {
+                            $line_data[$i] .= $data . $delimiter;
                         }
-                    }else{
-                        //
+                        $i++;
                     }
-                    
-                    //on exporte la ligne de données
-                    if($export_data){
-                        $line = str_replace("temps".$delimiter, "", $line);
-                        $line = str_replace($delimiter."temps", "", $line);
-                        if(array_key_exists(0,$line_data)){
-                            $line = str_replace("datas", substr($line_data[0], 0, -1), $line);
-                        }
-                        $lines[$index] = $line."\r";
-                        $index++;
-                        
-                        if($export_time){
-                            //si il y a du temps on exporte la ligne de temps
-                            //on reconstruit une ligne vide avec les delimiters avants et après
-                            //on fait correspondre les temps avec les datas de la ligne du dessus
-                            $line = $modele;
-                            $splt = explode("datas".$delimiter,$line);
-                            if(count($splt)==1){
-                                if(strpos($modele,"datas") === 0){
-                                    if(array_key_exists(1,$line_data)){
-                                        $line = substr($line_data[1], 0, -1).
-                                            str_repeat($delimiter,substr_count($splt[1], $delimiter));
-                                    }
-                                }else{
-                                    if(array_key_exists(1,$line_data)){
-                                        $line = str_repeat($delimiter,substr_count($splt[0], $delimiter)-1).
-                                                substr($line_data[1], 0, -1);
-                                    }
-                                }
-                            }else{
-                                $line = str_repeat($delimiter,substr_count($splt[0], $delimiter)).
-                                        substr($line_data[1], 0, -1).
-                                        str_repeat($delimiter,substr_count($splt[1], $delimiter));
-                            }
-                            $lines[$index] = $line;
-                            $index++;
-                        }   
-                    }else if($export_time){
-                        $line = str_replace("temps", substr($line_data[0], 0, -1), $line);
-                        $lines[$index] = $line."\r";
-                        $index++;
-                    }
+                } else {
+                    //
                 }
+                
+                //on exporte la ligne de données
+                if ($export_data) {
+                    $line = str_replace("temps" . $delimiter, "", $line);
+                    $line = str_replace($delimiter . "temps", "", $line);
+                    if (array_key_exists(0, $line_data)) {
+                        $line = str_replace("datas", substr($line_data[0], 0, -1), $line);
+                    }
+                    $lines[$index] = $line . "\r";
+                    $index++;
+
+                    if ($export_time) {
+                        //si il y a du temps on exporte la ligne de temps
+                        //on reconstruit une ligne vide avec les delimiters avants et après
+                        //on fait correspondre les temps avec les datas de la ligne du dessus
+                        $line = $modele;
+                        $splt = explode("datas" . $delimiter, $line);
+                        if (count($splt) == 1) {
+                            if (strpos($modele, "datas") === 0) {
+                                if (array_key_exists(1, $line_data)) {
+                                    $line = substr($line_data[1], 0, -1) .
+                                            str_repeat($delimiter, substr_count($splt[1], $delimiter));
+                                }
+                            } else {
+                                if (array_key_exists(1, $line_data)) {
+                                    $line = str_repeat($delimiter, substr_count($splt[0], $delimiter) - 1) .
+                                            substr($line_data[1], 0, -1);
+                                }
+                            }
+                        } else {
+                            $line = str_repeat($delimiter, substr_count($splt[0], $delimiter)) .
+                                    substr($line_data[1], 0, -1) .
+                                    str_repeat($delimiter, substr_count($splt[1], $delimiter));
+                        }
+                        $lines[$index] = $line;
+                        $index++;
+                    }
+                } else if ($export_time) {
+                    $line = str_replace("temps", substr($line_data[0], 0, -1), $line);
+                    $lines[$index] = $line . "\r";
+                    $index++;
+                }
+            }
             //}
         }
 //        foreach($lines as $line){
 //            echo $line."<br/>";
 //        }
-        
-        
-        
+
+
+
         $this->Array2CSVDownload($lines, "export.csv", $delimiter);
     }
 }
-
-

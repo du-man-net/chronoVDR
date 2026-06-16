@@ -1,7 +1,7 @@
 <?php
 
 /* 
- * Copyright (C) 2025 gleon
+ * Copyright (C) 2026 gleon
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -16,8 +16,27 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-$dt = new DateTime("now", new DateTimeZone('Europe/Paris')); 
 
-echo json_encode(["time" => $dt->format('Y,m,d,N,H,i,s')]);
-//echo date("Y-m-d H:i:s"); 
+require_once '../class/ActiviteClass.php';
 
+$myactivite = new Activite();
+
+
+/* Reception du JSON */
+$jsonData = file_get_contents("php://input");
+/* Verifie si JSON est vide */
+if (strlen($jsonData) > 0) {
+    /* Decoder JSON */
+    $activite = json_decode($jsonData, true);
+    /* Verifie les erreurs et le format final */
+    if (json_last_error() == JSON_ERROR_NONE){
+        $myactivite->infos = $activite;
+        $myactivite->save();
+        $t_activite = [];
+        echo json_encode($t_activite);
+    }else{
+        die('Données JSON invalides.');
+    }
+} else{
+    die('Aucune données JSON.');
+}

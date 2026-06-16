@@ -1,7 +1,10 @@
 <?php
 
-/* 
- * Copyright (C) 2025 gleon
+error_reporting(E_ALL & ~E_DEPRECATED);
+ini_set("display_errors", 1);
+
+/*
+ * Copyright (C) 2025 Gérard Léon
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -16,8 +19,15 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-$dt = new DateTime("now", new DateTimeZone('Europe/Paris')); 
 
-echo json_encode(["time" => $dt->format('Y,m,d,N,H,i,s')]);
-//echo date("Y-m-d H:i:s"); 
+
+$abort = "../files/abort";
+
+if (isset($_GET['action'])) {
+    $action = $_GET['action'];
+    file_put_contents($abort, "1", LOCK_EX);
+    $t_datas["action"] = $action;
+    $t_datas["newid"] = "";
+    echo json_encode($t_datas);
+}
 

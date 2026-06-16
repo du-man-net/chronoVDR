@@ -1,7 +1,14 @@
 <?php
 
-/* 
- * Copyright (C) 2025 gleon
+error_reporting(E_ALL & ~E_DEPRECATED);
+ini_set("display_errors", 1);
+session_start();
+
+header("Access-Control-Allow-Origin: http://localhost");
+header("Access-Control-Allow-Credentials: true");
+header("Content-Type: application/json");
+/*
+ * Copyright (C) 2026 gleon
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -16,8 +23,20 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-$dt = new DateTime("now", new DateTimeZone('Europe/Paris')); 
 
-echo json_encode(["time" => $dt->format('Y,m,d,N,H,i,s')]);
-//echo date("Y-m-d H:i:s"); 
+if (isset($_SESSION['login'])) {
 
+    echo json_encode([
+        "logged" => true,
+        "login" => $_SESSION['login'],
+        "nom" => $_SESSION['nom'],
+        "id" => $_SESSION['id']
+    ]);
+} else {
+
+    http_response_code(401);
+
+    echo json_encode([
+        "logged" => false
+    ]);
+}

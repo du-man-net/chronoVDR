@@ -18,6 +18,5 @@
  */
 $dt = new DateTime("now", new DateTimeZone('Europe/Paris')); 
 
-echo json_encode(["time" => $dt->format('Y,m,d,N,H,i,s')]);
+echo json_encode(["time" => $dt->format('H:i:s')]);
 //echo date("Y-m-d H:i:s"); 
-
