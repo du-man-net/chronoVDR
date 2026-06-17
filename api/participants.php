@@ -25,6 +25,7 @@ $myactivite = new Activite();
 
 $myusers = new Users();
 $lst_err = [];
+$t_datas = [];
 
 if (isset($_GET['idmat_used'])) {
     $id_participant = $_GET['idmat_used'];

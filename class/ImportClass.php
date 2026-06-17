@@ -61,16 +61,16 @@ class Import {
             return false;
         }
     }
-
+ 
     public function read_file() {
         //on enregistre le fichier
-        move_uploaded_file($this->_file['tmp_name'], "files/" . $this->_file['name']);
+        move_uploaded_file($this->_file['tmp_name'], "../files/" . $this->_file['name']);
         //on ouvre le fichier en lecture
-        $tmp_file = fopen("files/" . $this->_file['name'], "r") or die("Unable to open file!");
+        $tmp_file = fopen("../files/" . $this->_file['name'], "r") or die("Unable to open file!");
         //on enregistre les données dans un tableau
-        $this->file_array = file('files/' . $this->_file['name']); # read file into array
+        $this->file_array = file('../files/' . $this->_file['name']); # read file into array
         fclose($tmp_file); //close the file after read
-        unlink("files/" . $this->_file['name']);
+        unlink("../files/" . $this->_file['name']);
     }
 
     public function getElevesArray($classe = '') {
