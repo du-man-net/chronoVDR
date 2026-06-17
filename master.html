@@ -33,16 +33,20 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
     <body>
 
         <template id="tmpl_spinner">
+
             <div class="text-center spinner">
                 <div class="spinner-border text-info spinner-border-sm" role="status">
                     <span class="visually-hidden">Loading...</span>
                 </div>
             </div>
+
         </template>
 
         <template id="tmpl_charts">
             <div class="chart-container">
-                <canvas class="canvas"></canvas>
+                <div class="chartWrapper">
+                    <canvas ></canvas>
+                </div>
             </div>
         </template>
 
@@ -72,7 +76,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
                 <span class="badge text-bg-danger">A1</span>
             </div>
         </template>
-        
+
         <template id="tmpl_co">
             <div class="btn-group" role="group">
                 <button type="button" class="btn btn-outline-secondary co_left">
@@ -254,7 +258,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
                         </a>
                     </li >
                     <li class="nav-item">
-
                         <a href="#" class="nav-link text-white"  id="import_activite" data-bs-toggle="modal" data-bs-target="#modal_import">
                             <i class="bi bi-people" style="font-size: 1.5rem;"></i>
                             <span>Importation</span>
@@ -266,6 +269,20 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
                             <span>Exporter les données</span>
                         </a>
                     </li>
+                    <li><hr/></li>
+                    <li class="nav-item">
+                        <a href="#" class="nav-link text-warning" id="del_datas">
+                            <i class="bi bi-database-x" style="font-size: 1.5rem;"></i>
+                            <span>Supprimer les données</span>
+                        </a>
+                    </li >
+                    <li class="nav-item">
+                        <a href="#" class="nav-link text-danger" id="del_activite">
+                            <i class="bi bi-trash3" style="font-size: 1.5rem;"></i>
+                            <span>Supprimer l'activité</span>
+                        </a>
+                    </li >
+                    <li><hr/></li>
                     <li class="nav-item">
                         <a href="#" class="nav-link text-white" id="props_admin" data-bs-toggle="offcanvas" data-bs-target="#off_admin">
                             <i class="bi bi-person-vcard" style="font-size: 1.5rem;"></i>
@@ -278,6 +295,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
                             <span>Se deconnecter</span>
                         </a>
                     </li >
+
                 </ul>
 
             </div>
@@ -348,6 +366,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
                         <select class="form-select form-select" id="sel_parcours">
                             <option value="-1">Aucun parcours</option>
                         </select>
+                        <span class="input-group-text">
+                            <i class="bi bi-caret-right-fill" style="font-size: 1.1rem;"></i>
+                        </span>
                         <input type="text" class="form-control-sm" id="nom_parcours">
                         <button type="button" class="btn btn-info btn-sm" id="add_parcours">+</button>
                     </div>
@@ -423,24 +444,49 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
         <!-- Modal -->
         <div class="modal fade" 
-             id="modal_conf" 
+             id="modal_del_datas" 
              data-bs-backdrop="static" 
              data-bs-keyboard="false" 
              tabindex="-1" 
-             aria-labelledby="modal_conf_title" 
+             aria-labelledby="modal_del_datas_title" 
              aria-hidden="true">
             <div class="modal-dialog">
                 <div class="modal-content">
                     <div class="modal-header">
-                        <h1 class="modal-title fs-5" id="modal_conf_title">dummy</h1>
+                        <h1 class="modal-title fs-5" id="modal_del_datas_title">dummy</h1>
                         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                     </div>
-                    <div class="modal-body" id="modal_conf_body">
+                    <div class="modal-body" id="modal_del_datas_body">
                         ...
                     </div>
                     <div class="modal-footer">
                         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annnuler</button>
-                        <button type="button" class="btn btn-primary" id="btn_modal_conf">Supprimer</button>
+                        <button type="button" class="btn btn-primary" id="btn_modal_del_datas">Supprimer</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Modal -->
+        <div class="modal fade" 
+             id="modal_del_ativite" 
+             data-bs-backdrop="static" 
+             data-bs-keyboard="false" 
+             tabindex="-1" 
+             aria-labelledby="modal_del_ativite_title" 
+             aria-hidden="true">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h1 class="modal-title fs-5" id="modal_del_ativite_title">dummy</h1>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body" id="modal_del_ativite_body">
+                        ...
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annnuler</button>
+                        <button type="button" class="btn btn-primary" id="btn_modal_del_ativite">Supprimer</button>
                     </div>
                 </div>
             </div>
@@ -572,25 +618,29 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
             </div>
         </div>
 
+
         <div class="offcanvas offcanvas-start text-bg-dark" data-bs-backdrop="static" tabindex="-1" id="off_props" aria-labelledby="staticBackdropLabel">
             <div class="offcanvas-header">
                 <h5 class="offcanvas-title" id="staticBackdropLabel">Propriété de l'activité</h5>
                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="offcanvas" aria-label="Close"></button>
             </div>
             <div class="offcanvas-body">
-                <div class="row mb-3">
-                    <label for="nom_activite" class="col col-form-label ">Nom de l'activité : </label>
-                    <div class="col">
-                        <input id="nom_activite" type="text" class="form-control form-control-sm bg-dark text-white border-secondary" placeholder="Nom de l'activité" aria-label="Nom de l'activité">
-                    </div>
+                <div class="input-group mb-3 " data-bs-theme="dark">
+
+                    <span class="input-group-text">Nom de l'activité : </span>
+                    <input id="nom_activite" type="text" class="form-control form-control-sm bg-dark text-white border-secondary" placeholder="Nom de l'activité" aria-label="Nom de l'activité">
+
+                    <button type="button" class="btn btn-light " id="save_props_activite">
+                        <i class="bi bi-floppy" style="font-size: 1.1rem;"></i>
+                    </button>
                 </div>
                 <div class="row mb-3">
                     <label for="nom_orga" class="col col-form-label">Organisateur : </label>
                     <div class="col">
-                        <input id="nom_orga" type="text" class="form-control form-control-sm bg-dark text-white border-secondary" placeholder="Organisateur" aria-label="Organisateur">
+                        <input id="nom_orga" type="text" class="form-control form-control-sm bg-dark text-white border-secondary" placeholder="Organisateur" aria-label="Organisateur" readonly>
                     </div>
                 </div>
-                <hr class="hr" />
+                <hr/>
                 <div class="row mb-3">
                     <label for="sel_type_activite" class="col col-form-label">Type d'activité : </label>
                     <div class="col">
@@ -622,13 +672,13 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 
                 <div class="form-check form-switch">
-                    <label class="form-check-label text-warning" for="switchDetails">Afficher le paramétrage détaillé</label>
+                    <label class="form-check-label text-warning" for="switchDetails">Afficher le détaillé</label>
                     <input class="form-check-input" type="checkbox" role="switch" id="switchDetails" data-bs-toggle="collapse" data-bs-target="#collapseDetails" aria-controls="collapseDetails">
-
                 </div>
 
-                <div class="collapse" id="collapseDetails">
 
+                <div class="collapse" id="collapseDetails">
+                    <hr/>
                     <div class="row mb-3">
                         <label for="sel_id_type" class="col col-form-label">Authentification : </label>
                         <div class="col">
@@ -638,7 +688,17 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
                             </select>
                         </div>
                     </div>
-                    <hr class="hr" />
+                    <div class="row mb-3">
+                        <label for="how_show_time" class="col col-form-label">Affichage du temps : </label>
+                        <div class="col">
+                            <select class="form-select form-select-sm bg-dark text-white border-secondary" id="how_show_time">
+                                <option value="128">min/sec par tours</option>
+                                <option value="64">heure par tour</option>
+                                <option value="32">Temps depuis le départ</option>
+                            </select>
+                        </div>
+                    </div>
+                    <hr/>
                     <div class="form-check ">
                         <input class="form-check-input bg-dark text-white border-secondary" type="checkbox" role="switch" id="flag_show_data" value="8">
                         <label class="form-check-label" for="flag_show_data">
@@ -651,26 +711,13 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
                             Afficher la ligne de temps
                         </label>
                     </div>
-                    <hr class="hr" />
+
                     <div class="form-check ">
                         <input class="form-check-input bg-dark text-white border-secondary" type="checkbox" role="switch" id="flag_show_startTime" value="16">
                         <label class="form-check-label" for="flag_show_startTime">
                             Afficher l'heure de départ
                         </label>
                     </div>
-                    <hr class="hr" />
-                    <div class="row mb-3">
-                        <label for="how_show_time" class="col col-form-label">Affichage du temps : </label>
-                        <div class="col">
-                            <select class="form-select form-select-sm bg-dark text-white border-secondary" id="how_show_time">
-                                <option value="128">min/sec par tours</option>
-                                <option value="64">heure par tour</option>
-                                <option value="32">Temps depuis le départ</option>
-                            </select>
-                        </div>
-                    </div>
-                    <hr class="hr" />
-
                     <div class="form-check ">
                         <input class="form-check-input bg-dark text-white border-secondary" type="checkbox" role="switch"  id="flag_final_time" value="4096">
                         <label class="form-check-label" for="flag_final_time">
@@ -691,16 +738,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
                     </div>
 
                 </div>
-
                 <hr/>
-
-                <p class="d-flex justify-content-between">
-                    <button type="button" class="btn btn-primary btn-warning" id="del_datas">Supprimer données</button>
-                    <button type="button" class="btn btn-primary btn-info" id="save_props_activite">Enregistrer propriétés</button>
-                </p>
-                <p class="d-flex justify-content-start">
-                    <button type="button" class="btn btn-primary btn-danger" id="del_activite">Supprimer l'activité</button>
-                </p>
             </div>
         </div>
 

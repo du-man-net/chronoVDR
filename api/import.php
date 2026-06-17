@@ -24,7 +24,7 @@ $myusers = new Users();
 $myimport = new Import();
 
 if (isset($_FILES['fileImport'])){
-    $t_datas['users'] = [];
+    $t_datas=[];
     $myimport->set_file($_FILES['fileImport']);
     if ($myimport->is_csv_file()) {
         $myimport->read_file();

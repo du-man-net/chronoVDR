@@ -58,7 +58,7 @@ CREATE TABLE `admin` (
 --
 
 INSERT INTO `admin` (`id`, `nom`, `login`, `password`, `create_at`) VALUES
-(1, 'Admin ChronoVDR', 'chronovdr', '', '2026-05-28 16:14:08');
+(1, 'Admin ChronoVDR', 'chronovdr', '$2y$12$OVu0uo7AE5i4tLrdGSwuo.qCvXGkDhf23zi1EKoyR/9Q/UrMm3M7a', '2026-05-28 16:14:08');
 
 -- --------------------------------------------------------
 

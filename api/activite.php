@@ -24,6 +24,7 @@ $myactivite = new Activite();
 
 $last_index = 0;
 $t_datas = [];
+$myDatas = [];
         
 if (isset($_GET['get'])) {
     $id_activite = $myactivite->get_id($_SESSION['id']);
