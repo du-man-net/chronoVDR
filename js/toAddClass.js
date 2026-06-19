@@ -27,13 +27,17 @@ class tableToAdd {
     set toAddCheked(val) {
         document.getElementById("tout_ptoadd").checked = val;
     }
-
+ 
     async loadClasse() {
         let jsonRes = await loadJson(this.url + '?lst_toadd=');
         let classes = await jsonRes.classes;
         await this.vider();
-        this.setClasses(classes);
-        return this.sel_classe.options[this.sel_classe.selectedIndex].value;
+        if(classes){
+            this.setClasses(classes);
+            return this.sel_classe.options[this.sel_classe.selectedIndex].value;
+        }else{
+            return false;
+        }
     }
 
     async load(classe=false) {

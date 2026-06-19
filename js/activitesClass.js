@@ -83,10 +83,11 @@ class activites {
             let type = await jsonRes.type;
             await this.show_type(type);
             let classe = await myToAdd.loadClasse();
-            await myToAdd.load(classe);
+            if (classe)
+                await myToAdd.load(classe);
         }
     }
-
+ 
     async create() {
         let option = "?add=1";
         let jsonRes = await loadJson(this.url + option);

@@ -148,7 +148,8 @@ function insert_data_for_participant($id_participants, $data) {
     global $mysqli;
     $query = "INSERT INTO datas (id_participant,temps,data) VALUES ";
     foreach($id_participants as $id){
-        $query .= "('".$id."', '".date('Y-m-d H:i:s')."', '".$data."'),";
+        $date = DateTime::createFromFormat('U.u', microtime(TRUE));
+        $query .= "('".$id."', '".$date->format('Y-m-d H:i:s.u')."', '".$data."'),";
     }
     $query = substr($query, 0, -1);
     $mysqli->query($query);
@@ -219,10 +220,11 @@ if (strlen($str_id) > 0) {
         unlink("files/scan_balise");
         echo "ok";
         return;
-        
+         
         
     //Sinon, c'est un ajout de données
     } else {
+        $t0 = microtime(true);
         $infos = get_activite_infos();
         if ($infos){
             $id_activite = $infos['id'];
@@ -241,9 +243,6 @@ if (strlen($str_id) > 0) {
             
             if($insert_is_valid){
                 $lastid = insert_data_for_participant($id_participants, $str_data);
-                if($lastid){
-                    write_last_update($lastid);
-                }
             }else{
                 write_log("delais non respécté");
             }
@@ -251,7 +250,9 @@ if (strlen($str_id) > 0) {
     }
     close_db($mysqli);
     write_log($str_log);
-    echo "ok";
+    //echo "ok";
+    $t1 = microtime(true);
+    echo ($t1-$t0)*1000;
     return;
     
 } else {
