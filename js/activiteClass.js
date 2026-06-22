@@ -43,6 +43,10 @@ class activite {
         return "../api/save_activite.php";
     }
 
+    get url_logs() {
+        return "../api/last_logs.php";
+    }
+    
     get sel() {
         return document.getElementById("sel_activite");
     }
@@ -217,7 +221,7 @@ class activite {
             await this.sleep(delay);
         }
     }
-
+     
     sleep(ms) {
         return new Promise(resolve => setTimeout(resolve, ms));
     }
@@ -259,7 +263,7 @@ class activite {
         await sendJson(this.url_save, a);
         await this.select(this.sel.value, false);
     }
-
+    
     set_type() {
         document.getElementById("sel_type_activite").options.foreach(a => {
             a.selected = (this.flag === a.value) ? 'selected' : "";

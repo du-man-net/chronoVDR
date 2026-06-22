@@ -202,12 +202,12 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
                         </a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="#">
+                        <a id="show_logs" class="nav-link" href="#">
                             <i class="bi bi-terminal text-light" style="font-size: 2rem;"></i>
                             <!--<img src="img/logsw.png" alt="Logo" width="30" height="30">!-->
                         </a>
                     </li>
-                    <li class="nav-item badge text-bg-black text-wrap" id="hour">
+                    <li class="nav-item badge  text-wrap" id="hour">
                         <div class="text-secondary float-start font-monospace" id="htime"></div><br/>
                         <div class="text-secondary float-start font-monospace fs-4" id="stime"></div>
                     </li>
@@ -217,7 +217,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
             </div>
         </nav>
 
-
+        <div id="logs" style="display:none;">
+            
+        </div>
+        
         <div class="offcanvas offcanvas-start text-bg-dark" id="off_menu" aria-labelledby="off_menu_title">
 
             <div class="offcanvas-body d-flex flex-column flex-shrink-0">

@@ -230,6 +230,10 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
+    document.getElementById('show_logs').addEventListener('click', async () => {
+        myActivites.show_logs();
+    });
+    
 
     //****************************************
     //Choix de parcours

@@ -1,7 +1,8 @@
 <?php
+
 error_reporting(E_ALL & ~E_DEPRECATED);
 ini_set("display_errors", 1);
-/* 
+/*
  * Copyright (C) 2025 Gérard Léon
  *
  * This program is free software: you can redistribute it and/or modify
@@ -19,45 +20,41 @@ ini_set("display_errors", 1);
  */
 
 //Gestion des logs des entrée WIFI/série
-$logs_file = "files/logs.txt";
-$logs = [];$t_logs = [];
+$logs_file = "../files/logs.txt";
 
 if (file_exists($logs_file)) {
-    
-    $last_index = 0;
+
+    $logs = [];
+    $t_logs = [];
+    $new_logs = false;
+
+    $last_index = "0";
     if (isset($_GET['idx'])) {
         $last_index = $_GET['idx'];
     }
 
+    //lecture de la date de la dernière ligne du fichier
     $lines = file($logs_file);
-    
-    //Si plus de 15 lignes ont été ajoutée, 
-    //on place l'index au début des 15 dernières
-    $nb_lines  = count($lines);
-    if($nb_lines-$last_index>15){
-        $last_index = $nb_lines-15;
+    if ($lines) {
+        //si elle est différente de la dernière
+        if ($lines != $last_index) {
+            $new_logs = true;
+        }
     }
-    
-    //On ne lit que les ligne nouvelles
-    for($i=0;$i<$nb_lines;$i++){
-        if($i >= $last_index){
-            $logs[] = $lines[$i];
-        } 
-    }
-    
-    if ($nb_lines>15){
+
+    if ($new_logs) {
         //On ne garde que les 15 dernières ligne de logs
-        $lines = array_slice ($lines,-15);
+        $lines = array_slice($lines, -15);
         //concaténation du tableau de ligne en un texte
-        $txtnew = implode ("",$lines);
+        $txtnew = implode("", $lines);
         //on ré-écrit le fichier avec le nouveau contenu 
-        $f=fopen($logs_file,"w+" );
-        fwrite($f,$txtnew);
+        $f = fopen($logs_file, "w+");
+        fwrite($f, $txtnew);
         fclose($f);
+
+        $t_logs["last_index"] = end($lines);
+        $t_logs["logs"] = $lines;
     }
-    
-    $last_index = count($lines);
-    $t_logs["last_index"]=$last_index;
-    $t_logs["logs"]=$logs;
     echo json_encode($t_logs);
-}      
+}
+    

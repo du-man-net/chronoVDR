@@ -208,21 +208,21 @@ echo Installation des bibliothèques javascripts
 echo
 
 #Installation de noe/npm pour raspberry pi 3
-version=v23.11.1
-arch=linux-armv7l
-node=node-$version-$arch
-wget https://nodejs.org/dist/$version/$node.tar.gz
-tar -xzf $node.tar.gz && rm $node.tar.gz
-rm -rf /opt/nodejs
-mv $node /opt/nodejs
-rm /usr/bin/node /usr/bin/npm
-ln -s /opt/nodejs/bin/node /usr/bin/node
-ln -s /opt/nodejs/bin/npm /usr/bin/npm
+#version=v23.11.1
+#arch=linux-armv7l
+#node=node-$version-$arch
+#wget https://nodejs.org/dist/$version/$node.tar.gz
+#tar -xzf $node.tar.gz && rm $node.tar.gz
+#sudo rm -rf /opt/nodejs
+#sudo mv $node /opt/nodejs
+#sudo rm /usr/bin/node /usr/bin/npm
+#sudo ln -s /opt/nodejs/bin/node /usr/bin/node
+#sudo ln -s /opt/nodejs/bin/npm /usr/bin/npm
 
 
-#curl -fsSL https://deb.nodesource.com/setup_24.x | sudo -E bash -
+curl -fsSL https://deb.nodesource.com/setup_24.x | sudo -E bash -
 sudo apt update
-#apt install -y -q install nodejs
+apt install -y -q install nodejs
 npm i chart.js  --save
 npm i luxon --save
 npm i chartjs-adapter-luxon --save

@@ -156,15 +156,6 @@ function insert_data_for_participant($id_participants, $data) {
     return $mysqli->insert_id;
 }
 
-//====================================================
-//insertion d'un nouvel enrengistrement
-//====================================================
-function write_last_update($lastid) {
-    $f = fopen("files/lastupdate", "w") or die("Unable to open file!");
-    fwrite($f, $lastid);
-    fclose($f);
-}
-
 //================================================
 // écriture des donnés dans le fichier de log
 //================================================
@@ -224,7 +215,6 @@ if (strlen($str_id) > 0) {
         
     //Sinon, c'est un ajout de données
     } else {
-        $t0 = microtime(true);
         $infos = get_activite_infos();
         if ($infos){
             $id_activite = $infos['id'];
@@ -243,8 +233,10 @@ if (strlen($str_id) > 0) {
             
             if($insert_is_valid){
                 $lastid = insert_data_for_participant($id_participants, $str_data);
+                $str_log .= " ok";
             }else{
                 write_log("delais non respécté");
+                $str_log .= " delais!";
             }
         } 
     }

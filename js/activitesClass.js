@@ -28,7 +28,7 @@ export let myCo = new co;
 class activites {
     constructor() {
         this.organisateur = {};
-        //this.users_import = [];
+        this.last_log_index = "";
     }
     get url() {
         return '../api/activite.php';
@@ -43,10 +43,15 @@ class activites {
     get url_time() {
         return "../api/time.php";
     }
+    get url_logs() {
+        return "../api/last_logs.php";
+    }
     get sel() {
         return document.getElementById("sel_activite");
     }
-
+    get logs(){
+        return document.getElementById('logs');
+    }
     sleep(ms) {
         return new Promise(resolve => setTimeout(resolve, ms));
     }
@@ -54,20 +59,65 @@ class activites {
     async startTime() {
         var sec = 0; var time;
         while (true) {
+            if (sec===60) sec = 0;
             if(sec===0){
                 let jsonRes = await loadJson(this.url_time);
                 time = jsonRes.time.substring(0, 5);
                 sec = Number(jsonRes.time.substring(6));
                 document.getElementById("htime").textContent = time;
-            }else{
-                sec++;
-                if (sec===60) sec = 0;
             }
+            sec++;
+            this.show_update_logs();
             document.getElementById("stime").textContent = (sec < 10 ? '0' : '') + sec;
             await this.sleep(1000);
         }
     }
- 
+    
+    show_logs(){
+        const el_dialog = this.logs;
+        if (el_dialog.style.display) {
+            if (el_dialog.style.display === "none") {
+                el_dialog.style.display = null;
+                return true;
+            }
+        }
+        el_dialog.style.display = "none";
+        return false;
+    }
+    
+    logIsShow() {
+        const el_dialog = this.logs;
+        if (el_dialog.style.display) {
+            if (el_dialog.style.display === "none") {
+                return false;
+            }
+        }
+        return true; 
+    }
+
+    async show_update_logs() {
+        if (this.logIsShow()) {
+            let option = "?idx="+ this.last_log_index;
+            let jsonRes = await loadJson(this.url_logs + option);
+            const last_logs = jsonRes.logs;
+            if (last_logs.length > 0) {
+
+                const txt_logs = this.logs;
+                for (const last_log of last_logs) {
+                    const newDiv = document.createElement("div");
+                    const newContent = document.createTextNode(last_log);
+                    newDiv.appendChild(newContent);
+                    txt_logs.append(newDiv);
+                    if (txt_logs.childElementCount > 15) {
+                        txt_logs.firstElementChild.remove();
+                    }
+                }
+                //on récupère le dernier index pour minimiser les reqêtes suivantes
+                this.last_log_index = jsonRes.last_index;
+            }
+        }
+    }
+    
     async load(option = "") {
         let jsonRes = await loadJson(this.url + option);
         let lst = await jsonRes.liste;
