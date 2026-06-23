@@ -166,6 +166,13 @@ document.addEventListener('DOMContentLoaded', () => {
                 );
     });
 
+    document.getElementById('link_import_name').addEventListener('click', () => {
+        showOffcanvasToAdd(false);
+        myActivites.togle_btn_import(false);
+        const modal_import = new bootstrap.Modal(document.getElementById('modal_import'));
+        modal_import.show();
+    });
+    
     //décoche la case de selection quand le canvas est montré
     document.getElementById('off_ptoadd').addEventListener('show.bs.offcanvas', (el) => {
         //console.log("off_ptoadd show");
@@ -174,6 +181,7 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('off_ptoadd').addEventListener('hide.bs.offcanvas', (el) => {
         //console.log("off_ptoadd hide");
     });
+    
 
     //****************************************
     //Participants

@@ -104,7 +104,7 @@ echo
 if [ -f /etc/init.d/apache2* ]; then
     echo "Apache2 est installé"
 else
-    apt -y -q install apache2 php php-mbstring libapache2-mod-php
+    apt -y -q install apache2 apache2-utils php php-mbstring libapache2-mod-php
 fi
 
 # mise en place des virtual host sur les ports 80, 8080, 3000
@@ -176,6 +176,8 @@ EOF
 
     mysql --user=root --password=$mysql_password --execute="create database chronoVDR;"
     mysql --user=root --password=$mysql_password chronoVDR < $vdr_path/conf/chronoVDR.sql
+    HASH=$(htpasswd -bnBC 12 "" "$mysql_password" | tr -d ':\n')
+    mysql --user=root --password=$mysql_password -D chronoVDR -e "UPDATE admin SET password = \"${HASH}\" WHERE id = \"1\""
 
 fi
 
@@ -208,21 +210,21 @@ echo Installation des bibliothèques javascripts
 echo
 
 #Installation de noe/npm pour raspberry pi 3
-#version=v23.11.1
-#arch=linux-armv7l
-#node=node-$version-$arch
-#wget https://nodejs.org/dist/$version/$node.tar.gz
-#tar -xzf $node.tar.gz && rm $node.tar.gz
-#sudo rm -rf /opt/nodejs
-#sudo mv $node /opt/nodejs
-#sudo rm /usr/bin/node /usr/bin/npm
-#sudo ln -s /opt/nodejs/bin/node /usr/bin/node
-#sudo ln -s /opt/nodejs/bin/npm /usr/bin/npm
+version=v23.11.1
+arch=linux-armv7l
+node=node-$version-$arch
+wget https://nodejs.org/dist/$version/$node.tar.gz
+tar -xzf $node.tar.gz && rm $node.tar.gz
+rm -rf /opt/nodejs
+mv $node /opt/nodejs
+rm /usr/bin/node /usr/bin/npm
+ln -s /opt/nodejs/bin/node /usr/bin/node
+ln -s /opt/nodejs/bin/npm /usr/bin/npm
 
-
-curl -fsSL https://deb.nodesource.com/setup_24.x | sudo -E bash -
 sudo apt update
 apt install -y -q install nodejs
+cd $vdr_web_path
+npm install -g npm@11.17.0
 npm i chart.js  --save
 npm i luxon --save
 npm i chartjs-adapter-luxon --save
