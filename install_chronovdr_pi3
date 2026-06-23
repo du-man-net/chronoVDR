@@ -24,7 +24,8 @@ echo $vdr_path
 vdr_web_path="/var/www/html/"$vdr_name
 vdr_restart=0
 real_user="${SUDO_USER:-$(whoami)}"
-echo $real_user
+
+cd /home/$real_user
 
 echo '------------------------------------------------------'
 echo '----------- Installation de chronoVDR ----------------'
@@ -221,17 +222,18 @@ rm /usr/bin/node /usr/bin/npm
 ln -s /opt/nodejs/bin/node /usr/bin/node
 ln -s /opt/nodejs/bin/npm /usr/bin/npm
 
+curl -fsSL https://deb.nodesource.com/setup_24.x | sudo -E bash -
 sudo apt update
-apt install -y -q install nodejs
-cd $vdr_web_path
+apt install -y -q nodejs
 npm install -g npm@11.17.0
+cd $vdr_web_path
 npm i chart.js  --save
 npm i luxon --save
 npm i chartjs-adapter-luxon --save
 npm i bootstrap --save 
 npm i bootstrap-icons --save
 npm i sortablejs --save
-
+cd /home/$real_user
 
 echo
 echo '------------------------------------------------------'
@@ -279,6 +281,7 @@ else
     pip3 install  pandas-stubs
     pip3 install  numpy
     cp $vdr_path/conf/98-serial_background.rules /etc/udev/rules.d/98-serial_background.rules
+    sed -i s/sudouser/$real_user/g /etc/udev/rules.d/98-serial_background.rules
 fi
 
 cp -R $vdr_path/serial $vdr_web_path/
