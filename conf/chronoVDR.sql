@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Hôte : localhost:3306
--- Généré le : ven. 12 juin 2026 à 20:31
+-- Généré le : mar. 11 août 2026 à 21:12
 -- Version du serveur : 11.8.6-MariaDB-0+deb13u1 from Debian
 -- Version de PHP : 8.4.16
 
@@ -52,13 +52,6 @@ CREATE TABLE `admin` (
   `password` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL,
   `create_at` timestamp NOT NULL DEFAULT current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_uca1400_ai_ci;
-
---
--- Déchargement des données de la table `admin`
---
-
-INSERT INTO `admin` (`id`, `nom`, `login`, `password`, `create_at`) VALUES
-(1, 'Admin ChronoVDR', 'chronovdr', '$2y$12$OVu0uo7AE5i4tLrdGSwuo.qCvXGkDhf23zi1EKoyR/9Q/UrMm3M7a', '2026-05-28 16:14:08');
 
 -- --------------------------------------------------------
 
@@ -134,13 +127,26 @@ CREATE TABLE `liste_balises` (
 -- --------------------------------------------------------
 
 --
+-- Structure de la table `mqtt_messages`
+--
+
+CREATE TABLE `mqtt_messages` (
+  `id` int(11) NOT NULL,
+  `topic` varchar(200) NOT NULL,
+  `message` varchar(200) NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_uca1400_ai_ci;
+
+-- --------------------------------------------------------
+
+--
 -- Structure de la table `parcours`
 --
 
 CREATE TABLE `parcours` (
   `id` int(11) NOT NULL,
   `nom` varchar(20) DEFAULT NULL,
-  `ordre` tinyint(1) NOT NULL DEFAULT 0
+  `ordre` tinyint(1) NOT NULL DEFAULT 0,
+  `id_admin` int(11) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 -- --------------------------------------------------------
@@ -240,6 +246,12 @@ ALTER TABLE `liste_balises`
   ADD KEY `id_parcours` (`id_parcours`);
 
 --
+-- Index pour la table `mqtt_messages`
+--
+ALTER TABLE `mqtt_messages`
+  ADD PRIMARY KEY (`id`);
+
+--
 -- Index pour la table `parcours`
 --
 ALTER TABLE `parcours`
@@ -274,7 +286,7 @@ ALTER TABLE `activites`
 -- AUTO_INCREMENT pour la table `admin`
 --
 ALTER TABLE `admin`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=9;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
 
 --
 -- AUTO_INCREMENT pour la table `balises`
@@ -304,6 +316,12 @@ ALTER TABLE `datas`
 -- AUTO_INCREMENT pour la table `liste_balises`
 --
 ALTER TABLE `liste_balises`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT pour la table `mqtt_messages`
+--
+ALTER TABLE `mqtt_messages`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
 
 --
