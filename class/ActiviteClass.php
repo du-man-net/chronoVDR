@@ -123,7 +123,8 @@ class Activite {
                 $this->_id = $id;
             }
             //on écrit un petit fichier pour nettoyer le cache du démon serial python
-            file_put_contents("../files/clearcash", "1", LOCK_EX);
+            file_put_contents("../files/clearcache.serial", "1", LOCK_EX);
+            file_put_contents("../files/clearcache.rqtt", "1", LOCK_EX);
         }
     }
 
@@ -194,7 +195,8 @@ class Activite {
             }
             $this->_db->query("UPDATE activites SET etat = '".$etat."' WHERE id = '" . $this->_id . "'");
             //on écrit un petit fichier pour nettoyer le cache du démon serial python
-            file_put_contents("../files/clearcash", "1", LOCK_EX);
+            file_put_contents("../files/clearcache.serial", "1", LOCK_EX);
+            file_put_contents("../files/clearcache.rqtt", "1", LOCK_EX);
             return $etat;
         }
         return false;

@@ -163,7 +163,7 @@ class Parcours {
 //********************************************************
 //********************************************************
 
-    public function create() {
+    public function create($id_admin) {
         $defName = "Sans nom";
         $query = "SELECT nom,SUBSTRING(nom, 9)as defname FROM parcours ORDER BY (defname+0) DESC";
         $result = $this->_db->query($query);
@@ -179,7 +179,7 @@ class Parcours {
         } else {
             $idx = "";
         }
-        $this->_db->query("INSERT INTO parcours (nom) VALUES ('" . $defName . $idx . "')");
+        $this->_db->query("INSERT INTO parcours (nom,id_admin) VALUES ('" . $defName . $idx . "','". $id_admin ."')");
         $this->_id = $this->_db->insert_id;
         return $this->_id;
     }
@@ -369,7 +369,7 @@ class Parcours {
 
     public function get_all_parcours($id_activite) {
         if ($id_activite > 0) {
-            $result = $this->_db->query("SELECT id,nom,ordre FROM parcours ORDER BY NOM");
+            $result = $this->_db->query("SELECT id,nom,ordre,id_admin FROM parcours ORDER BY NOM");
             if ($result->num_rows > 0) {
                 return $result;
             }
@@ -379,7 +379,7 @@ class Parcours {
 
     public function get_last_parcours($id_activite, $last_index) {
         if ($id_activite > 0) {
-            $result = $this->_db->query("SELECT id,nom,ordre FROM parcours WHERE parcours.id > '" . $last_index . "'  ORDER BY NOM");
+            $result = $this->_db->query("SELECT id,nom,ordre,id_admin FROM parcours WHERE parcours.id > '" . $last_index . "'  ORDER BY NOM");
             if ($result->num_rows > 0) {
                 return $result;
             }

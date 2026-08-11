@@ -44,7 +44,7 @@ else
         echo "Mot de passe : "
         read -s first
         read -s -p "Confirmer le mot de passe: " second
-        if [ $first == $second ]; then
+        if [ $first==$second ]; then
             mysql_password=$first
             echo  $"$mysql_password" > $vdr_web_path/config/mysql_password
         else
@@ -210,7 +210,7 @@ echo '------------------------------------------------------'
 echo Installation des bibliothèques javascripts
 echo
 
-#Installation de noe/npm pour raspberry pi 3
+#Installation de node/npm pour raspberry pi 3
 version=v23.11.1
 arch=linux-armv7l
 node=node-$version-$arch
@@ -291,6 +291,37 @@ udevadm control --reload
 
 echo
 echo '------------------------------------------------------'
+echo Installation du serveur Mosquitto
+echo
+
+if [ -f /etc/mosquitto/passwd ]; then
+    echo "Configration Mosquitto OK"
+else
+    sudo apt install mosquitto mosquitto-clients
+    pip install paho-mqtt
+    mosquitto_passwd -c -b /etc/mosquitto/passwd chronovdr 12345678
+    chown root /etc/mosquitto/passwd
+    cp $vdr_path/conf/mosquitto.conf     /etc/mosquitto/mosquitto.conf
+    systemctl restart mosquitto
+fi
+
+echo
+echo '------------------------------------------------------'
+echo Installation du service http_mqtt
+echo
+
+if [ -f /etc/systemd/system/http_mqtt.service ]; then
+    echo "Configration http_mqtt.service OK"
+else
+    chmod +x $vdr_web_path/serial/mqtt.py
+    cp $vdr_path/conf/http_mqtt.service   /etc/systemd/system/http_mqtt.service 
+    systemctl daemon-reload
+    systemctl enable http_mqtt.service 
+    systemctl start http_mqtt.service 
+fi
+
+echo
+echo '------------------------------------------------------'
 echo Hotspot WIFI
 echo
 
@@ -328,7 +359,7 @@ fi
 
 #on detecte quelle carte réseau est utilisée pour la connexion Hotspot
 curent=$(nmcli connection show|grep Hotspot|awk '{print $4}')
-if [ $curent == $WIFIDEVICE ]; then
+if [[ $curent==$WIFIDEVICE ]]; then
     echo "connexion Hotspot trouvée pour $WIFIDEVICE"
 else
     if [[ $curent != "" ]]; then

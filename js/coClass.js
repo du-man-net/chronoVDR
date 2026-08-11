@@ -20,6 +20,7 @@ class co {
     constructor() {
         this.last_data_index = 0;
         this.parcours = [];
+        this.admin = {};
     }
     get url() {
         return '../api/co.php';
@@ -98,12 +99,18 @@ class co {
 
     async setListBalises(list) {
         await this.clearBalises();
+        let parcours = this.getParcours();
+        let disabled = false;
+        if (this.admin.id > 1)
+            if (parcours.id_admin !== this.admin.id)
+                disabled = true;
         for await (const b of list) {
             let tr = document.createElement('tr');
             tr.id = "b" + b.id;
             tr.append(document.getElementById("tmpl_balise").content.cloneNode(true));
             tr.querySelector(".balise_nom").textContent = b.nom;
             tr.querySelector(".balise_tag").textContent = b.tag;
+            tr.querySelector(".pb_add").disabled = disabled;
             this.tableToAdd.appendChild(tr);
         }
     }
@@ -114,22 +121,41 @@ class co {
         }
         const parcours = this.getParcours();
         if (parcours) {
+            let disabled = false;
+            if (this.admin.id > 1)
+                if (parcours.id_admin !== this.admin.id)
+                    disabled = true;
+            
             this.cur_nom = parcours.nom;
             this.cur_ordre = parcours.ordre;
+            document.getElementById("nom_parcours").disabled = disabled;
+            document.getElementById("ordre_parcours").disabled = disabled;
+            document.getElementById("del_parcours").disabled = disabled;
+            document.getElementById("save_balise").disabled = disabled;
+            
             parcours.balises.sort((a, b) => a.ordre - b.ordre);
             this.clearParcours();
             for (const b of parcours.balises) {
                 let tr = document.createElement('tr');
                 tr.id = "pb" + b.id;
                 tr.append(document.getElementById("tmpl_parcours").content.cloneNode(true));
+                let pb_nom = tr.querySelector(".pb_nom");
                 if (b.nom) {
-                    tr.querySelector(".pb_nom").value = b.nom;
+                    pb_nom.value = b.nom;
                 } else {
-                    tr.querySelector(".pb_nom").placeholder = b.nombalise;
+                    pb_nom.placeholder = b.nombalise;
                 }
-                tr.querySelector(".drag-handler").textContent = b.ordre;
+                let dragHandler = tr.querySelector(".drag-handler");
+                dragHandler.textContent = b.ordre;
                 tr.querySelector(".pb_tag").textContent = b.tag;
-                tr.querySelector(".pb_value").value = b.value;
+                let pb_value = tr.querySelector(".pb_value");
+                pb_value.value = b.value;
+                if (disabled) {
+                    dragHandler.classList.remove("drag-handler");
+                    pb_nom.disabled = true;
+                    pb_value.disabled = true;
+                    tr.querySelector(".pb_del").disabled = true;
+                }
                 this.table.appendChild(tr);
             }
             let list = await this.loadBalises(id);
@@ -227,7 +253,8 @@ class co {
     
     async addParcours() {
         let request = {
-            action: 'addParcours'
+            action: 'addParcours',
+            id_admin: this.admin.id,
         };
         let jsonRes = await sendJson(this.url_save, request);
         await this.load(jsonRes.id);

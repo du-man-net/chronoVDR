@@ -68,7 +68,7 @@ if (strlen($jsonData) > 0) {
             }
         } else {
             if ($jsonRes['action'] == 'addParcours') {
-                $id = $myparcours->create();
+                $id = $myparcours->create($jsonRes['id_admin']);
                 $t_parcours = [];
                 $t_parcours["id"] = $id;
                 echo json_encode($t_parcours);

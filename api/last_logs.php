@@ -43,15 +43,6 @@ if (file_exists($logs_file)) {
     }
 
     if ($new_logs) {
-        //On ne garde que les 15 dernières ligne de logs
-        $lines = array_slice($lines, -15);
-        //concaténation du tableau de ligne en un texte
-        $txtnew = implode("", $lines);
-        //on ré-écrit le fichier avec le nouveau contenu 
-        $f = fopen($logs_file, "w+");
-        fwrite($f, $txtnew);
-        fclose($f);
-
         $t_logs["last_index"] = end($lines);
         $t_logs["logs"] = $lines;
     }

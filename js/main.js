@@ -40,6 +40,7 @@ document.addEventListener('DOMContentLoaded', () => {
         } else {
             myActivite.admin = a;
             myAdmins.admin = a;
+            myCo.admin = a;
             document.getElementById('menu_a_name').textContent = a.nom;
             document.getElementById('admin_a_name').textContent = a.nom;
         }

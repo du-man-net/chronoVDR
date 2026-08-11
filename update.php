@@ -242,9 +242,7 @@ if (strlen($str_id) > 0) {
     }
     close_db($mysqli);
     write_log($str_log);
-    //echo "ok";
-    $t1 = microtime(true);
-    echo ($t1-$t0)*1000;
+    echo "ok";
     return;
     
 } else {

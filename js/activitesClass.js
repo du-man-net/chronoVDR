@@ -108,9 +108,9 @@ class activites {
                     const newContent = document.createTextNode(last_log);
                     newDiv.appendChild(newContent);
                     txt_logs.append(newDiv);
-                    if (txt_logs.childElementCount > 15) {
-                        txt_logs.firstElementChild.remove();
-                    }
+//                    if (txt_logs.childElementCount > 15) {
+//                        txt_logs.firstElementChild.remove();
+//                    }
                 }
                 //on récupère le dernier index pour minimiser les reqêtes suivantes
                 this.last_log_index = jsonRes.last_index;

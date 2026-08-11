@@ -1,0 +1,18 @@
+
+mosquitto
+
+sudo apt-get install mosquitto
+sudo mosquitto_passwd -c /etc/mosquitto/passwd chronovdr
+
+Dans /etc/mosquitto/mosquitto.conf, rajouter les lignes
+allow_anonymous false
+password_file /etc/mosquitto/passwd
+listener 1883 0.0.0.0
+
+Faire systemctl restart mosquitto
+
+chmod 0700 /path/to/your/pwfile and 
+chown mosquitto:mosquitto /path/to/your/pwfile 
+solves the problem
+
+

@@ -15,4 +15,26 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+import { loadJson, sendJson } from './ajax.js';
 
+document.addEventListener('DOMContentLoaded', () => {
+    
+
+    document.getElementById('btn_on').addEventListener('click', (el) => {
+        let request = {
+            topic: "mbit",
+            message: "1:toto"
+        };
+        let url = "http://" + window.location.hostname + ":8080";
+        sendJson(url,request);
+    });
+    
+    document.getElementById('btn_off').addEventListener('click', (el) => {
+        let request = {
+            topic: "1",
+            message: "titi"
+        };
+        let url = "http://" + window.location.hostname + ":8080";
+        sendJson(url,request);
+    });
+});

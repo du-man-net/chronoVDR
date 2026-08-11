@@ -50,8 +50,6 @@ if (isset($_GET['data'])) {
             $datas = $myparcours->get_last_datas($myactivite->id(), $last_index);
         }
 
-        //echo 'id_participant,id_co,idparcours,id_data,tag,nom<br/>';
-
         foreach ($datas as $data) {
             $myData = [];
             $myData['temps'] = $data['temps'];
@@ -70,14 +68,6 @@ if (isset($_GET['data'])) {
             $myDatas[$data['id_participant']][$data['id_co']]["id_parcours"] = $data['id_parcours'];
             $myDatas[$data['id_participant']][$data['id_co']]["t_start"] = $data['t_start'];
             $myDatas[$data['id_participant']][$data['id_co']]["t_end"] = $data['t_end'];
-
-//            echo $data['id_participant'] . ',' .
-//            $data['id_co'] . ',' .
-//            $data['id_parcours'] . ',' .
-//            $data['id_data'] . ',' .
-//            $data['tag'] . ',' .
-//            $data['nom'] . "<br/>";
-
 
             if ($data['id_data'] > $last_index) {
                 $last_index = $data['id_data'];
@@ -129,6 +119,7 @@ if (isset($_GET['data'])) {
             $i_parcours['id'] = $parcours['id'];
             $i_parcours['nom'] = $parcours['nom'];
             $i_parcours['ordre'] = $parcours['ordre'];
+            $i_parcours['id_admin'] = $parcours['id_admin'];
             if ($parcours['id'] > $last_index) {
                 $last_index = $parcours['id'];
             }

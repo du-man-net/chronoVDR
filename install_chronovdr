@@ -220,7 +220,7 @@ npm i bootstrap --save
 npm i bootstrap-icons --save
 npm i sortablejs --save
 cd /home/$real_user
- 
+
 echo
 echo '------------------------------------------------------'
 echo Mise à jour des fichiers WEB
@@ -255,7 +255,6 @@ echo '------------------------------------------------------'
 echo Communication série avec Micro:bit
 echo
 
-
 if [ -f /etc/udev/rules.d/98-serial_background.rules ]; then
     echo "Configration communication avec Micro:bit OK"
 else
@@ -274,6 +273,37 @@ cp -R $vdr_path/serial $vdr_web_path/
 chown -R $real_user:www-data $vdr_web_path/serial
 chmod -R 770 $vdr_web_path/serial
 udevadm control --reload
+
+echo
+echo '------------------------------------------------------'
+echo Installation du serveur Mosquitto
+echo
+
+if [ -f /etc/mosquitto/passwd ]; then
+    echo "Configration Mosquitto OK"
+else
+    sudo apt install mosquitto mosquitto-clients
+    pip install paho-mqtt
+    mosquitto_passwd -c -b /etc/mosquitto/passwd chronovdr 12345678
+    chown root /etc/mosquitto/passwd
+    cp $vdr_path/conf/mosquitto.conf     /etc/mosquitto/mosquitto.conf
+    systemctl restart mosquitto
+fi
+
+echo
+echo '------------------------------------------------------'
+echo Installation du service http_mqtt
+echo
+
+if [ -f /etc/systemd/system/http_mqtt.service ]; then
+    echo "Configration http_mqtt.service OK"
+else
+    chmod +x $vdr_web_path/serial/mqtt.py
+    cp $vdr_path/conf/http_mqtt.service   /etc/systemd/system/http_mqtt.service 
+    systemctl daemon-reload
+    systemctl enable http_mqtt.service 
+    systemctl start http_mqtt.service 
+fi
 
 echo
 echo '------------------------------------------------------'
@@ -314,7 +344,7 @@ fi
 
 #on detecte quelle carte réseau est utilisée pour la connexion Hotspot
 curent=$(nmcli connection show|grep Hotspot|awk '{print $4}')
-if [ $curent == $WIFIDEVICE ]; then
+if [[ $curent == $WIFIDEVICE ]]; then
     echo "connexion Hotspot trouvée pour $WIFIDEVICE"
 else
     if [[ $curent != "" ]]; then
