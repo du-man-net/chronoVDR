@@ -17,11 +17,10 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 import time
-from datetime import datetime
-import socket
 import serial.tools.list_ports as list_ports
 import serial
 from VDR_txt import VDR_logs
+
 
 class VDR_serial:
 
@@ -32,12 +31,12 @@ class VDR_serial:
         self.baud = 115200
         self.serial = None
         self._on_message = None
-        
+
         self.logs = VDR_logs()
         self.find_com_port()
         self.connect()
         # self.listen()
-        
+
     # ====================================================
     # Récupération du port série
     # ====================================================
@@ -61,16 +60,17 @@ class VDR_serial:
                         )
                     )
                     self.serial.port = str(p.device)
-                    time.sleep(2)   
+                    time.sleep(2)
                     self.serial.open()
                     self.logs.write("Essais de connexion à Micro:bit")
                     return
 
-                time.sleep(1)              
-                     
+                time.sleep(1)
+
     # ====================================================
     # essais de com avec le microbit
     # ====================================================
+
     def connect(self):
         while True:
             msg_start = "CONNECT\n"
@@ -79,12 +79,13 @@ class VDR_serial:
             strdatas = ""
             strdatas = self.read()
             if strdatas:
+                print(strdatas)
                 if strdatas == "OK":
                     self.logs.write("Connexion à Micro:bit réussie")
                     break
 
     # ====================================================
-    # écoute sur le port série. 
+    # écoute sur le port série.
     # Quand un message arrive il est redirigé vers la fonction
     # de callback si elle affectée
     # ====================================================
@@ -103,7 +104,7 @@ class VDR_serial:
     @property
     def on_message(self):
         return self._on_message
-        
+
     @on_message.setter
     def on_message(self, callback):
         self._on_message = callback

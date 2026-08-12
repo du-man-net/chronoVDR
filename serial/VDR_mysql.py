@@ -16,12 +16,9 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-import time
-from datetime import datetime
 
+from datetime import datetime
 import mysql.connector as connector
-import VDR_serial
-from numpy import size
 from VDR_txt import VDR_logs, cash_to_clear, get_password
 
 
@@ -71,7 +68,7 @@ class VDR_mysql:
             + self.id_activite
             + "'"
         )
-        # print (query)
+        # print(query)
         try:
             self.cursor.execute(query)
             results = self.cursor.fetchall()
@@ -88,13 +85,11 @@ class VDR_mysql:
     # Départ pour tout le monde si l'activité est vide
     # ====================================================
     def start_for_all(self):
+        
         if self.id_activite != "0":
             if self.etat > 1:
                 if self.is_activite_empty():
                     self.insert_data_for_all()
-                    # write_last_update(0)
-                    accuse_rcp = "START\n"
-                    mb_serie.write(accuse_rcp.encode("utf-8"))
 
     # ====================================================
     # Insert l'heure de dépaart pour tous les participants
@@ -185,9 +180,9 @@ class VDR_mysql:
     # ====================================================
     # récuperation des infos concernant l'activite et le participant
     # ====================================================
-    def get_activite_infos(self, moduleName):
-
-        if cash_to_clear(moduleName):
+    def get_activite_infos(self):
+        
+        if cash_to_clear():
             self.etat = 0
             self.id_activite = "0"
             print("clear")

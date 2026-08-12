@@ -28,10 +28,10 @@ from VDR_txt import VDR_logs, VDR_tag
 # ====================================================
 # Implémentation de la fonction de répéttion
 # ====================================================
-def set_interval(func, arg, sec):
+def set_interval(func, sec):
     def func_wrapper():
-        set_interval(func, arg, sec)
-        func(arg)
+        set_interval(func, sec)
+        func()
 
     t = threading.Timer(sec, func_wrapper)
     t.start()
@@ -117,17 +117,21 @@ def on_mqtt_message(client, userdata, msg):
     
     try:
         message = msg.payload.decode("utf-8")
-
+        print(message)
         if tag.exist():
             change_tag(message)
 
         else:
-            save_data(message)
+            if message == "START?":
+                mysql.start_for_all()
+            else:    
+                save_data(message)
 
         logs.write()
         
     except Exception:
         pass
+
 
 # ====================================================
 # class serveru http sur le port 8000
@@ -193,8 +197,8 @@ mysql = VDR_mysql()
 logs = VDR_logs()
 mysql.connect()
 
-mysql.get_activite_infos("mqtt")
-t = set_interval(mysql.get_activite_infos, "mqtt", 2)
+mysql.get_activite_infos()
+t = set_interval(mysql.get_activite_infos, 2)
 
 mqtt = VDR_mqtt("http_agent")
 mqtt.sub_topic = "vdr/pub"

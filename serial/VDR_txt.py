@@ -84,8 +84,9 @@ def get_password():
     return pw
 
 
-def cash_to_clear(module):
-    path = "/var/www/html/chronoVDR/files/clearcache." + module
+def cash_to_clear():
+    path = "/var/www/html/chronoVDR/files/clearcache"
     if os.path.exists(path):
         os.remove(path)
         return True
+    return False
