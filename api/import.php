@@ -32,9 +32,12 @@ if (isset($_FILES['fileImport'])){
             $classe = filter_input(INPUT_POST, 'importClasse', FILTER_SANITIZE_STRING);
         }
         $eleves_read = $myimport->getElevesArray($classe);
+        
         $t_datas["users"] = $eleves_read;
         $t_datas["erreur"] = $myimport->get_erreur();
         $t_datas["erreur_message"] = $myimport->get_erreur_message();
+    }else{
+        echo 'not is_csv_file';
     }
     echo json_encode($t_datas, JSON_PRETTY_PRINT);
     exit;

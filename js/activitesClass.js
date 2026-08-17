@@ -101,13 +101,12 @@ class activites {
             let jsonRes = await loadJson(this.url_logs + option);
             const last_logs = jsonRes.logs;
             if (last_logs.length > 0) {
-
-                const txt_logs = this.logs;
+                this.logs.innerHTML = "";
                 for (const last_log of last_logs) {
                     const newDiv = document.createElement("div");
                     const newContent = document.createTextNode(last_log);
                     newDiv.appendChild(newContent);
-                    txt_logs.append(newDiv);
+                    this.logs.append(newDiv);
 //                    if (txt_logs.childElementCount > 15) {
 //                        txt_logs.firstElementChild.remove();
 //                    }
@@ -243,9 +242,11 @@ class activites {
             formFileStatus.innerHTML = "Lecture du fichier termninée : ";
             formFileStatus.innerHTML += " " + nb_users + " noms trouvés.";
         }
-        this.users_import.forEach(e => {
+        console.log(this.users_import);
+        for(var i= 0; i < this.users_import.length; i++){
+            let e = this.users_import[i];
             formFileResult.innerHTML += e.nom + "," + e.prenom + "," + e.classe + "," + e.nais + "," + e.sexe + "<br/>";
-        });
+        }
         this.togle_btn_import(true);
     }
 

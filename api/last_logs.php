@@ -33,17 +33,19 @@ if (file_exists($logs_file)) {
         $last_index = $_GET['idx'];
     }
 
-    //lecture de la date de la dernière ligne du fichier
     $lines = file($logs_file);
-    if ($lines) {
+    //lecture de la date de la dernière ligne du fichier
+    $lastLine = end($lines);
+    if ($lastLine) {
         //si elle est différente de la dernière
-        if ($lines != $last_index) {
+        if ($lastLine != $last_index) {
             $new_logs = true;
         }
     }
-
+    
+    
     if ($new_logs) {
-        $t_logs["last_index"] = end($lines);
+        $t_logs["last_index"] = $lastLine;
         $t_logs["logs"] = $lines;
     }
     echo json_encode($t_logs);

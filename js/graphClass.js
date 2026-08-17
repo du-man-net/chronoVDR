@@ -127,18 +127,19 @@ class chartsP {
     }
 
     insertSpinner(r) {
-        let cell = r.insertCell(3);
-        let tmpl_spinner = document.getElementById("tmpl_spinner").content.cloneNode(true);
-        cell.append(tmpl_spinner);
-        return cell.children[1];
+        if (r) {
+            let cell = r.insertCell(3);
+            let tmpl_spinner = document.getElementById("tmpl_spinner").content.cloneNode(true);
+            cell.append(tmpl_spinner);
+        }
     }
- 
+
     addData(id, item) {
         if (this.charts[id]) {
             let dt = new Date(item['x']);
             let labels = this.charts[id].data.labels;
             labels.push(dt.toISOString());
-            
+
             const datas = this.charts[id].data.datasets[0];
 
             if (this.check(flags.TIME_PER_LAP)) {

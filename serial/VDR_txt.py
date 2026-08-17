@@ -44,32 +44,24 @@ class VDR_logs:
     def __init__(self):
         self.path = "/var/www/html/chronoVDR/files/logs.txt"
         self.logs = ""
-        self.nbline = 0
-    
+
     def write(self, log=""):
-        #try:
+        
         if len(log) == 0:
             log = self.logs
+        self.logs = ""
         now = datetime.now()
         dt_string = now.strftime("%H:%M:%S") + " - " + log + "\n"
-        print(dt_string)
-
-        if self.nbline > 50:
+        
+        try:
             with open(self.path, "r") as f:
-                lines = f.readlines()                  
+                lines = f.readlines()
             with open(self.path, "w") as f:
                 f.writelines(lines[-20:])
                 f.write(dt_string)
-            self.nbline == 0
-        else:
-            with open(self.path, "a") as f:
-                f.write(dt_string)
 
-        self.logs = ""
-        self.nbline += 1
-
-        #except:
-            #print("erreur d'accès au fichier  de logs")
+        except:
+            print("erreur d'accès au fichier  de logs")
 
     def add(self, log):
         self.logs += log

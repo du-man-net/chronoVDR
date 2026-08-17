@@ -45,7 +45,6 @@ export async function formSend(url, formData) {
         method: "POST",
         body: formData
     });
-    //console.log(response);
     const jsonRes = await response.json();
     return jsonRes;
 }

@@ -44,8 +44,8 @@ def get_ip_address():
 def on_mqtt_connect(client, userdata, flags, reason_code, properties):
 
     if reason_code == 0:
-        print("Connecté au broker")
         client.subscribe("vdr/mbit")
+        print("Agent série connecté a vdr/mbit")
     else:
         print("Erreur de connexion :", reason_code)
 
@@ -59,6 +59,7 @@ def on_mqtt_message(client, userdata, msg):
     message = msg.payload.decode("utf-8")
     # print("message mqtt vers microbit : " + message)
     serial.write(message + "\n")
+    logs.write("vdr/mbit : " + message)
 
 
 # ====================================================
@@ -68,7 +69,7 @@ def on_serial_message(msg):
 
     global serial
     global mqtt
-    
+
     # print("message microbit vers mqtt : " + msg)
     msg = msg.strip()
     serial_datas = msg.split(":", 1)
@@ -76,14 +77,16 @@ def on_serial_message(msg):
     topic = serial_datas[0]
     if len(serial_datas) > 1:
         message = serial_datas[1]
-    
+
     if topic == "IP?":
         ip = get_ip_address() + "\n"
         serial.write(ip)
+        logs.write("demande d'adresse IP")
     elif topic == "START?":
         serial.write("START")
         mqtt.pub_topic = "vdr/pub"
         mqtt.publish(topic)
+        logs.write("Démarrage pour tous !")
     elif topic == "pub":
         mqtt.pub_topic = "vdr/pub"
         mqtt.publish(message)
@@ -97,6 +100,7 @@ def on_serial_message(msg):
     else:
         mqtt.pub_topic = "vdr/" + topic
         mqtt.publish(message)
+        logs.write("de microbit vers vdr/" + topic + " : " + message)
 
 
 # ====================================================

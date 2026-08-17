@@ -43,19 +43,8 @@ class Import {
     }
     
     public function is_csv_file() {
-        $allow_type = array(
-            'text/csv',
-            'text/plain',
-            'application/csv',
-            'text/comma-separated-values',
-            'application/excel',
-            'application/vnd.ms-excel',
-            'application/vnd.msexcel',
-            'text/anytext',
-            'application/octet-stream',
-            'application/txt',
-        );
-        if (in_array($this->_file['type'], $allow_type)) {
+        $type = explode(".",$this->_file['name']);
+        if(strtolower(end($type)) == 'csv'){
             return true;
         } else {
             return false;
@@ -98,7 +87,6 @@ class Import {
             return $this->_eleves;
         }
          */
-        
         //sinom on essaye de trouver les champs nom et prénom
         $firstLine = trim(strtolower($this->no_accent($this->file_array[0]))) ;
         if (strpos($firstLine, 'prenom')!==false && 
@@ -125,6 +113,7 @@ class Import {
             
             //sinom il y a un champ classe
             if(strpos($firstLine, 'classe')!==false){
+                
                 $this->importFromCSV($titles);
                 return $this->_eleves;
                 
@@ -152,23 +141,25 @@ class Import {
             if ($i > 0) { //on importe pas les entètes
                 $eleve = $this->getEleveFromCsv(trim($row));
                 if(count($eleve)>1){
-                    $this->_eleves[$i]['nom'] = $eleve[$titles['nom']];
-                    $this->_eleves[$i]['prenom'] = $eleve[$titles['prenom']];
+                    $e = array();
+                    $e['nom'] = $eleve[$titles['nom']];
+                    $e['prenom'] = $eleve[$titles['prenom']];
                     if(empty($eleve[$titles['nais']])){
-                        $this->_eleves[$i]['nais'] = "01/01/2000";
+                        $e['nais'] = "01/01/2000";
                     }else{
-                        $this->_eleves[$i]['nais'] = $eleve[$titles['nais']];
+                        $e['nais'] = $eleve[$titles['nais']];
                     }
                     if(empty($eleve[$titles['sexe']])){
-                        $this->_eleves[$i]['sexe'] = "M";
+                        $e['sexe'] = "M";
                     }else{
-                        $this->_eleves[$i]['sexe'] = $eleve[$titles['sexe']];
+                        $e['sexe'] = $eleve[$titles['sexe']];
                     }
                     if(empty($classe)){
-                        $this->_eleves[$i]['classe'] = $eleve[$titles['classe']];
+                        $e['classe'] = $eleve[$titles['classe']];
                     }else{
-                        $this->_eleves[$i]['classe'] = $classe;
+                        $e['classe'] = $classe;
                     }
+                    $this->_eleves[]=$e;
                 }
             }
             $i++;

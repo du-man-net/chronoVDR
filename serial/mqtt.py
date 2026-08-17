@@ -63,12 +63,13 @@ def change_tag(message):
                     # on le modifie pour l'utilisateur
                     mysql.change_tag_participant(str_id, id_participant)
                     # print("tag changé")
+                    logs.write(" tag changé")
                     # on détruit le fichier pour dire que tout c'est bien passé
                     tag.delete()
-                    print("fichier détruit")
+                    # print("fichier détruit")
                 else:
-                    print("tag déja utilisé")
-                    logs.add(" déjà utilisé")
+                    # print("tag déja utilisé")
+                    logs.write(" déjà utilisé")
 
         return
     logs.write("Err. requête")
@@ -80,6 +81,7 @@ def change_tag(message):
 def save_data(message):
 
     serial_datas = message.split(",")
+    logs.add("vdr/pub : ")
     for serial_data in serial_datas:
         s_data = serial_data.split(":")
         str_id = s_data[0]
@@ -103,9 +105,10 @@ def save_data(message):
 
                     if insert_is_valid:
                         mysql.insert_data(id_participants, str_data)
+                        logs.add(" - enregistré")
                     else:
-                        logs.write("delais non respécté")
-
+                        logs.add(" - délais non respécté")
+        logs.write()
         return
         logs.write("Err. requête")
 
@@ -114,21 +117,19 @@ def save_data(message):
 # traitement d'un d'une commande concernant un id
 # ====================================================
 def on_mqtt_message(client, userdata, msg):
-    
+
     try:
         message = msg.payload.decode("utf-8")
-        print(message)
+
         if tag.exist():
             change_tag(message)
 
         else:
             if message == "START?":
                 mysql.start_for_all()
-            else:    
+            else:
                 save_data(message)
 
-        logs.write()
-        
     except Exception:
         pass
 
@@ -145,7 +146,7 @@ class RequestHandler(BaseHTTPRequestHandler):
         self.send_header("Access-Control-Allow-Headers", "Content-Type")
         self.send_header("Content-Type", "application/json")
         super().end_headers()
-        
+
     def do_GET(self):
         self.send_response(200)
         self.end_headers()
@@ -159,11 +160,11 @@ class RequestHandler(BaseHTTPRequestHandler):
     def do_OPTIONS(self):
         self.send_response(204)
         self.end_headers()
-        
+
     def do_POST(self):
         self.send_response(200)
         self.end_headers()
-        
+
         # Lecture du corps de la requête
         content_length = int(self.headers.get("Content-Length", 0))
         body = self.rfile.read(content_length)
@@ -183,8 +184,9 @@ class RequestHandler(BaseHTTPRequestHandler):
         }
 
         self.wfile.write(json.dumps(response).encode("utf-8"))
-
-        mqtt.pub_topic = "vdr/" + str(jsonRes["topic"])
+        topic = str(jsonRes["topic"])
+        mqtt.pub_topic = "vdr/" + topic
+        logs.write("de http vers vdr/" + topic + " : " + jsonRes["message"])
         mqtt.publish(jsonRes["message"])
 
 
