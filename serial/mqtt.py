@@ -49,28 +49,29 @@ def change_tag(message):
         logs.add("newid=" + str_id)
 
         if len(str_id) > 0:
-            # print("rfid lu")
+            print("rfid lu")
             # si le fichier tagToChange existe on est en mode insertion de tag
 
             if tag.exist():
-                # print("fichier tagToChange trouvé")
+                print("fichier tagToChange trouvé")
                 # on récupère l'id du tag à modifier dans le fichier
                 id_participant = tag.id_participant()
-                # print(id_participant + " " + str_id)
+                print(id_participant + " " + str_id)
 
                 # si le ref_id n'est pas utilisé,
                 if not mysql.is_tag_used(str_id):
                     # on le modifie pour l'utilisateur
                     mysql.change_tag_participant(str_id, id_participant)
-                    # print("tag changé")
-                    logs.write(" tag changé")
+                    print("tag changé")
+                    logs.add(" tag changé")
                     # on détruit le fichier pour dire que tout c'est bien passé
                     tag.delete()
-                    # print("fichier détruit")
+                    print("fichier détruit")
                 else:
-                    # print("tag déja utilisé")
-                    logs.write(" déjà utilisé")
-
+                    print("tag déja utilisé")
+                    logs.add(" déjà utilisé")
+   
+        logs.write()  
         return
     logs.write("Err. requête")
 

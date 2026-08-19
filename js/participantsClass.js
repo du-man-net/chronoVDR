@@ -386,7 +386,7 @@ class participants {
 
     async addSelected() {
         let participantsToAdd = this.participantsToAdd;
-        if (participantsToAdd) {
+        if (participantsToAdd.length>0) {
             let option = '?ptoadd=' + participantsToAdd.join(',');
             await this.load(option);
             await this.vue.load();

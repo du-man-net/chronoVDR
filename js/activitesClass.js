@@ -17,7 +17,7 @@
 
 import * as flags from './constantes.js';
 import { activite } from "./activiteClass.js";
-import { loadJson, sendJson, formSend } from './ajax.js';
+import { loadJson, sendJson, formSend, isAuth } from './ajax.js';
 import { tableToAdd } from "./toAddClass.js";
 import { co } from "./coClass.js";
 
@@ -49,7 +49,7 @@ class activites {
     get sel() {
         return document.getElementById("sel_activite");
     }
-    get logs(){
+    get logs() {
         return document.getElementById('logs');
     }
     sleep(ms) {
@@ -57,10 +57,19 @@ class activites {
     }
 
     async startTime() {
-        var sec = 0; var time;
+        var sec = 0;
+        var time;
         while (true) {
-            if (sec===60) sec = 0;
-            if(sec===0){
+            if (sec === 60)
+                sec = 0;
+            if (sec === 0) {
+                // On vérifie l'authentification toute les minutes
+                isAuth().then((a) => {
+                    if (!a.logged) {
+                        document.location.href = "index.html";
+                    }
+                });
+                // On resynchronose l'heure affichée avec l'heure du RaspBerry
                 let jsonRes = await loadJson(this.url_time);
                 time = jsonRes.time.substring(0, 5);
                 sec = Number(jsonRes.time.substring(6));
@@ -72,8 +81,8 @@ class activites {
             await this.sleep(1000);
         }
     }
-    
-    show_logs(){
+
+    show_logs() {
         const el_dialog = this.logs;
         if (el_dialog.style.display) {
             if (el_dialog.style.display === "none") {
@@ -84,7 +93,7 @@ class activites {
         el_dialog.style.display = "none";
         return false;
     }
-    
+
     logIsShow() {
         const el_dialog = this.logs;
         if (el_dialog.style.display) {
@@ -92,12 +101,12 @@ class activites {
                 return false;
             }
         }
-        return true; 
+        return true;
     }
 
     async show_update_logs() {
         if (this.logIsShow()) {
-            let option = "?idx="+ this.last_log_index;
+            let option = "?idx=" + this.last_log_index;
             let jsonRes = await loadJson(this.url_logs + option);
             const last_logs = jsonRes.logs;
             if (last_logs.length > 0) {
@@ -116,7 +125,7 @@ class activites {
             }
         }
     }
-    
+
     async load(option = "") {
         let jsonRes = await loadJson(this.url + option);
         let lst = await jsonRes.liste;
@@ -134,9 +143,9 @@ class activites {
             let classe = await myToAdd.loadClasse();
             if (classe)
                 await myToAdd.load(classe);
-        }
     }
- 
+    }
+
     async create() {
         let option = "?add=1";
         let jsonRes = await loadJson(this.url + option);
@@ -241,13 +250,13 @@ class activites {
                 nb_users = this.users_import.length;
             formFileStatus.innerHTML = "Lecture du fichier termninée : ";
             formFileStatus.innerHTML += " " + nb_users + " noms trouvés.";
+        
+            for (var i = 0; i < this.users_import.length; i++) {
+                let e = this.users_import[i];
+                formFileResult.innerHTML += e.nom + "," + e.prenom + "," + e.classe + "," + e.nais + "," + e.sexe + "<br/>";
+            }
+            this.togle_btn_import(true);
         }
-        console.log(this.users_import);
-        for(var i= 0; i < this.users_import.length; i++){
-            let e = this.users_import[i];
-            formFileResult.innerHTML += e.nom + "," + e.prenom + "," + e.classe + "," + e.nais + "," + e.sexe + "<br/>";
-        }
-        this.togle_btn_import(true);
     }
 
     async import() {

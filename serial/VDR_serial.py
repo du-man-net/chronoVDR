@@ -46,11 +46,12 @@ class VDR_serial:
             self.serial = serial.Serial(timeout=self.TIMEOUT)
             self.serial.baudrate = self.baud
             ports = list(list_ports.comports())
-            # print('scanning ports')
+            print('scanning ports')
             for p in ports:
                 self.logs.write("port: {}".format(p))
                 try:
                     self.logs.write("pid: {} vid: {}".format(p.pid, p.vid))
+                    print("pid: {} vid: {}".format(p.pid, p.vid))
                 except AttributeError:
                     continue
                 if (p.pid == self.PID_MICROBIT) and (p.vid == self.VID_MICROBIT):
@@ -59,10 +60,15 @@ class VDR_serial:
                             p.pid, p.vid, p.device
                         )
                     )
+                    print("Périphérique trouvé pid: {} vid: {} port: {}".format(
+                            p.pid, p.vid, p.device
+                        )
+                    )
                     self.serial.port = str(p.device)
                     time.sleep(2)
                     self.serial.open()
                     self.logs.write("Essais de connexion à Micro:bit")
+                    print("Essais de connexion à Micro:bit")
                     return
 
                 time.sleep(1)
@@ -82,6 +88,7 @@ class VDR_serial:
                 print(strdatas)
                 if strdatas == "OK":
                     self.logs.write("Connexion à Micro:bit réussie")
+                    print("Connexion à Micro:bit réussie")
                     break
 
     # ====================================================

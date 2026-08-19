@@ -38,15 +38,18 @@ if (file_exists($logs_file)) {
     $lastLine = end($lines);
     if ($lastLine) {
         //si elle est différente de la dernière
+
         if ($lastLine != $last_index) {
             $new_logs = true;
         }
     }
     
-    
     if ($new_logs) {
         $t_logs["last_index"] = $lastLine;
         $t_logs["logs"] = $lines;
+    }else{
+         $t_logs["last_index"] = $lastLine;
+        $t_logs["logs"] = [];
     }
     echo json_encode($t_logs);
 }

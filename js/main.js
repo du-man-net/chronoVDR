@@ -109,6 +109,11 @@ document.addEventListener('DOMContentLoaded', () => {
         modal_export.hide();
     });
 
+    //****************************************
+    //Activité
+    //Import
+    //****************************************
+   
     document.getElementById('import_activite').addEventListener('click', () => {
         showOffcanvasMenu(false);
         myActivites.togle_btn_import(false);

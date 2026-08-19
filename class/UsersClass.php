@@ -89,7 +89,7 @@ class Users {
     }
 
     public function cleanUser($userId) {
-        $this->_db->query("UPDATE users SET classe = 'Bean' WHERE id = '" . $userId . "'");
+        $this->_db->query("UPDATE users SET classe = 'Non classé' WHERE id = '" . $userId . "'");
     }
 
     public function getUserInfos(&$user) {
@@ -118,7 +118,7 @@ class Users {
     }
 
     public function deleteUsersBin() {
-        $this->_db->query("DELETE FROM users Where classe = 'Bean' "
+        $this->_db->query("DELETE FROM users Where classe = 'Non classé' "
                 . "AND users.id NOT IN (SELECT id_user as id FROM participants)");
         $this->_db->query("DELETE FROM users Where classe = '' "
                 . "AND users.id NOT IN (SELECT id_user as id FROM participants)");

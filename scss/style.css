@@ -203,9 +203,9 @@ chartWrapper{
     padding: 5px;
     margin: 0;
     position: absolute;
-    left:70px;
+    left:0px;
     top:60px;
-    width:300px;
+    width:250px;
     color: white;
     background-color: #222;
     box-shadow: 0 3px 7px rgba(0, 0, 0, 0.3);

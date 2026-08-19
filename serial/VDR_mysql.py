@@ -197,16 +197,16 @@ class VDR_mysql:
                     self.id_activite = str(row[0])
                     self.etat = int(row[1])
                     self.delais = int(row[2])
-
+                    return True
+                    
             except:
                 self.logs.write("Err. SQL " + query)
                 self.id_activite = "0"
                 self.id_participants = {}
                 self.etat = 0
                 self.delais = 0
-                return False
 
-        return True
+        return False
 
     # ====================================================
     # récuperation des infos concernant l'activite et le participant
